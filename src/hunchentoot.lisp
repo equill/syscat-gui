@@ -36,7 +36,8 @@
 ;;; Utility functions
 
 (defun get-uri-parts (uri)
-  "Break the URI into parts for processing by uri-node-helper"
+  "Break the URI into parts for processing by uri-node-helper.
+  Expects a string; returns a list of strings."
   (mapcar
     #'sanitise-uid
     (cdr
@@ -44,14 +45,15 @@
                      (cl-ppcre:regex-replace (getf *config-vars* :api-uri-base) uri "")))))
 
 (defun escape-neo4j (str)
-  "Escape any undesirable characters in a string, e.g. the single-quote."
+  "Escape any undesirable characters in a string, e.g. the single-quote.
+  Expects a string, and returns another string."
   (cl-ppcre:regex-replace-all
     "'"
     str
     "´"))
 
 
-;; Dispatchers
+;; Request handlers
 
 (defun root ()
   "Default handler for requests to /"
@@ -64,6 +66,7 @@
   (setf (tbnl:content-type*) "text/plain")
   (setf (tbnl:return-code*) tbnl:+http-ok+)
   "OK")
+
 
 ;; Error response functions
 
@@ -131,13 +134,15 @@
 ;; Functions for dispatching requests
 
 (defun sanitise-uid (uid)
-  "Replace UID-unfriendly characters in UIDs with something safe"
+  "Replace UID-unfriendly characters in UIDs with something safe.
+  Expects a string and returns another string."
   (escape-neo4j
     (cl-ppcre:regex-replace-all "[/ ]" uid "_")))
 
 (defun get-sub-uri (uri base-uri)
   "Extract the URI from the full request string,
-   excluding the base URL and any GET parameters."
+   excluding the base URL and any GET parameters.
+   Expects two strings; returns one string."
   (first (cl-ppcre:split "\\?" (cl-ppcre:regex-replace base-uri uri ""))))
 
 
@@ -404,6 +409,7 @@
 ;; Appserver startup/shutdown
 
 (defun make-default-acceptor ()
+  "Return an instance of 'cl-webcat-acceptor, a subclass of tbnl:easy-acceptor."
   (make-instance 'cl-webcat-acceptor
                  :address (or (sb-ext:posix-getenv "LISTEN_ADDR")
                               (getf *config-vars* :listen-address))
