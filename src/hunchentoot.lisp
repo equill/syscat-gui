@@ -11,18 +11,16 @@
 ;;; Customised Hunchentoot acceptor.
 ;;; Carries information about the datastore being used.
 (defclass cl-webcat-acceptor (tbnl:easy-acceptor)
-  ;; Class attributes
-  ((rg-hostname :initarg :rg-hostname
-                :reader rg-hostname
-                :initform "localhost")
-   (rg-port :initarg :rg-port
-            :reader rg-port
-            :initform 4950)
+  ;; Subclass attributes
+  ((rg-server :initarg :rg-server
+            :reader rg-server
+            :initform (make-default-acceptor))
    (url-base :initarg :url-base
              :reader url-base
              :initform "localhost"))
-  ;; Class defaults
+  ;; Superclass defaults
   (:default-initargs :address "127.0.0.1")
+  ;; Note to those asking.
   (:documentation "vhost object, subclassed from tbnl:easy-acceptor"))
 
 ;;; Define a logging method
@@ -31,6 +29,14 @@
                                       format-string
                                       &rest format-arguments)
   (log-message log-level (append (list format-string) format-arguments)))
+
+
+(defstruct rg-server
+  "The details needed to connect to the backend Restagraph server."
+  (hostname nil :type string :read-only t)
+  (port nil :type integer :read-only t)
+  (raw-base nil :type string :read-only t)
+  (schema-base nil :type string :read-only t))
 
 
 ;;; Utility functions
@@ -421,10 +427,15 @@
                  :access-log-destination (make-synonym-stream 'cl:*standard-output*)
                  :message-log-destination (make-synonym-stream 'cl:*standard-output*)
                  ;; Restagraph connection details
-                 :rg-hostname (or (sb-ext:posix-getenv "RG_HOSTNAME")
-                                  (getf *config-vars* :rg-hostname))
-                 :rg-port (or (sb-ext:posix-getenv "RG_PORT")
-                              (getf *config-vars* :rg-port))))
+                 :rg-server (make-rg-server
+                              :hostname (or (sb-ext:posix-getenv "RG_HOSTNAME")
+                                            (getf *config-vars* :rg-hostname))
+                              :port (or (parse-integer (sb-ext:posix-getenv "RG_PORT"))
+                                        (getf *config-vars* :rg-port))
+                              :raw-base (or (sb-ext:posix-getenv "RG_RAW_BASE")
+                                            (getf *config-vars* :api-uri-base))
+                              :schema-base (or (sb-ext:posix-getenv "RG_SCHEMA_BASE")
+                                               (getf *config-vars* :schema-uri-base)))))
 
 (defun startup (&key acceptor docker)
   "Start up the appserver.
