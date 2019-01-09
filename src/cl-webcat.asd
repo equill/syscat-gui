@@ -10,6 +10,7 @@
   :description "Generates a REST API from a shema defined in Neo4J"
   :depends-on (#:hunchentoot
                #:drakma
+               #:flexi-streams
                #:cl-json
                ;; It's between these two for markdown rendering
                ;#:3bmd

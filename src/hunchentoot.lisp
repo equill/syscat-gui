@@ -59,6 +59,50 @@
     "´"))
 
 
+;;; Data retrieval functions
+
+(defun decode-json-response (json)
+  "Parse the JSON returned as application/json into a CL structure"
+  ;; Neo4j sends a stream of octets. Convert this into a string.
+  (let ((json-string (flexi-streams:octets-to-string json)))
+    ;; If an empty string was returned, pass an empty string back.
+    (if (equal json-string "")
+        ""
+        ;; If we received actual content, on the other hand, decode it.
+        (cl-json:decode-json-from-string json-string))))
+
+(defun rg-request-json (server uri &key schema-p)
+  "Make a request to a Restagraph backend that should return a JSON response.
+   Return the decoded JSON."
+  (decode-json-response
+    (drakma:http-request (format nil "http://~A:~D~A~A"
+                                 (rg-server-hostname server)
+                                 (rg-server-port server)
+                                 (if schema-p
+                                     (rg-server-schema-base server)
+                                     (rg-server-raw-base server))
+                                 uri))))
+
+(defun get-uids (server resourcetype)
+  "Retrieve a list of UIDs for a specified resourcetype.
+   Arguments:
+   - server = instance of rg-server struct
+   - resourcetype = string
+   Returns a list of strings."
+  (mapcar #'(lambda (item)
+              (cdr (assoc :uid item)))
+          (rg-request-json server (format nil "/~A" resourcetype))))
+
+(defun get-attrs (server resourcetype)
+  "Retrieve a list of attributes for a resourcetype.
+   Arguments:
+   - server = instance of rg-server struct
+   - resourcetype = string
+   Returns a list of strings."
+  (cdr (assoc :attributes
+              (rg-request-json server (format nil "/~A" resourcetype) :schema-p t))))
+
+
 ;; Request handlers
 
 (defun root ()
