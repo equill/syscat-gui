@@ -9,7 +9,7 @@
 
 (defparameter *config-vars*
   `(:listen-address "localhost"
-    :listen-port 3000
+    :listen-port 8080
     :rg-hostname "localhost"
     :rg-port 4955
     :api-uri-base "/raw/v1"
