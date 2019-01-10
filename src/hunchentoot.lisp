@@ -466,8 +466,7 @@
   (make-instance 'cl-webcat-acceptor
                  :address (or (sb-ext:posix-getenv "LISTEN_ADDR")
                               (getf *config-vars* :listen-address))
-                 :port (or (when (sb-ext:posix-getenv "LISTEN_PORT")
-                             (parse-integer (sb-ext:posix-getenv "LISTEN_PORT")))
+                 :port (or (sb-ext:posix-getenv "LISTEN_PORT")
                            (getf *config-vars* :listen-port))
                  :url-base (getf *config-vars* ::url-base)
                  ;; Send all logs to STDOUT, and let Docker sort 'em out
@@ -477,7 +476,8 @@
                  :rg-server (make-rg-server
                               :hostname (or (sb-ext:posix-getenv "RG_HOSTNAME")
                                             (getf *config-vars* :rg-hostname))
-                              :port (or (parse-integer (sb-ext:posix-getenv "RG_PORT"))
+                              :port (or (when (sb-ext:posix-getenv "RG_PORT")
+                                          (parse-integer (sb-ext:posix-getenv "RG_PORT")))
                                         (getf *config-vars* :rg-port))
                               :raw-base (or (sb-ext:posix-getenv "RG_RAW_BASE")
                                             (getf *config-vars* :api-uri-base))
