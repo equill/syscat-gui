@@ -93,6 +93,9 @@
               (cdr (assoc :uid item)))
           (rg-request-json server (format nil "/~A" resourcetype))))
 
+(defun get-schema (server &optional (resourcetype ""))
+  (rg-request-json server (format nil "/~A" resourcetype) :schema-p t))
+
 (defun get-attrs (server resourcetype)
   "Retrieve a list of attributes for a resourcetype.
    Arguments:
@@ -100,7 +103,7 @@
    - resourcetype = string
    Returns a list of strings."
   (cdr (assoc :attributes
-              (rg-request-json server (format nil "/~A" resourcetype) :schema-p t))))
+              (get-schema server resourcetype))))
 
 
 ;; Request handlers
