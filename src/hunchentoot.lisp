@@ -498,7 +498,7 @@
   ;;; so we're using the existence of its special variable as a proxy.
   (if (boundp '*cl-webcat-acceptor*)
       ;; There's an acceptor already in play; bail out.
-      (log-message :fatal "Acceptor already exists; refusing to create a new one.")
+      (log-message :critical "Acceptor already exists; refusing to create a new one.")
       ;; No existing acceptor; we're good to go.
       (progn
         ;; Figure out whether we have a schema directory to work with
