@@ -2,9 +2,9 @@
  * Common functions
 */
 
-var url_base = window.location.protocol + '//' + window.location.hostname + '/sebcat';
-var url_schema = url_base + '/schema/v1';
-var url_raw = url_base + '/raw/v1';
+var url_base = window.location.protocol + '//' + window.location.hostname;
+var url_schema = url_base + '/schema/v1/';
+var url_raw = url_base + '/raw/v1/';
 
 // Extract a GET parameter from the URL
 function getparam(name){
@@ -37,7 +37,7 @@ function update_attrs(resourcetype) {
     remove_attrs();
     // Add the new ones.
     // Query the schema for this resourcetype, and iterate over the attributes described in it.
-    $.getJSON("http://narcisse/sebcat/schema/v1/" + resourcetype, function(result){
+    $.getJSON(url_schema + resourcetype, function(result){
       // Declare vars and pre-compute what we can.
       var req_resourcetype = getparam('resourcetype'), req_val = null, val = null;
       // Now iterate.

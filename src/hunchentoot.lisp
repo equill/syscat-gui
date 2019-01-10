@@ -105,6 +105,15 @@
   (cdr (assoc :attributes
               (get-schema server resourcetype))))
 
+(defun get-resourcetypes (server)
+  "Retrieve a sorted list of resourcetypes.
+   Filter out rgResource, rgAttribute et al."
+  (sort
+    (mapcar #'(lambda (rtype)
+                (cdr (assoc :name rtype)))
+            (get-schema server))
+    #'string<))
+
 
 ;; Request handlers
 
@@ -123,25 +132,45 @@
 
 (defun searchpage ()
   "Display the search-page"
-  (let ((schema (mapcar #'(lambda (rtype)
-                            (list :name (cdr (assoc :name rtype))
-                                  :selected nil))
-                        (get-schema (rg-server tbnl:*acceptor*))))
-        (tags (mapcar #'(lambda (tag)
-                          (list :tag tag
-                                :selected nil))
-                      (get-uids (rg-server tbnl:*acceptor*) "tags"))))
-    (log-message :debug (format nil "Schema: ~A" schema))
-    (log-message :debug (format nil "Tags: ~A" tags))
-    (setf (tbnl:content-type*) "text/html")
-    (setf (tbnl:return-code*) tbnl:+http-ok+)
-    (with-output-to-string (outstr)
-      (html-template:fill-and-print-template
-        #p"templates/display_search.tmpl"
-        (list :schema schema
-              :tags tags
-              :result ())
-        :stream outstr))))
+  (cond
+    ((equal (tbnl:request-method*) :GET)
+     (let ((schema (mapcar #'(lambda (rtype)
+                               (list :name rtype :selected nil))
+                           (get-resourcetypes (rg-server tbnl:*acceptor*))))
+           (tags (mapcar #'(lambda (tag)
+                             (list :tag tag
+                                   :selected nil))
+                         (get-uids (rg-server tbnl:*acceptor*) "tags"))))
+       (log-message :debug (format nil "Schema: ~A" schema))
+       (log-message :debug (format nil "Tags: ~A" tags))
+       (setf (tbnl:content-type*) "text/html")
+       (setf (tbnl:return-code*) tbnl:+http-ok+)
+       (with-output-to-string (outstr)
+         (html-template:fill-and-print-template
+           #p"templates/display_search.tmpl"
+           (list :schema schema
+                 :tags tags
+                 :result ())
+           :stream outstr))))
+    ;; Fallback: not by this method
+    (t (method-not-allowed))))
+
+(defun createitem ()
+  "Display the create-item page"
+  (cond
+    ((equal (tbnl:request-method*) :GET)
+     (let ((schema (mapcar #'(lambda (rtype)
+                               (list :name rtype :selected nil))
+                           (get-resourcetypes (rg-server tbnl:*acceptor*)))))
+       (setf (tbnl:content-type*) "text/html")
+       (setf (tbnl:return-code*) tbnl:+http-ok+)
+       (with-output-to-string (outstr)
+         (html-template:fill-and-print-template
+           #p"templates/display_createitem.tmpl"
+           (list :schema schema)
+           :stream outstr))))
+    ;; Fallback: not by this method
+    (t (method-not-allowed))))
 
 
 ;; Error response functions
@@ -534,7 +563,8 @@
         (setf tbnl:*dispatch-table*
               (list
                 ;; Include the additional dispatchers here
-                (tbnl:create-regex-dispatcher "/search$" 'searchpage)
+                (tbnl:create-regex-dispatcher "/create$" 'createitem)
+                (tbnl:create-prefix-dispatcher "/search" 'searchpage)
                 (tbnl:create-folder-dispatcher-and-handler "/static/css/" "static/css/" "text/css")
                 (tbnl:create-folder-dispatcher-and-handler "/static/js/" "static/js/" "text/javascript")
                 (tbnl:create-regex-dispatcher "/healthcheck$" 'healthcheck)

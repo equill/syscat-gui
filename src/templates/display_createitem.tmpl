@@ -1,0 +1,47 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <title>Webcat create items</title>
+    <script src="/static/js/jquery-3.3.1.js"></script>
+    <script src="/static/js/common.js"></script>
+    <script src="/static/js/search.js"></script>
+    <link rel="stylesheet" type="text/css" href="/static/css/common.css">
+    <link rel="stylesheet" type="text/css" href="/static/css/create.css">
+</head>
+
+<body>
+  <h1>Webcat create page</h1>
+  <!-- Start of grid layout -->
+  <div id="pagegrid">
+    <!-- Navigation bar -->
+      <div id="navigation">
+        <a class="nav-item-1" href='/search'>Search</a>
+      </div>
+      <!-- End navigation bar -->
+
+    <form action="/create" method="post" class="formgrid" id="createform">
+      <!-- UID -->
+      <div id="header-uid" class="header">UID/title:&nbsp;</div>
+      <input type="text" name="uid" id="input-uid"></input>
+      <!-- Resource types -->
+      <div class="header" id="header-resourcetypes">Resource type</div>
+      <select name="resourcetype" id="resourcetype" size="15">
+        <!-- TMPL_LOOP schema -->
+        <option value="<!-- TMPL_VAR name -->"><!-- TMPL_VAR name --></option>
+        <!-- /TMPL_LOOP -->
+      </select>
+      <!-- End of resource types -->
+
+      <!-- Javascript-updated attribute management -->
+      <div class="header" id="header-attributes">Attributes</div>
+      <div class="attrnames" id="attrnames"></div>
+      <div class="attrvals" id="attrvals"></div>
+      <!-- Submit button -->
+      <input type="submit" value="Create" id="createbutton">
+    </form>
+
+  <!-- End of grid -->
+  </div>
+
+</body>
+</html>

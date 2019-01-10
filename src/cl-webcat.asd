@@ -12,6 +12,7 @@
                #:drakma
                #:flexi-streams
                #:cl-json
+               #:cl-ppcre
                ;; It's between these two for markdown rendering
                ;#:3bmd
                #:cl-markdown)
