@@ -116,9 +116,30 @@
 
 (defun healthcheck ()
   "Basic is-it-running endpoint"
+  (log-message :debug "Returning healthcheck")
   (setf (tbnl:content-type*) "text/plain")
   (setf (tbnl:return-code*) tbnl:+http-ok+)
   "OK")
+
+(defun searchpage ()
+  "Display the search-page"
+  (let ((schema (mapcar #'(lambda (rtype)
+                            (list :name (cdr (assoc :name rtype))
+                                  :selected nil))
+                        (get-schema (rg-server tbnl:*acceptor*))))
+        (tags (mapcar #'(lambda (tag)
+                          (list :tag tag
+                                :selected nil))
+                      (get-uids (rg-server tbnl:*acceptor*) "tags"))))
+    (log-message :debug (format nil "Schema: ~A" schema))
+    (log-message :debug (format nil "Tags: ~A" tags))
+    (setf (tbnl:content-type*) "text/html")
+    (setf (tbnl:return-code*) tbnl:+http-ok+)
+    (html-template:fill-and-print-template
+      #p"templates/display_search.tmpl"
+      (list :schema schema
+            :tags tags
+            :result ()))))
 
 
 ;; Error response functions
@@ -511,6 +532,7 @@
         (setf tbnl:*dispatch-table*
               (list
                 ;; Include the additional dispatchers here
+                (tbnl:create-regex-dispatcher "/search$" 'searchpage)
                 (tbnl:create-regex-dispatcher "/healthcheck$" 'healthcheck)
                 (tbnl:create-regex-dispatcher "/$" 'root)
                 ;; Default fallback
