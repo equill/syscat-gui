@@ -11,7 +11,7 @@
   `(:listen-address "localhost"
     :listen-port 3000
     :rg-hostname "localhost"
-    :rg-port 4950
+    :rg-port 4955
     :api-uri-base "/raw/v1"
     :schema-uri-base "/schema/v1"))
 
