@@ -5,17 +5,7 @@
 
 
 (defpackage cl-webcat
-  (:use
-    #:cl)
+  (:use #:cl)
   (:export
-    ;; Operational functions
     startup
-    shutdown
-    log-message
-    ;; Conditions
-    integrity-error
-    client-error
-    message
-    ;; Functions
-    sanitise-uid
-    ))
+    shutdown))
