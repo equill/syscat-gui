@@ -1,0 +1,41 @@
+/* Attributes */
+.formgrid {
+  /* Where within the parent grid */
+  grid-row: 2;
+  /* What goes inside it */
+  display: grid;
+  grid-template-columns: auto auto;
+  grid-row-gap: 5px;
+  justify-content: start;
+}
+
+.title-attributes {
+  grid-row: 1;
+  grid-column: 1 / span 2;
+}
+
+.attrnames {
+  grid-column: 1;
+  font-weight: bold;
+}
+
+.wikititle-title {
+  grid-row: 1;
+  grid-column: 1;
+  font-weight: bold;
+}
+
+.wikititle-value {
+  grid-row: 1;
+  grid-column: 2;
+}
+
+.attrvals {
+  grid-column: 2;
+}
+/* End of attributes section */
+
+#createbutton {
+  grid-row: 3;
+  grid-column: 1 / span 2;
+}

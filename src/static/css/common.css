@@ -1,0 +1,43 @@
+body {
+    font-family: sans;
+}
+
+.pagegrid {
+  display: grid;
+  grid-template-columns: auto;
+  justify-content: start;
+  grid-column-gap: 50px;
+  grid-row-gap: 50px;
+}
+
+/* Nav-bar */
+#navigation {
+  /* Where within the parent grid */
+  grid-row: 1;
+  /* What goes inside it */
+  display: grid;
+  grid-template-columns: auto auto auto;
+  grid-column-gap: 50px;
+  justify-content: start;
+}
+
+.nav-item-1 {
+  grid-row: 1;
+  grid-column: 1;
+}
+
+.nav-item-2 {
+  grid-row: 1;
+  grid-column: 2;
+}
+
+.nav-item-3 {
+  grid-row: 1;
+  grid-column: 3;
+}
+/* End of nav-bar section */
+
+.header {
+    font-weight: bold;
+}
+

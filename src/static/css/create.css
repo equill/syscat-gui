@@ -1,0 +1,58 @@
+.formgrid {
+  /* Where within the parent grid */
+  grid-row: 2;
+  /* What goes inside it */
+  display: grid;
+  grid-template-columns: auto auto auto;
+  grid-row-gap: 5px;
+  grid-column-gap: 5px;
+  align-content: start;
+  justify-content: start;
+}
+
+/* UID input */
+#header-uid {
+  grid-row: 1;
+  grid-column: 1 / span 3;
+}
+
+#input-uid {
+  grid-row: 1;
+  grid-column: 2 / span 2;
+}
+/* End UID input */
+
+/* Resource-type input */
+.header-resourcetypes {
+  grid-row: 2;
+  grid-column: 1;
+}
+
+#resourcetype {
+  grid-row: 3;
+  grid-column: 1;
+}
+/* End resource-type input */
+
+/* Attributes */
+#header-attributes {
+  grid-row: 2;
+  grid-column: 2 / span 2;
+}
+
+.attrnames {
+  grid-row: 3;
+  grid-column: 2;
+  font-weight: bold;
+}
+
+.attrvals {
+  grid-row: 3;
+  grid-column: 3;
+}
+/* End of attributes section */
+
+#createbutton {
+  grid-row: 4;
+  grid-column: 1 / span 3;
+}

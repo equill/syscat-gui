@@ -1,0 +1,108 @@
+.content-default {
+  /* Where within the parent grid */
+  grid-row: 2;
+  /* What goes inside it */
+  display: grid;
+  grid-template-columns: auto auto;
+  grid-row-gap: 5px;
+  justify-content: start;
+}
+
+.content-wikipage {
+  grid-row: 2;
+}
+
+/* Attributes */
+.title-attributes {
+  grid-row: 1;
+  grid-column: 1 / span 2;
+}
+
+.attrnames {
+  grid-column: 1;
+  font-weight: bold;
+}
+
+.attrvals {
+  grid-column: 2;
+}
+/* End of attributes section */
+
+div#metadetails {
+  grid-row: 3;
+  grid-column: 1;
+  display: grid;
+  grid-template-columns: auto auto;
+  justify-content: start;
+}
+
+/* Tags */
+h2#tags_header {
+  grid-row: 1;
+  grid-column: 1;
+}
+
+ul#taglist {
+  grid-row: 2;
+  grid-column: 1;
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+}
+
+div#taglink {
+  grid-row: 3;
+  grid-column: 1;
+}
+/* End tags */
+
+/* Groups */
+h2#groups_header {
+  grid-row: 1;
+  grid-column: 2;
+}
+
+ul#grouplist {
+  grid-row: 2;
+  grid-column: 2;
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+}
+/* End groups */
+
+/* Edit-membership form */
+div#edit-membership {
+  grid-row: 3;
+  grid-column: 1;
+  display: grid;
+  justify-content: start;
+  grid-template-columns: auto auto;
+  grid-column-gap: 50px;
+}
+
+div#add_tags {
+  grid-row: 1;
+  grid-column: 1;
+}
+
+div#remove_tags {
+  grid-row: 1;
+  grid-column: 2;
+}
+
+div#add_groups {
+  grid-row: 2;
+  grid-column: 1;
+}
+
+div#remove_groups {
+  grid-row: 2;
+  grid-column: 2;
+}
+
+input#update_membership {
+  grid-row: 3;
+  grid-column: 1 / span 2;
+}
+/* End edit-membership form */

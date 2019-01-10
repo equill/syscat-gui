@@ -1,0 +1,52 @@
+.formgrid {
+    display: grid;
+    grid-template-columns: auto auto auto auto;
+    grid-column-gap: 20px;
+    grid-row-gap: 5px;
+    align-content: start;
+    justify-content: start;
+}
+
+#header-resourcetypes {
+    grid-row 1;
+    grid-column: 1;
+}
+
+#resourcetype {
+    grid-row: 2;
+    grid-column: 1;
+}
+
+#header-tags {
+    grid-row 1;
+    grid-column: 2;
+}
+
+#tags {
+    grid-row: 2;
+    grid-column: 2;
+}
+
+#header-refinesearch {
+    grid-row: 1;
+    grid-column: 3 / span 2;
+}
+
+.attrnames {
+    grid-row: 2;
+    grid-column: 3;
+}
+
+.attrvals {
+    grid-row: 2;
+    grid-column: 4;
+}
+
+#searchbutton {
+    grid-row: 3;
+    grid-column: 1 / span 4;
+}
+
+#searchresults {
+    grid-row: 2;
+}

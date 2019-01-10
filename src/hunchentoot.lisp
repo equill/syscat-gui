@@ -533,6 +533,8 @@
               (list
                 ;; Include the additional dispatchers here
                 (tbnl:create-regex-dispatcher "/search$" 'searchpage)
+                (tbnl:create-folder-dispatcher-and-handler "/static/css/" "static/css/" "text/css")
+                (tbnl:create-folder-dispatcher-and-handler "/static/js/" "static/js/" "text/javascript")
                 (tbnl:create-regex-dispatcher "/healthcheck$" 'healthcheck)
                 (tbnl:create-regex-dispatcher "/$" 'root)
                 ;; Default fallback
