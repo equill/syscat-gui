@@ -135,11 +135,13 @@
     (log-message :debug (format nil "Tags: ~A" tags))
     (setf (tbnl:content-type*) "text/html")
     (setf (tbnl:return-code*) tbnl:+http-ok+)
-    (html-template:fill-and-print-template
-      #p"templates/display_search.tmpl"
-      (list :schema schema
-            :tags tags
-            :result ()))))
+    (with-output-to-string (outstr)
+      (html-template:fill-and-print-template
+        #p"templates/display_search.tmpl"
+        (list :schema schema
+              :tags tags
+              :result ())
+        :stream outstr))))
 
 
 ;; Error response functions
