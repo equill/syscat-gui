@@ -141,8 +141,8 @@
                              (list :tag tag
                                    :selected nil))
                          (get-uids (rg-server tbnl:*acceptor*) "tags"))))
-       (log-message :debug (format nil "Schema: ~A" schema))
-       (log-message :debug (format nil "Tags: ~A" tags))
+       (log-message :debug "Schema: ~A" schema)
+       (log-message :debug "Tags: ~A" tags)
        (setf (tbnl:content-type*) "text/html")
        (setf (tbnl:return-code*) tbnl:+http-ok+)
        (with-output-to-string (outstr)
@@ -196,7 +196,7 @@
 (defun return-integrity-error (logmessage &optional client-message)
   "Report to the client that their request would have violated an integrity constraint.
   The optional client-message "
-  (log-message :warn (format nil "Client triggered integrity error: ~A" logmessage))
+  (log-message :warn "Client triggered integrity error: ~A" logmessage)
   (setf (tbnl:content-type*) "text/plain")
   (setf (tbnl:return-code*) tbnl:+http-conflict+)
   ;; If we were handed a specific message, use that.
@@ -205,21 +205,21 @@
 
 (defun return-database-error (message)
   "There was a database problem. Log it and report something generic to the user, not to keep them in the dark but to reduce the potential for data leakage."
-  (log-message :error (format nil "Database error: ~A" message))
+  (log-message :error "Database error: ~A" message)
   (setf (tbnl:content-type*) "text/plain")
   (setf (tbnl:return-code*) tbnl:+http-internal-server-error+)
   "An error occurred with the database. This has been logged, and will be fixed.")
 
 (defun return-transient-error (message)
   "Transient problem, which may already have self-resolved.. Log it and report something generic to the user, not to keep them in the dark but to reduce the potential for data leakage."
-  (log-message :error (format nil "Database error: ~A" message))
+  (log-message :error "Database error: ~A" message)
   (setf (tbnl:content-type*) "text/plain")
   (setf (tbnl:return-code*) tbnl:+http-service-unavailable+)
   "A transient error occurred, and has been logged for us to work on. Please try your request again.")
 
 (defun return-client-error (logmessage &optional message)
   "The client made a bad request. Return this information to them, that they may learn from their mistakes."
-  (log-message :info (format nil "Client error: ~A" logmessage))
+  (log-message :info "Client error: ~A" logmessage)
   (setf (tbnl:content-type*) "text/plain")
   (setf (tbnl:return-code*) tbnl:+http-bad-request+)
   ;; If we were handed a specific message, use that.
@@ -229,7 +229,7 @@
 
 (defun return-service-error (logmessage &optional message)
   "There was a problem with connecting to the backend service."
-  (log-message :crit (format nil "Service error: ~A" logmessage))
+  (log-message :crit "Service error: ~A" logmessage)
   (setf (tbnl:content-type*) "text/plain")
   (setf (tbnl:return-code*) tbnl:+http-internal-server-error+)
   (format nil "Service error: ~A"
@@ -576,8 +576,7 @@
         (handler-case
           (tbnl:start acceptor)
           (usocket:address-in-use-error
-            () (log-message :error
-                            (format nil "Attempted to start an already-running instance!"))))
+            () (log-message :error "Attempted to start an already-running instance!")))
         (when docker
           (sb-thread:join-thread
             (find-if
@@ -605,18 +604,14 @@
       (if (tbnl::acceptor-shutdown-p *cl-webcat-acceptor*)
           (log-message :info "Acceptor was present but already shut down.")
           (progn
-            (cl-webcat:log-message
-              :info
-              (format nil "Shutting down the cl-webcat application server"))
+            (cl-webcat:log-message :info "Shutting down the cl-webcat application server")
             (handler-case
               ;; Perform a soft shutdown: finish serving any requests in flight
               (tbnl:stop *cl-webcat-acceptor* :soft t)
               ;; Catch the case where it's already shut down
               (tbnl::unbound-slot
                 ()
-                (cl-webcat:log-message
-                  :info
-                  "Attempting to shut down Hunchentoot, but it's not running."))
+                (cl-webcat:log-message :info "Attempting to shut down Hunchentoot, but it's not running."))
               (sb-pcl::no-applicable-method-error
                 ()
                 (cl-webcat:log-message
