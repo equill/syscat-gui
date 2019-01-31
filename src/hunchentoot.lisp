@@ -83,6 +83,13 @@
                                      (rg-server-raw-base server))
                                  uri))))
 
+(defun search-for-resources (server rtype &optional params)
+  "Search in the backend for a thing.
+   Expected to be called from the search page"
+  (let ((query-string (format nil "/~A?~{~A~^&~}" rtype params)))
+    (log-message :debug "search-for-resources using query string '~A'" query-string)
+    (rg-request-json server query-string)))
+
 (defun get-uids (server resourcetype)
   "Retrieve a list of UIDs for a specified resourcetype.
    Arguments:
@@ -114,6 +121,14 @@
             (get-schema server))
     #'string<))
 
+(defun search-results-to-template (res)
+  "Transform the output of a search into something digestible by html-template.
+   Accepts a list of alists.
+   Returns a list of plists."
+  (mapcar #'(lambda (result)
+              `(:uid ,(cdr (assoc :uid result))))
+          res))
+
 
 ;; Request handlers
 
@@ -136,22 +151,40 @@
     ((equal (tbnl:request-method*) :GET)
      (let ((schema (mapcar #'(lambda (rtype)
                                (list :name rtype :selected nil))
-                           (get-resourcetypes (rg-server tbnl:*acceptor*))))
+                           (remove-if #'(lambda (name)
+                                          (cl-ppcre:all-matches "^rg" name))
+                                      (get-resourcetypes (rg-server tbnl:*acceptor*)))))
            (tags (mapcar #'(lambda (tag)
                              (list :tag tag
                                    :selected nil))
-                         (get-uids (rg-server tbnl:*acceptor*) "tags"))))
+                         (get-uids (rg-server tbnl:*acceptor*) "tags")))
+           (search-parameters
+             (when (tbnl:get-parameter "resourcetype")
+               (append ()
+                       (when (tbnl:get-parameter "uid_regex")
+                         (tbnl:get-parameter "uid_regex"))))))
        (log-message :debug "Schema: ~A" schema)
        (log-message :debug "Tags: ~A" tags)
-       (setf (tbnl:content-type*) "text/html")
-       (setf (tbnl:return-code*) tbnl:+http-ok+)
-       (with-output-to-string (outstr)
-         (html-template:fill-and-print-template
-           #p"templates/display_search.tmpl"
-           (list :schema schema
-                 :tags tags
-                 :result ())
-           :stream outstr))))
+       (log-message :debug "Resourcetype supplied: ~A" (if (tbnl:get-parameter "resourcetype") "yes" "no"))
+       (let* ((search-results
+                (when (tbnl:get-parameter "resourcetype")
+                  (search-for-resources (rg-server tbnl:*acceptor*)
+                                        (tbnl:get-parameter "resourcetype")
+                                        search-parameters)))
+              (tbnl-formatted-results (search-results-to-template search-results)))
+         (when (tbnl:get-parameter "resourcetype")
+           (log-message :debug "Search results: ~A" search-results)
+           (log-message :debug "tbnl-formatted search results: ~A" tbnl-formatted-results))
+         (setf (tbnl:content-type*) "text/html")
+         (setf (tbnl:return-code*) tbnl:+http-ok+)
+         (with-output-to-string (outstr)
+           (html-template:fill-and-print-template
+             #p"templates/display_search.tmpl"
+             (list :schema schema
+                   :tags tags
+                   :resourcetype (tbnl:get-parameter "resourcetype")
+                   :results tbnl-formatted-results)
+             :stream outstr)))))
     ;; Fallback: not by this method
     (t (method-not-allowed))))
 
