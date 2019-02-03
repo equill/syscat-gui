@@ -13,11 +13,14 @@
 (defclass cl-webcat-acceptor (tbnl:easy-acceptor)
   ;; Subclass attributes
   ((rg-server :initarg :rg-server
-            :reader rg-server
-            :initform (make-default-acceptor))
+              :reader rg-server
+              :initform (make-acceptor))
    (url-base :initarg :url-base
              :reader url-base
-             :initform "localhost"))
+             :initform "localhost")
+   (template-path :initarg :template-path
+                  :reader template-path
+                  :initform "/opt/cl-webcat/templates"))
   ;; Superclass defaults
   (:default-initargs :address "127.0.0.1")
   ;; Note to those asking.
@@ -73,7 +76,11 @@
 
 (defun rg-request-json (server uri &key schema-p)
   "Make a request to a Restagraph backend that should return a JSON response.
-   Return the decoded JSON."
+   Return the decoded JSON.
+   Arguments:
+   - rg-server object
+   - URI
+   - :schema-p = whether this is a schema query instead of a resource one"
   (decode-json-response
     (drakma:http-request (format nil "http://~A:~D~A~A"
                                  (rg-server-hostname server)
@@ -144,6 +151,72 @@
   (setf (tbnl:content-type*) "text/plain")
   (setf (tbnl:return-code*) tbnl:+http-ok+)
   "OK")
+
+#|
+This seems really stupid, but it should work.
+From inside to outside:
+- replace __ with / to put it safely out of the way.
+- replace _ with a space.
+- replace / with _.
+Now double-underscores have turned into single underscores,
+single underscores have turned into spaces,
+and any forward-slashes that sneaked through are also now underscores.
+|#
+(defun uid-to-title (uid)
+  "Render the UID as a human-friendly title string"
+  (cl-ppcre:regex-replace "/"
+                          (cl-ppcre:regex-replace "_"
+                                                  (cl-ppcre:regex-replace "__" uid "/")
+                                                  " ")
+                          "_"))
+
+(defun display-item ()
+  "Display an item"
+  (let* ((uri-parts (cl-ppcre:split "/" (tbnl:request-uri*)))
+         (resourcetype (third uri-parts))
+         (uid (fourth uri-parts))
+         (content (rg-request-json (rg-server tbnl:*acceptor*)
+                                   (format nil "/~A/~A" resourcetype uid)))
+         (schema (mapcar #'(lambda (attr) (intern (string-upcase attr) 'keyword))
+                         (cdr (assoc :attributes
+                                     (rg-request-json (rg-server tbnl:*acceptor*)
+                                                      (format nil "/~A" resourcetype)
+                                                      :schema-p t))))))
+    (log-message :debug "Content: ~A" content)
+    (log-message :debug "Schema ~A" schema)
+    (if (and content schema)
+        (let ((filtered-content
+                (mapcar #'(lambda (attrname)
+                            (list :attrname attrname
+                                  :attrval (or (cdr (assoc attrname content)) "")))
+                        (sort schema #'string<)))
+              (layout-template-path (concatenate 'string
+                                                 (template-path tbnl:*acceptor*)
+                                                 "/display_layout.tmpl"))
+              (html-template:*string-modifier* #'cl:identity))
+          (log-message :debug "Filtered content: ~A" filtered-content)
+          (setf (tbnl:content-type*) "text/html")
+          (setf (tbnl:return-code*) tbnl:+http-ok+)
+          (with-output-to-string (outstr)
+            (html-template:fill-and-print-template
+              (make-pathname :defaults layout-template-path)
+              (list :resourcetype resourcetype
+                    :uid uid
+                    ;; FIXME: Should check for Wikipage title and use that instead
+                    :title (uid-to-title uid)
+                    :content (with-output-to-string (contstr)
+                               (html-template:fill-and-print-template
+                                 (make-pathname :defaults (concatenate
+                                                            'string
+                                                            (template-path tbnl:*acceptor*)
+                                                            "/display_default.tmpl"))
+                                 (list :attributes filtered-content)
+                                 :stream contstr)))
+              :stream outstr)))
+        (progn
+          (setf (tbnl:content-type*) "text/plain")
+          (setf (tbnl:return-code*) tbnl:+http-not-found+)
+          "No content"))))
 
 (defun searchpage ()
   "Display the search-page"
@@ -286,7 +359,7 @@
 
 ;; Appserver startup/shutdown
 
-(defun make-default-acceptor ()
+(defun make-acceptor (&key template-path)
   "Return an instance of 'cl-webcat-acceptor, a subclass of tbnl:easy-acceptor."
   (make-instance 'cl-webcat-acceptor
                  :address (or (sb-ext:posix-getenv "LISTEN_ADDR")
@@ -294,6 +367,9 @@
                  :port (or (sb-ext:posix-getenv "LISTEN_PORT")
                            (getf *config-vars* :listen-port))
                  :url-base (getf *config-vars* ::url-base)
+                 :template-path (or template-path
+                                    (sb-ext:posix-getenv "TEMPLATE_PATH")
+                                    (getf *config-vars* :template-path))
                  ;; Send all logs to STDOUT, and let Docker sort 'em out
                  :access-log-destination (make-synonym-stream 'cl:*standard-output*)
                  :message-log-destination (make-synonym-stream 'cl:*standard-output*)
@@ -309,7 +385,7 @@
                               :schema-base (or (sb-ext:posix-getenv "RG_SCHEMA_BASE")
                                                (getf *config-vars* :schema-uri-base)))))
 
-(defun startup (&key acceptor docker)
+(defun startup (&key acceptor static-path template-path docker)
   "Start up the appserver.
    Ensures the uniqueness constraint on resource-types is present in Neo4j.
    Keyword arguments:
@@ -325,21 +401,27 @@
       ;; There's an acceptor already in play; bail out.
       (log-message :critical "Acceptor already exists; refusing to create a new one.")
       ;; No existing acceptor; we're good to go.
-      (progn
-        ;; Figure out whether we have a schema directory to work with
-        ;; Ensure we have an acceptor to work with
-        (unless acceptor (setf acceptor (make-default-acceptor)))
+      (let ((myacceptor (or acceptor
+                            (make-acceptor :template-path template-path)))
+            (static-filepath (or static-path
+                                 (sb-ext:posix-getenv "STATIC_PATH")
+                                 (getf *config-vars* :static-path))))
         ;; Make it available as a dynamic variable, for shutdown to work on
-        (defparameter *cl-webcat-acceptor* acceptor)
+        (defparameter *cl-webcat-acceptor* myacceptor)
         ;; Set the dispatch table
-        (cl-webcat:log-message :info "Configuring the dispatch table")
+        (log-message :info "Configuring the dispatch table")
         (setf tbnl:*dispatch-table*
               (list
                 ;; Include the additional dispatchers here
                 (tbnl:create-regex-dispatcher "/create$" 'createitem)
                 (tbnl:create-prefix-dispatcher "/search" 'searchpage)
-                (tbnl:create-folder-dispatcher-and-handler "/static/css/" "static/css/" "text/css")
-                (tbnl:create-folder-dispatcher-and-handler "/static/js/" "static/js/" "text/javascript")
+                (tbnl:create-prefix-dispatcher "/display" 'display-item)
+                (tbnl:create-folder-dispatcher-and-handler "/static/css/"
+                                                           (concatenate 'string static-filepath "/css/")
+                                                           "text/css")
+                (tbnl:create-folder-dispatcher-and-handler "/static/js/"
+                                                           (concatenate 'string static-filepath "/js/")
+                                                           "text/javascript")
                 (tbnl:create-regex-dispatcher "/healthcheck$" 'healthcheck)
                 (tbnl:create-regex-dispatcher "/$" 'root)
                 ;; Default fallback
@@ -347,7 +429,7 @@
         ;; Start up the server
         (log-message :info "Starting up Hunchentoot to serve HTTP requests")
         (handler-case
-          (tbnl:start acceptor)
+          (tbnl:start myacceptor)
           (usocket:address-in-use-error
             () (log-message :error "Attempted to start an already-running instance!")))
         (when docker
@@ -356,8 +438,8 @@
                     (lambda (th)
                       (string= (sb-thread:thread-name th)
                                (format nil "hunchentoot-listener-~A:~A"
-                                       (tbnl:acceptor-address acceptor)
-                                       (tbnl:acceptor-port acceptor))))
+                                       (tbnl:acceptor-address myacceptor)
+                                       (tbnl:acceptor-port myacceptor))))
                     (sb-thread:list-all-threads)))))))
 
 (defun dockerstart ()
@@ -377,20 +459,20 @@
       (if (tbnl::acceptor-shutdown-p *cl-webcat-acceptor*)
           (log-message :info "Acceptor was present but already shut down.")
           (progn
-            (cl-webcat:log-message :info "Shutting down the cl-webcat application server")
+            (log-message :info "Shutting down the cl-webcat application server")
             (handler-case
               ;; Perform a soft shutdown: finish serving any requests in flight
               (tbnl:stop *cl-webcat-acceptor* :soft t)
               ;; Catch the case where it's already shut down
               (tbnl::unbound-slot
                 ()
-                (cl-webcat:log-message :info "Attempting to shut down Hunchentoot, but it's not running."))
+                (log-message :info "Attempting to shut down Hunchentoot, but it's not running."))
               (sb-pcl::no-applicable-method-error
                 ()
-                (cl-webcat:log-message
+                (log-message
                   :info
                   "Attempted to shut down Hunchentoot, but received an error. Assuming it wasn't running.")))))
         ;; Nuke the acceptor
         (makunbound '*cl-webcat-acceptor*))
       ;; No acceptor. Note the fact and do nothing.
-      (cl-webcat:log-message :warn "No acceptor present; nothing to shut down.")))
+      (log-message :warn "No acceptor present; nothing to shut down.")))

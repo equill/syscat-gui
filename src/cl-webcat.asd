@@ -13,6 +13,7 @@
                #:flexi-streams
                #:cl-json
                #:cl-ppcre
+               #:html-template
                ;; It's between these two for markdown rendering
                ;#:3bmd
                #:cl-markdown)
