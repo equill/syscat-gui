@@ -234,29 +234,33 @@ and any forward-slashes that sneaked through are also now underscores.
   "Display the search-page"
   (cond
     ((equal (tbnl:request-method*) :GET)
-     (let ((schema (mapcar #'(lambda (rtype)
-                               (list :name rtype :selected nil))
-                           (remove-if #'(lambda (name)
-                                          (cl-ppcre:all-matches "^rg" name))
-                                      (get-resourcetypes (rg-server tbnl:*acceptor*)))))
-           (tags (mapcar #'(lambda (tag)
-                             (list :tag tag
-                                   :selected nil))
-                         (get-uids (rg-server tbnl:*acceptor*) "tags")))
-           (search-parameters
-             (when (tbnl:get-parameter "resourcetype")
-               (append ()
-                       (when (tbnl:get-parameter "uid_regex")
-                         (tbnl:get-parameter "uid_regex"))))))
+     (let* ((schema (mapcar #'(lambda (rtype)
+                                (list :name rtype :selected nil))
+                            (remove-if #'(lambda (name)
+                                           (cl-ppcre:all-matches "^rg" name))
+                                       (get-resourcetypes (rg-server tbnl:*acceptor*)))))
+            (tags (mapcar #'(lambda (tag)
+                              (list :tag tag
+                                    :selected nil))
+                          (get-uids (rg-server tbnl:*acceptor*) "tags")))
+            (search-criteria (append ()
+                                     (when (tbnl:get-parameter "uid_regex")
+                                       (list (format nil "uid_regex=~A"
+                                                     (tbnl:get-parameter "uid_regex"))))))
+            (search-results
+              (when (and
+                      (tbnl:get-parameter "resourcetype")
+                      (not (equal (tbnl:get-parameter "resourcetype") "")))
+                (log-message :debug "Searching with criteria '~A'" search-criteria)
+                (search-for-resources (rg-server tbnl:*acceptor*)
+                                      (tbnl:get-parameter "resourcetype")
+                                      search-criteria))))
+       ;; Debug logging for what we've obtained so far
        (log-message :debug "Schema: ~A" schema)
        (log-message :debug "Tags: ~A" tags)
        (log-message :debug "Resourcetype supplied: ~A" (if (tbnl:get-parameter "resourcetype") "yes" "no"))
-       (let* ((search-results
-                (when (tbnl:get-parameter "resourcetype")
-                  (search-for-resources (rg-server tbnl:*acceptor*)
-                                        (tbnl:get-parameter "resourcetype")
-                                        search-parameters)))
-              (tbnl-formatted-results (search-results-to-template search-results)))
+       (log-message :debug "Search results: ~A" search-results)
+       (let ((tbnl-formatted-results (search-results-to-template search-results)))
          (when (tbnl:get-parameter "resourcetype")
            (log-message :debug "Search results: ~A" search-results)
            (log-message :debug "tbnl-formatted search results: ~A" tbnl-formatted-results))
@@ -264,7 +268,10 @@ and any forward-slashes that sneaked through are also now underscores.
          (setf (tbnl:return-code*) tbnl:+http-ok+)
          (with-output-to-string (outstr)
            (html-template:fill-and-print-template
-             #p"templates/display_search.tmpl"
+             (make-pathname :defaults
+                            (concatenate 'string
+                                         (template-path tbnl:*acceptor*)
+                                         "/display_search.tmpl"))
              (list :schema schema
                    :tags tags
                    :resourcetype (tbnl:get-parameter "resourcetype")
