@@ -76,38 +76,49 @@
 
 (defun rg-request-json (server uri &key schema-p)
   "Make a request to a Restagraph backend that should return a JSON response.
-   Return the decoded JSON.
-   Arguments:
-   - rg-server object
-   - URI
-   - :schema-p = whether this is a schema query instead of a resource one"
+  Return the decoded JSON.
+  Arguments:
+  - rg-server object
+  - URI
+  - :schema-p = whether this is a schema query instead of a resource one"
+  (log-message :debug "Requesting URI '~A' from the ~A API" uri (if schema-p "schema" "raw"))
   (decode-json-response
     (drakma:http-request (format nil "http://~A:~D~A~A"
                                  (rg-server-hostname server)
                                  (rg-server-port server)
                                  (if schema-p
-                                     (rg-server-schema-base server)
-                                     (rg-server-raw-base server))
+                                   (rg-server-schema-base server)
+                                   (rg-server-raw-base server))
                                  uri))))
 
 (defun search-for-resources (server rtype &optional params)
   "Search in the backend for a thing.
-   Expected to be called from the search page"
-  (let ((query-string (format nil "/~A?~{~A~^&~}" rtype params)))
-    (log-message :debug "search-for-resources using query string '~A'" query-string)
-    (rg-request-json server query-string)))
+  Expected to be called from the search page"
+  (log-message :debug "Searching for ~A with parameters ~A" rtype params)
+  (let ((query-string (if params
+                        (format nil "/~A?~{~A~^&~}" rtype params)
+                        (format nil "/~A" rtype))))
+    ;(log-message :debug "search-for-resources using query string '~A'" query-string)
+    (let ((result (rg-request-json server query-string)))
+      (if (equal result "")
+        nil
+        result))))
 
 (defun get-uids (server resourcetype)
   "Retrieve a list of UIDs for a specified resourcetype.
-   Arguments:
-   - server = instance of rg-server struct
-   - resourcetype = string
-   Returns a list of strings."
+  Arguments:
+  - server = instance of rg-server struct
+  - resourcetype = string
+  Returns a list of strings."
+  (log-message :debug "Retrieving UIDs for ~A" resourcetype)
   (mapcar #'(lambda (item)
               (cdr (assoc :uid item)))
           (rg-request-json server (format nil "/~A" resourcetype))))
 
 (defun get-schema (server &optional (resourcetype ""))
+  (if (equal resourcetype "")
+    (log-message :debug "Retrieving the whole schema")
+    (log-message :debug "Retrieving the schema for resourcetype '~A'" resourcetype))
   (rg-request-json server (format nil "/~A" resourcetype) :schema-p t))
 
 (defun get-attrs (server resourcetype)
@@ -130,8 +141,9 @@
 
 (defun search-results-to-template (res)
   "Transform the output of a search into something digestible by html-template.
-   Accepts a list of alists.
-   Returns a list of plists."
+  Accepts a list of alists.
+  Returns a list of plists."
+  (log-message :debug "search-results-to-template formatting results ~A" res)
   (mapcar #'(lambda (result)
               `(:uid ,(cdr (assoc :uid result))))
           res))
