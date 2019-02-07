@@ -286,6 +286,119 @@ and any forward-slashes that sneaked through are also now underscores.
         (setf (tbnl:return-code*) tbnl:+http-not-found+)
         "No content"))))
 
+(defun edit-resource ()
+  "Handle the edit-page for an item"
+  (log-message :debug "Attempting to edit an item")
+  (cond
+    ((equal (tbnl:request-method*) :GET)
+     (let* ((uri-parts (cl-ppcre:split "/" (tbnl:request-uri*)))
+            (resourcetype (third uri-parts))
+            (uid (fourth uri-parts))
+            (content (rg-request-json (rg-server tbnl:*acceptor*)
+                                      (format nil "/~A/~A" resourcetype uid)))
+            (schema
+              (sort (cdr (assoc :attributes
+                                (rg-request-json (rg-server tbnl:*acceptor*)
+                                                 (format nil "/~A" resourcetype)
+                                                 :schema-p t))) #'string<)))
+       (log-message :debug "Resourcetype: ~A" resourcetype)
+       (log-message :debug "UID: ~A" uid)
+       (log-message :debug "Schema ~A" schema)
+       (log-message :debug "Content: ~A" content)
+       (if (and content schema)
+           (if (equal resourcetype "wikipages")
+               (progn
+                 (log-message :debug "Rendering wikipage ~A" uid)
+                 (setf (tbnl:content-type*) "text/html")
+                 (setf (tbnl:return-code*) tbnl:+http-ok+)
+                 (with-output-to-string (outstr)
+                   (html-template:fill-and-print-template
+                     (make-pathname :defaults (concatenate 'string
+                                                           (template-path tbnl:*acceptor*)
+                                                           "/edit_wikipage.tmpl"))
+                     (list :title (if (and
+                                        (assoc :title content)
+                                        (not (equal (cdr (assoc :title content)) "")))
+                                      (cdr (assoc :title content))
+                                      (uid-to-title uid))
+                           :uid uid
+                           :content (cdr (assoc :text content)))
+                     :stream outstr)))
+               (let ((filtered-content
+                       (mapcar #'(lambda (attrname)
+                                   (list :attrname attrname
+                                         :attrval (or (cdr (assoc
+                                                             (intern (string-upcase attrname) 'keyword)
+                                                             content)) "")))
+                               schema)))
+                 (log-message :debug "Filtered content: ~A" filtered-content)
+                 (setf (tbnl:content-type*) "text/html")
+                 (setf (tbnl:return-code*) tbnl:+http-ok+)
+                 (with-output-to-string (outstr)
+                   (html-template:fill-and-print-template
+                     (make-pathname :defaults (concatenate 'string
+                                                           (template-path tbnl:*acceptor*)
+                                                           "/edit_resource.tmpl"))
+                     (list :resourcetype resourcetype
+                           :uid uid
+                           :title (uid-to-title uid)
+                           :attributes filtered-content)
+                     :stream outstr))))
+           (progn
+             (setf (tbnl:content-type*) "text/plain")
+             (setf (tbnl:return-code*) tbnl:+http-not-found+)
+             "No content"))))
+    ((equal (tbnl:request-method*) :POST)
+     (let* ((uri-parts (cl-ppcre:split "/" (tbnl:request-uri*)))
+            (resourcetype (third uri-parts))
+            (uid (fourth uri-parts))
+            ;; Extract attributes relevant to this resourcetype
+            (validated-attrs
+              (mapcar #'(lambda (attr)
+                          (log-message :debug "Checking for parameter ~A" attr)
+                          (let ((val (tbnl:post-parameter attr)))
+                            (when val
+                              (cons attr val))))
+                      (cdr (assoc :attributes
+                                  (rg-request-json (rg-server tbnl:*acceptor*)
+                                                   (concatenate 'string "/" resourcetype)
+                                                   :schema-p t))))))
+       (log-message :debug "Validated attributes: ~A" validated-attrs)
+       ;; Send the update
+       (multiple-value-bind (body status-code)
+         (rg-post-json (rg-server tbnl:*acceptor*)
+                       (concatenate 'string "/" resourcetype "/" uid)
+                       :payload validated-attrs
+                       :put-p t)
+         ;; Did it work?
+         (if (and (> status-code 199)
+                  (< status-code 300))
+             ;; Happy path
+             (tbnl:redirect (concatenate 'string "/display/" resourcetype "/" uid ))
+             ;; Less-happy path
+             (let ((html-template:*string-modifier* #'cl:identity))
+               (setf (tbnl:content-type*) "text/html")
+               (setf (tbnl:return-code*) tbnl:+http-bad-request+)
+               (with-output-to-string (outstr)
+                 (html-template:fill-and-print-template
+                   (make-pathname :defaults (concatenate 'string
+                                                         (template-path tbnl:*acceptor*)
+                                                         "/display_layout.tmpl"))
+                   `(:resourcetype ,resourcetype
+                     :uid ,uid
+                     :title ,(format nil "Failed to create ~A" uid)
+                     :content ,(with-output-to-string (contstr)
+                                 (html-template:fill-and-print-template
+                                   (make-pathname :defaults (concatenate 'string
+                                                                         (template-path tbnl:*acceptor*)
+                                                                         "/display_default.tmpl"))
+                                   `(:attributes ((:attrname "Server message"
+                                                   :attrval ,body)))
+                                   :stream contstr)))
+                   :stream outstr)))))))
+    ;; Fallback: not by this method
+    (t (method-not-allowed))))
+
 (defun searchpage ()
   "Display the search-page"
   (cond
@@ -493,6 +606,7 @@ and any forward-slashes that sneaked through are also now underscores.
                 (tbnl:create-regex-dispatcher "/create$" 'createitem)
                 (tbnl:create-prefix-dispatcher "/search" 'searchpage)
                 (tbnl:create-prefix-dispatcher "/display" 'display-item)
+                (tbnl:create-prefix-dispatcher "/editresource" 'edit-resource)
                 (tbnl:create-folder-dispatcher-and-handler "/static/css/"
                                                            (concatenate 'string static-filepath "/css/")
                                                            "text/css")

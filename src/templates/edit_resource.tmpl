@@ -1,0 +1,37 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <title>Edit <!-- TMPL_VAR resourcetype -->: <!-- TMPL_VAR title --></title>
+    <link rel="stylesheet" type="text/css" href="/static/common.css">
+    <link rel="stylesheet" type="text/css" href="/static/edit.css">
+  </head>
+
+  <body>
+    <h1>Edit <!-- TMPL_VAR resourcetype -->: <!-- TMPL_VAR title --></h1>
+    <div id="pagegrid">
+      <!-- Navigation bar -->
+      <div id="navigation">
+        <a class="nav-item-1" href='/search'>Search</a>
+        <a class="nav-item-2" href="/display/<!-- TMPL_VAR resourcetype -->/<!-- TMPL_VAR uid -->">View this item</a>
+        <a class="nav-item-3" href="/create">Create a new item</a>
+      </div>
+      <!-- End navigation bar -->
+
+      <!-- Edit attributes -->
+      <form id="edit-form" class="formgrid" action="/editresource/<!-- TMPL_VAR resourcetype -->/<!-- TMPL_VAR uid -->" method="post">
+        <h2 id="title-attributes">Edit attributes</h2>
+        <table class="attributes">
+        <!-- TMPL_LOOP attributes -->
+        <tr>
+        <td><!-- TMPL_VAR attrname --></td>
+        <td><input class="attrvals" name="<!-- TMPL_VAR attrname -->" value="<!-- TMPL_VAR attrval -->"></td>
+        </tr>
+        <!-- /TMPL_LOOP -->
+        </table>
+        <input type="submit" value="Update">
+      </form>
+    <!-- End edit attributes -->
+    </div>
+  </body>
+</html>
+

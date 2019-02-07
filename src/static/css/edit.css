@@ -14,6 +14,10 @@
   grid-column: 1 / span 2;
 }
 
+.attributes {
+  grid-column: 1;
+}
+
 .attrnames {
   grid-column: 1;
   font-weight: bold;

@@ -1,0 +1,31 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <title>Edit wikipage: <!-- TMPL_VAR title --></title>
+    <link rel="stylesheet" type="text/css" href="/static/common.css">
+    <link rel="stylesheet" type="text/css" href="/static/edit.css">
+  </head>
+
+  <body>
+    <h1>Edit wikipage: <!-- TMPL_VAR title --></h1>
+    <div id="pagegrid">
+      <!-- Navigation bar -->
+      <div id="navigation">
+        <a class="nav-item-1" href='/search'>Search</a>
+        <a class="nav-item-2" href="/display/wikipages/<!-- TMPL_VAR uid -->">View this item</a>
+        <a class="nav-item-3" href="/create">Create a new item</a>
+      </div>
+      <!-- End navigation bar -->
+
+      <!-- Edit attributes -->
+      <form id="edit-form" class="formgrid" action="/editresource/wikipages/<!-- TMPL_VAR uid -->" method="post">
+        <div class="wikititle-title">Title:</div>
+        <input name="title" value="<!-- TMPL_VAR title -->" class="wikititle-value"><!-- TMPL_VAR title --></div>
+        <textarea name="text" class="attrvals" cols="80" rows="25"><!-- TMPL_VAR content --></textarea>
+        <input type="submit" value="Update">
+      </form>
+    <!-- End edit attributes -->
+    </div>
+  </body>
+</html>
+
