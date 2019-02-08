@@ -232,7 +232,10 @@ and any forward-slashes that sneaked through are also now underscores.
                                                             (template-path tbnl:*acceptor*)
                                                             "/display_wikipage.tmpl"))
                                  (list :content
-                                       (cl-markdown:markdown (cdr (assoc :text content))))
+                                       (with-output-to-string
+                                         (mdstr)
+                                         (cl-markdown:markdown (cdr (assoc :text content))
+                                                               :stream mdstr)))
                                  :stream contstr))
                              ;; Default item display
                              (with-output-to-string (contstr)
