@@ -176,11 +176,13 @@ and any forward-slashes that sneaked through are also now underscores.
 |#
 (defun uid-to-title (uid)
   "Render the UID as a human-friendly title string"
-  (cl-ppcre:regex-replace "/"
-                          (cl-ppcre:regex-replace "_"
-                                                  (cl-ppcre:regex-replace "__" uid "/")
-                                                  " ")
-                          "_"))
+  (cl-ppcre:regex-replace-all
+    "/"
+    (cl-ppcre:regex-replace-all
+      "_"
+      (cl-ppcre:regex-replace-all "__" uid "/")
+      " ")
+    "_"))
 
 (defun display-item ()
   "Display an item"
