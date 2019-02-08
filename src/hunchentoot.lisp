@@ -75,7 +75,7 @@
         (cl-json:decode-json-from-string json-string))))
 
 (defun rg-request-json (server uri &key schema-p)
-  "Make a request to a Restagraph backend that should return a JSON response.
+  "Make a GET request to a Restagraph backend that should return a JSON response.
   Return the decoded JSON.
   Arguments:
   - rg-server object
@@ -90,6 +90,40 @@
                                    (rg-server-schema-base server)
                                    (rg-server-raw-base server))
                                  uri))))
+
+(defun rg-post-json (server uri &key payload schema-p put-p)
+  "Make a POST rquest to a Restagraph backend, and decode the JSON response if there was one.
+   Arguments:
+   - rg-server object
+   - URI
+   - :payload = Drakma-ready alist of values to POST
+   - :schema-p = whether this is updating the schema instead of a resource"
+  (log-message :debug "~Aing a request to URI ~A" (if put-p "PUT" "POST") uri)
+  (log-message :debug "Payload: ~A" payload)
+  (multiple-value-bind (body status-code headers)
+    (drakma:http-request
+      (format nil "http://~A:~D~A~A"
+              (rg-server-hostname server)
+              (rg-server-port server)
+              (if schema-p
+                  (rg-server-schema-base server)
+                  (rg-server-raw-base server))
+              uri)
+      :parameters payload
+      :method (if put-p :PUT :POST))
+    ;; Now decide what to do with it.
+    ;; If it was successful, return it
+    (if (and (> status-code 199)
+             (< status-code 300))
+        (values
+          (if (equal (cdr (assoc :content-type headers))
+                     "application/json")
+              ;; If it's JSON, decode it
+              (decode-json-response body)
+              ;; If not JSON, just return the boy
+              body)
+          status-code)
+        (values body status-code))))
 
 (defun search-for-resources (server rtype &optional params)
   "Search in the backend for a thing.
