@@ -253,7 +253,7 @@ and any forward-slashes that sneaked through are also now underscores.
                                                       :schema-p t))))))
     (log-message :debug "Content: ~A" content)
     (log-message :debug "Schema ~A" schema)
-    (if (and content schema)
+    (if content
       (let ((filtered-content
               (mapcar #'(lambda (attrname)
                           (list :attrname attrname
