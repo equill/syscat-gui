@@ -444,6 +444,8 @@ and any forward-slashes that sneaked through are also now underscores.
                                  (getf *config-vars* :static-path))))
         ;; Make it available as a dynamic variable, for shutdown to work on
         (defparameter *cl-webcat-acceptor* myacceptor)
+        ;; Stop html-template raising a warning every time it compiles a template
+        (setf html-template:*warn-on-creation* nil)
         ;; Set the dispatch table
         (log-message :info "Configuring the dispatch table")
         (setf tbnl:*dispatch-table*
