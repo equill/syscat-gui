@@ -402,17 +402,20 @@ and any forward-slashes that sneaked through are also now underscores.
                (setf (tbnl:return-code*) tbnl:+http-bad-request+)
                (with-output-to-string (outstr)
                  (html-template:fill-and-print-template
-                   (make-pathname :defaults (concatenate 'string
-                                                         (template-path tbnl:*acceptor*)
-                                                         "/display_layout.tmpl"))
+                   (make-pathname :defaults
+                                  (concatenate 'string
+                                               (template-path tbnl:*acceptor*)
+                                               "/display_layout.tmpl"))
                    `(:resourcetype ,resourcetype
                      :uid ,uid
                      :title ,(format nil "Failed to create ~A" uid)
                      :content ,(with-output-to-string (contstr)
                                  (html-template:fill-and-print-template
-                                   (make-pathname :defaults (concatenate 'string
-                                                                         (template-path tbnl:*acceptor*)
-                                                                         "/display_default.tmpl"))
+                                   (make-pathname
+                                     :defaults
+                                     (concatenate 'string
+                                                  (template-path tbnl:*acceptor*)
+                                                  "/display_default.tmpl"))
                                    `(:attributes ((:attrname "Server message"
                                                    :attrval ,body)))
                                    :stream contstr)))
