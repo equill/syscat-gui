@@ -423,6 +423,163 @@ and any forward-slashes that sneaked through are also now underscores.
     ;; Fallback: not by this method
     (t (method-not-allowed))))
 
+(defun make-simple-alist (lst tag)
+  "Turn a list of atoms into a list of '(,tag <atom>) lists"
+  (mapcar #'(lambda (atm)
+              (list tag atm))
+          lst))
+
+(defun edit-tags ()
+  "Edit the lists of tags and groups associated with a resource"
+  (cond
+    ((equal (tbnl:request-method*) :GET)
+     (let* ((uri-parts (get-uri-parts (tbnl:request-uri*) tbnl:*acceptor*))
+            (resource (concatenate 'string
+                                   "/"
+                                   (second uri-parts)
+                                   "/"
+                                   (third uri-parts)))
+            (extant-tags
+              (mapcar #'(lambda (tag)
+                          (cdr (assoc :uid tag)))
+                      (rg-request-json
+                        (rg-server tbnl:*acceptor*)
+                        (concatenate 'string
+                                     (rg-server-raw-base
+                                       (rg-server tbnl:*acceptor*))
+                                     resource
+                                     "/Tags/tags"))))
+            (extant-groups
+              (mapcar #'(lambda (group)
+                          (cdr (assoc :uid group)))
+                      (rg-request-json
+                        (rg-server tbnl:*acceptor*)
+                        (concatenate 'string
+                                     (rg-server-raw-base
+                                       (rg-server tbnl:*acceptor*))
+                                     resource
+                                     "/Member/groups"))))
+            (all-tags (get-uids (rg-server tbnl:*acceptor*) "tags"))
+            (all-groups (get-uids (rg-server tbnl:*acceptor*) "groups")))
+       (with-output-to-string (outstr)
+         (html-template:fill-and-print-template
+           (make-pathname :defaults (concatenate 'string
+                                                 (template-path tbnl:*acceptor*)
+                                                 "/edit_tags.tmpl"))
+           (list :resource resource
+                 :add-tags (make-simple-alist
+                             (sort
+                               (set-difference all-tags extant-tags :test #'equal)
+                               #'string<)
+                             :tag)
+                 :remove-tags (make-simple-alist (sort extant-tags #'string<) :tag)
+                 :add-groups (make-simple-alist
+                               (sort
+                                 (set-difference all-groups extant-groups :test #'equal)
+                                 #'string<)
+                               :group)
+                 :remove-groups (make-simple-alist (sort extant-groups #'string<) :group))
+           :stream outstr))))
+    ((equal (tbnl:request-method*) :POST)
+     (let* ((uri-parts (get-uri-parts (tbnl:request-uri*) tbnl:*acceptor*))
+            (resourcetype (second uri-parts))
+            (uid (third uri-parts))
+            ;; Error counter for the updates
+            (update-errors ()))
+       ;; Try to perform the updates
+       (mapcar #'(lambda (param)
+                   (cond
+                     ;; Add a tag
+                     ((equal (car param) "add-tags")
+                      (multiple-value-bind (body status-code)
+                        (rg-post-json (rg-server tbnl:*acceptor*)
+                                      (concatenate 'string
+                                                   "/" resourcetype "/" uid "/Tags")
+                                      :payload `(("target"
+                                                  . ,(concatenate 'string "/tags/" (cdr param)))))
+                        ;; Did it work?
+                        (if (or (< status-code 200)
+                                (> status-code 299))
+                            (push (list :attrname (concatenate 'string
+                                                               "Failed to add tag " (cdr param))
+                                        :attrval (format nil "~A: ~A" status-code body))
+                                  update-errors))))
+                     ((equal (car param) "add-groups")
+                      (multiple-value-bind (body status-code)
+                        ;; Add it to a group
+                        (rg-post-json (rg-server tbnl:*acceptor*)
+                                      (concatenate 'string
+                                                   "/" resourcetype "/" uid "/Member/")
+                                      :payload `(("target"
+                                                  . ,(concatenate
+                                                       'string
+                                                       "/groups/" (cdr param)))))
+                        ;; Did it work?
+                        (if (or (< status-code 200)
+                                (> status-code 299))
+                            (push (list :attrname (concatenate 'string
+                                                               "Failed to add group " (cdr param))
+                                        :attrval (format nil "~A: ~A" status-code body))
+                                  update-errors))))
+                     ;; Remove a tag
+                     ((equal (car param) "remove-tags")
+                      (multiple-value-bind (status-code body)
+                        (rg-delete (rg-server tbnl:*acceptor*)
+                                   (concatenate 'string
+                                                "/" resourcetype "/" uid "/Tags")
+                                   :payload (list (concatenate 'string "resource=/tags/" (cdr param))))
+                        ;; Did it work?
+                        (if (or (< status-code 200)
+                                (> status-code 299))
+                            (push (list :attrname (concatenate 'string
+                                                               "Failed to remove tag " (cdr param))
+                                        :attrval (format nil "~A: ~A" status-code body))
+                                  update-errors))))
+                     ;; Remove it from a group
+                     ((equal (car param) "remove-groups")
+                      (multiple-value-bind (status-code body)
+                        (rg-delete (rg-server tbnl:*acceptor*)
+                                   (concatenate 'string
+                                                "/" resourcetype "/" uid "/Member")
+                                   :payload (list (concatenate 'string "resource=/groups/" (cdr param))))
+                        ;; Did it work?
+                        (if (or (< status-code 200)
+                                (> status-code 299))
+                            (push (list :attrname (concatenate 'string
+                                                               "Failed to remove group " (cdr param))
+                                        :attrval (format nil "~A: ~A" status-code body))
+                                  update-errors))))
+                     ;; Something else
+                     (t (log-message :warn "Bad parameter supplied to edit-tags: ~A" param))))
+               (tbnl:post-parameters*))
+       ;; At least one of those updates broke:
+       (if update-errors
+           (let ((html-template:*string-modifier* #'cl:identity))
+             (setf (tbnl:content-type*) "text/html")
+             (setf (tbnl:return-code*) tbnl:+http-bad-request+)
+             (with-output-to-string (outstr)
+               (html-template:fill-and-print-template
+                 (make-pathname :defaults
+                                (concatenate 'string
+                                             (template-path tbnl:*acceptor*)
+                                             "/display_layout.tmpl"))
+                 `(:resourcetype ,resourcetype
+                   :uid ,uid
+                   :title ,(format nil "Failed to create ~A" uid)
+                   :content ,(with-output-to-string (contstr)
+                               (html-template:fill-and-print-template
+                                 (make-pathname
+                                   :defaults
+                                   (concatenate 'string
+                                                (template-path tbnl:*acceptor*)
+                                                "/display_default.tmpl"))
+                                 (list :attributes update-errors)
+                                 :stream contstr)))
+                 :stream outstr)))
+           ;; Happy path: no errors
+           (tbnl:redirect (concatenate 'string "/display/" resourcetype "/" uid )))))
+    (t (method-not-allowed))))
+
 (defun searchpage ()
   "Display the search-page"
   (cond
@@ -702,6 +859,7 @@ and any forward-slashes that sneaked through are also now underscores.
                 (tbnl:create-prefix-dispatcher "/search" 'searchpage)
                 (tbnl:create-prefix-dispatcher "/display" 'display-item)
                 (tbnl:create-prefix-dispatcher "/editresource" 'edit-resource)
+                (tbnl:create-prefix-dispatcher "/edit_tags" 'edit-tags)
                 (tbnl:create-folder-dispatcher-and-handler "/static/css/"
                                                            (concatenate 'string static-filepath "/css/")
                                                            "text/css")
