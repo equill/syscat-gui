@@ -99,7 +99,8 @@
    - rg-server object
    - URI
    - :payload = Drakma-ready alist of values to POST
-   - :schema-p = whether this is updating the schema instead of a resource"
+   - :schema-p = whether this is updating the schema instead of a resource
+   Return the body as the primary value, and the status-code as a secondary value."
   (log-message :debug "~Aing a request to URI ~A" (if put-p "PUT" "POST") uri)
   (log-message :debug "Payload: ~A" payload)
   (multiple-value-bind (body status-code headers)
