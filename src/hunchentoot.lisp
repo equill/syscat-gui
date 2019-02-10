@@ -93,6 +93,23 @@
                                    (rg-server-raw-base server))
                                  uri))))
 
+(defun rg-delete (server uri &key payload schema-p)
+  "Delete a resource from the Restagraph backend.
+   Payload format: a list of 'name=value' strings.
+   Return the status code as the primary value, and the message body as an additional value."
+  (let ((url (format nil "http://~A:~D~A~A?~{~A~^&~}"
+                     (rg-server-hostname server)
+                     (rg-server-port server)
+                     (if schema-p
+                         (rg-server-schema-base server)
+                         (rg-server-raw-base server))
+                     uri
+                     payload)))
+    (log-message :info "DELETEing resource with URL ~A" url)
+    (multiple-value-bind (body status-code)
+      (drakma:http-request url :method :DELETE)
+      (values status-code body))))
+
 (defun rg-post-json (server uri &key payload schema-p put-p)
   "Make a POST rquest to a Restagraph backend, and decode the JSON response if there was one.
    Arguments:
