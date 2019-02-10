@@ -44,14 +44,16 @@
 
 ;;; Utility functions
 
-(defun get-uri-parts (uri)
+(defun get-uri-parts (uri acceptor)
   "Break the URI into parts for processing by uri-node-helper.
   Expects a string; returns a list of strings."
   (mapcar
     #'sanitise-uid
     (cdr
         (ppcre:split "/"
-                     (cl-ppcre:regex-replace (getf *config-vars* :api-uri-base) uri "")))))
+                     (cl-ppcre:regex-replace
+                       (url-base acceptor)
+                       uri "")))))
 
 (defun escape-neo4j (str)
   "Escape any undesirable characters in a string, e.g. the single-quote.
@@ -220,9 +222,10 @@ and any forward-slashes that sneaked through are also now underscores.
 
 (defun display-item ()
   "Display an item"
-  (let* ((uri-parts (cl-ppcre:split "/" (tbnl:request-uri*)))
-         (resourcetype (third uri-parts))
-         (uid (fourth uri-parts))
+  (log-message :debug "Handling display request from URI ~A" (tbnl:request-uri*))
+  (let* ((uri-parts (get-uri-parts (tbnl:request-uri*) tbnl:*acceptor*))
+         (resourcetype (second uri-parts))
+         (uid (third uri-parts))
          (content (rg-request-json (rg-server tbnl:*acceptor*)
                                    (format nil "/~A/~A" resourcetype uid)))
          (schema (mapcar #'(lambda (attr) (intern (string-upcase attr) 'keyword))
@@ -288,12 +291,12 @@ and any forward-slashes that sneaked through are also now underscores.
 
 (defun edit-resource ()
   "Handle the edit-page for an item"
-  (log-message :debug "Attempting to edit an item")
+  (log-message :debug "Attempting to edit an item with URI ~A" (tbnl:request-uri*))
   (cond
     ((equal (tbnl:request-method*) :GET)
-     (let* ((uri-parts (cl-ppcre:split "/" (tbnl:request-uri*)))
-            (resourcetype (third uri-parts))
-            (uid (fourth uri-parts))
+     (let* ((uri-parts (get-uri-parts (tbnl:request-uri*) tbnl:*acceptor*))
+            (resourcetype (second uri-parts))
+            (uid (third uri-parts))
             (content (rg-request-json (rg-server tbnl:*acceptor*)
                                       (format nil "/~A/~A" resourcetype uid)))
             (schema
@@ -349,9 +352,9 @@ and any forward-slashes that sneaked through are also now underscores.
              (setf (tbnl:return-code*) tbnl:+http-not-found+)
              "No content"))))
     ((equal (tbnl:request-method*) :POST)
-     (let* ((uri-parts (cl-ppcre:split "/" (tbnl:request-uri*)))
-            (resourcetype (third uri-parts))
-            (uid (fourth uri-parts))
+     (let* ((uri-parts (get-uri-parts (tbnl:request-uri*) tbnl:*acceptor*))
+            (resourcetype (second uri-parts))
+            (uid (third uri-parts))
             ;; Extract attributes relevant to this resourcetype
             (validated-attrs
               (mapcar #'(lambda (attr)
@@ -554,7 +557,7 @@ and any forward-slashes that sneaked through are also now underscores.
                               (getf *config-vars* :listen-address))
                  :port (or (sb-ext:posix-getenv "LISTEN_PORT")
                            (getf *config-vars* :listen-port))
-                 :url-base (getf *config-vars* ::url-base)
+                 :url-base (or (getf *config-vars* ::url-base) "")
                  :template-path (or template-path
                                     (sb-ext:posix-getenv "TEMPLATE_PATH")
                                     (getf *config-vars* :template-path))
