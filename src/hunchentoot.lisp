@@ -147,7 +147,8 @@
 
 (defun search-for-resources (server rtype &optional params)
   "Search in the backend for a thing.
-  Expected to be called from the search page"
+  Expected to be called from the search page.
+  params = optional list of strings."
   (log-message :debug "Searching for ~A with parameters ~A" rtype params)
   (let ((query-string (if params
                         (format nil "/~A?~{~A~^&~}" rtype params)
