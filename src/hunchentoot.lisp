@@ -594,40 +594,54 @@ and any forward-slashes that sneaked through are also now underscores.
                               (list :tag tag
                                     :selected nil))
                           (get-uids (rg-server tbnl:*acceptor*) "tags")))
-            (search-criteria (append ()
-                                     (when (tbnl:get-parameter "uid_regex")
-                                       (list (format nil "uid_regex=~A"
-                                                     (tbnl:get-parameter "uid_regex"))))))
-            (search-results
-              (when (and
-                      (tbnl:get-parameter "resourcetype")
-                      (not (equal (tbnl:get-parameter "resourcetype") "")))
-                (log-message :debug "Searching with criteria '~A'" search-criteria)
-                (search-for-resources (rg-server tbnl:*acceptor*)
-                                      (tbnl:get-parameter "resourcetype")
-                                      search-criteria))))
+            (tbnl-formatted-results
+              (if (tbnl:get-parameter "resourcetype")
+                  (search-results-to-template
+                    (let* ((requested-attributes
+                             (remove-if #'null
+                                        (mapcar #'(lambda (attr)
+                                                    (let ((val (tbnl:get-parameter attr)))
+                                                      (when val (format nil "~A=~A" attr val))))
+                                                (get-attrs (rg-server tbnl:*acceptor*)
+                                                           (tbnl:get-parameter "resourcetype")))))
+                           (tags (remove-if #'null
+                                            (mapcar #'(lambda (par)
+                                                        (when (equal (car par) "tags")
+                                                          (concatenate 'string "outbound=/Tags/tags/" (cdr par))))
+                                                    (tbnl:get-parameters*))))
+                           (search-criteria (append ()
+                                                    (when (tbnl:get-parameter "uid_regex")
+                                                      (list (format nil "uid=~A"
+                                                                    (tbnl:get-parameter "uid_regex")))))))
+                      (progn
+                        (log-message :debug "Searching with criteria '~A'" search-criteria)
+                        (search-for-resources (rg-server tbnl:*acceptor*)
+                                              (tbnl:get-parameter "resourcetype")
+                                              (format nil "?~{~A~^&~}"
+                                                      (append tags search-criteria requested-attributes))))))
+                  ;; If no resourcetype was specified, tbnl-formatted-results is NIL:
+                  ())))
        ;; Debug logging for what we've obtained so far
        (log-message :debug "Schema: ~A" schema)
        (log-message :debug "Tags: ~A" tags)
-       (log-message :debug "Resourcetype supplied: ~A" (if (tbnl:get-parameter "resourcetype") "yes" "no"))
-       (log-message :debug "Search results: ~A" search-results)
-       (let ((tbnl-formatted-results (search-results-to-template search-results)))
-         (when (tbnl:get-parameter "resourcetype")
-           (log-message :debug "Search results: ~A" search-results)
-           (log-message :debug "tbnl-formatted search results: ~A" tbnl-formatted-results))
-         (setf (tbnl:content-type*) "text/html")
-         (setf (tbnl:return-code*) tbnl:+http-ok+)
-         (with-output-to-string (outstr)
-           (html-template:fill-and-print-template
-             (make-pathname :defaults
-                            (concatenate 'string
-                                         (template-path tbnl:*acceptor*)
-                                         "/display_search.tmpl"))
-             (list :schema schema
-                   :tags tags
-                   :resourcetype (tbnl:get-parameter "resourcetype")
-                   :results tbnl-formatted-results)
-             :stream outstr)))))
+       (log-message :debug "Resourcetype supplied: ~A"
+                    (if
+                       (tbnl:get-parameter "resourcetype")
+                       (tbnl:get-parameter "resourcetype") "none"))
+       (log-message :debug "tbnl-formatted search results: ~A" tbnl-formatted-results)
+       (setf (tbnl:content-type*) "text/html")
+       (setf (tbnl:return-code*) tbnl:+http-ok+)
+       (with-output-to-string (outstr)
+         (html-template:fill-and-print-template
+           (make-pathname :defaults
+                          (concatenate 'string
+                                       (template-path tbnl:*acceptor*)
+                                       "/display_search.tmpl"))
+           (list :schema schema
+                 :tags tags
+                 :resourcetype (tbnl:get-parameter "resourcetype")
+                 :results tbnl-formatted-results)
+           :stream outstr))))
     ;; Fallback: not by this method
     (t (method-not-allowed))))
 
