@@ -590,10 +590,14 @@ and any forward-slashes that sneaked through are also now underscores.
                             (remove-if #'(lambda (name)
                                            (cl-ppcre:all-matches "^rg" name))
                                        (get-resourcetypes (rg-server tbnl:*acceptor*)))))
-            (tags (mapcar #'(lambda (tag)
+            (tags-available (mapcar #'(lambda (tag)
                               (list :tag tag
                                     :selected nil))
                           (get-uids (rg-server tbnl:*acceptor*) "tags")))
+            (tags-requested (remove-if #'null
+                                       (mapcar #'(lambda (par)
+                                                   (when (equal (car par) "tags") (car par)))))
+                                                   (tbnl:get-parameters*))
             (tbnl-formatted-results
               (if (tbnl:get-parameter "resourcetype")
                   (search-results-to-template
@@ -604,11 +608,11 @@ and any forward-slashes that sneaked through are also now underscores.
                                                       (when val (format nil "~A=~A" attr val))))
                                                 (get-attrs (rg-server tbnl:*acceptor*)
                                                            (tbnl:get-parameter "resourcetype")))))
-                           (tags (remove-if #'null
-                                            (mapcar #'(lambda (par)
-                                                        (when (equal (car par) "tags")
-                                                          (concatenate 'string "outbound=/Tags/tags/" (cdr par))))
-                                                    (tbnl:get-parameters*))))
+                           (tags-requested-formatted
+                             ((mapcar #'(lambda (par)
+                                          (concatenate 'string
+                                                       "outbound=/Tags/tags/" (cdr par)))
+                                      tags-requested)))
                            (search-criteria (append ()
                                                     (when (tbnl:get-parameter "uid_regex")
                                                       (list (format nil "uid=~A"
@@ -617,13 +621,12 @@ and any forward-slashes that sneaked through are also now underscores.
                         (log-message :debug "Searching with criteria '~A'" search-criteria)
                         (search-for-resources (rg-server tbnl:*acceptor*)
                                               (tbnl:get-parameter "resourcetype")
-                                              (format nil "?~{~A~^&~}"
-                                                      (append tags search-criteria requested-attributes))))))
+                                              (append tags-requested-formatted search-criteria requested-attributes)))))
                   ;; If no resourcetype was specified, tbnl-formatted-results is NIL:
                   ())))
        ;; Debug logging for what we've obtained so far
        (log-message :debug "Schema: ~A" schema)
-       (log-message :debug "Tags: ~A" tags)
+       (log-message :debug "Tags: ~A" tags-available)
        (log-message :debug "Resourcetype supplied: ~A"
                     (if
                        (tbnl:get-parameter "resourcetype")
@@ -638,7 +641,7 @@ and any forward-slashes that sneaked through are also now underscores.
                                        (template-path tbnl:*acceptor*)
                                        "/display_search.tmpl"))
            (list :schema schema
-                 :tags tags
+                 :tags tags-available
                  :resourcetype (tbnl:get-parameter "resourcetype")
                  :results tbnl-formatted-results)
            :stream outstr))))
