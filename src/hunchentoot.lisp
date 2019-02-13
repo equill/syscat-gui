@@ -435,31 +435,19 @@ and any forward-slashes that sneaked through are also now underscores.
   (cond
     ((equal (tbnl:request-method*) :GET)
      (let* ((uri-parts (get-uri-parts (tbnl:request-uri*) tbnl:*acceptor*))
-            (resource (concatenate 'string
-                                   "/"
-                                   (second uri-parts)
-                                   "/"
-                                   (third uri-parts)))
+            (resource (concatenate 'string "/" (second uri-parts) "/" (third uri-parts)))
             (extant-tags
               (mapcar #'(lambda (tag)
                           (cdr (assoc :uid tag)))
                       (rg-request-json
                         (rg-server tbnl:*acceptor*)
-                        (concatenate 'string
-                                     (rg-server-raw-base
-                                       (rg-server tbnl:*acceptor*))
-                                     resource
-                                     "/Tags/tags"))))
+                        (concatenate 'string resource "/Tags/tags"))))
             (extant-groups
               (mapcar #'(lambda (group)
                           (cdr (assoc :uid group)))
                       (rg-request-json
                         (rg-server tbnl:*acceptor*)
-                        (concatenate 'string
-                                     (rg-server-raw-base
-                                       (rg-server tbnl:*acceptor*))
-                                     resource
-                                     "/Member/groups"))))
+                        (concatenate 'string resource "/Member/groups"))))
             (all-tags (get-uids (rg-server tbnl:*acceptor*) "tags"))
             (all-groups (get-uids (rg-server tbnl:*acceptor*) "groups")))
        (with-output-to-string (outstr)
