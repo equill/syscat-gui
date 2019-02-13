@@ -14,9 +14,7 @@
                #:cl-json
                #:cl-ppcre
                #:html-template
-               ;; It's between these two for markdown rendering
-               ;#:3bmd
-               #:cl-markdown)
+               #:3bmd)
   :components ((:file "package")
                (:file "config")
                (:file "logging")
