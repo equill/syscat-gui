@@ -111,7 +111,7 @@
       (values status-code body))))
 
 (defun rg-post-json (server uri &key payload schema-p put-p)
-  "Make a POST rquest to a Restagraph backend, and decode the JSON response if there was one.
+  "Make a POST request to a Restagraph backend, and decode the JSON response if there was one.
    Arguments:
    - rg-server object
    - URI
