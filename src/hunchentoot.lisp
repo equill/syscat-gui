@@ -430,8 +430,8 @@ and any forward-slashes that sneaked through are also now underscores.
               (list tag atm))
           lst))
 
-(defun edit-tags ()
-  "Edit the lists of tags and groups associated with a resource"
+(defun edit-links ()
+  "Edit a resource's links to tags, groups and other resources."
   (cond
     ((equal (tbnl:request-method*) :GET)
      (let* ((uri-parts (get-uri-parts (tbnl:request-uri*) tbnl:*acceptor*))
@@ -454,7 +454,7 @@ and any forward-slashes that sneaked through are also now underscores.
          (html-template:fill-and-print-template
            (make-pathname :defaults (concatenate 'string
                                                  (template-path tbnl:*acceptor*)
-                                                 "/edit_tags.tmpl"))
+                                                 "/edit_links.tmpl"))
            (list :resource resource
                  :add-tags (make-simple-alist
                              (sort
@@ -489,10 +489,10 @@ and any forward-slashes that sneaked through are also now underscores.
                         ;; Did it work?
                         (if (or (< status-code 200)
                                 (> status-code 299))
-                            (push (list :attrname (concatenate 'string
-                                                               "Failed to add tag " (cdr param))
-                                        :attrval (format nil "~A: ~A" status-code body))
-                                  update-errors))))
+                          (push (list :attrname (concatenate 'string
+                                                             "Failed to add tag " (cdr param))
+                                      :attrval (format nil "~A: ~A" status-code body))
+                                update-errors))))
                      ((equal (car param) "add-groups")
                       (multiple-value-bind (body status-code)
                         ;; Add it to a group
@@ -506,10 +506,10 @@ and any forward-slashes that sneaked through are also now underscores.
                         ;; Did it work?
                         (if (or (< status-code 200)
                                 (> status-code 299))
-                            (push (list :attrname (concatenate 'string
-                                                               "Failed to add group " (cdr param))
-                                        :attrval (format nil "~A: ~A" status-code body))
-                                  update-errors))))
+                          (push (list :attrname (concatenate 'string
+                                                             "Failed to add group " (cdr param))
+                                      :attrval (format nil "~A: ~A" status-code body))
+                                update-errors))))
                      ;; Remove a tag
                      ((equal (car param) "remove-tags")
                       (multiple-value-bind (status-code body)
@@ -520,10 +520,10 @@ and any forward-slashes that sneaked through are also now underscores.
                         ;; Did it work?
                         (if (or (< status-code 200)
                                 (> status-code 299))
-                            (push (list :attrname (concatenate 'string
-                                                               "Failed to remove tag " (cdr param))
-                                        :attrval (format nil "~A: ~A" status-code body))
-                                  update-errors))))
+                          (push (list :attrname (concatenate 'string
+                                                             "Failed to remove tag " (cdr param))
+                                      :attrval (format nil "~A: ~A" status-code body))
+                                update-errors))))
                      ;; Remove it from a group
                      ((equal (car param) "remove-groups")
                       (multiple-value-bind (status-code body)
@@ -870,7 +870,7 @@ and any forward-slashes that sneaked through are also now underscores.
                 (tbnl:create-prefix-dispatcher "/search" 'searchpage)
                 (tbnl:create-prefix-dispatcher "/display" 'display-item)
                 (tbnl:create-prefix-dispatcher "/editresource" 'edit-resource)
-                (tbnl:create-prefix-dispatcher "/edit_tags" 'edit-tags)
+                (tbnl:create-prefix-dispatcher "/edit_links" 'edit-links)
                 (tbnl:create-folder-dispatcher-and-handler "/static/css/"
                                                            (concatenate 'string static-filepath "/css/")
                                                            "text/css")
