@@ -2,9 +2,9 @@
 <html>
   <head>
     <title>Add tags to <!-- TMPL_VAR resource --></title>
-    <link rel="stylesheet" type="text/css" href="/static/common.css">
-    <link rel="stylesheet" type="text/css" href="/static/display.css">
-    <script src="/static/jquery-3.3.1.js"></script>
+    <link rel="stylesheet" type="text/css" href="/static/css/common.css">
+    <link rel="stylesheet" type="text/css" href="/static/css/display.css">
+    <script src="/static/js/jquery-3.3.1.js"></script>
   </head>
 
   <body>
@@ -56,6 +56,12 @@
               <option name="<!-- TMPL_VAR group -->"><!-- TMPL_VAR group --></option>
               <!-- /TMPL_LOOP -->
             </select>
+          </div>
+
+          <div id="link-resources">
+            <h3>Link to other resources</h3>
+            <p>Space-separated list of resource paths, leading with the relationship</p>
+            <input type="text" name="resource_links" value="">
           </div>
 
           <input type="submit" id="update_membership" value="Update tags and groups">

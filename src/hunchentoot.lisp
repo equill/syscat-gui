@@ -610,39 +610,60 @@ and any forward-slashes that sneaked through are also now underscores.
                         ;; Did it work?
                         (if (or (< status-code 200)
                                 (> status-code 299))
-                            (push (list :attrname (concatenate 'string
-                                                               "Failed to remove group " (cdr param))
-                                        :attrval (format nil "~A: ~A" status-code body))
-                                  update-errors))))
+                          (push (list :attrname (concatenate 'string
+                                                             "Failed to remove group " (cdr param))
+                                      :attrval (format nil "~A: ~A" status-code body))
+                                update-errors))))
+                     ;; Links to other resources
+                     ((equal (car param) "resource_links")
+                      (mapcar #'(lambda (target)
+                                  (let* ((target-parts
+                                           (remove-if #'(lambda (x)
+                                                          (or (null x)
+                                                              (equal x "")))
+                                                      (cl-ppcre:split "/" target)))
+                                         (sourcepath (concatenate
+                                                       'string
+                                                       "/" resourcetype "/" uid "/" (first target-parts)))
+                                         (targetpath (format nil "~{/~A~}" (cdr target-parts))))
+                                    (log-message :debug
+                                                 (format nil "Linking ~A to ~A"
+                                                         sourcepath targetpath))
+                                    (rg-post-json
+                                      (rg-server tbnl:*acceptor*)
+                                      sourcepath
+                                      :payload `(("target" . ,targetpath)))))
+                              ;; Split on any quantity of whitespace
+                              (cl-ppcre:split "[W]+" (cdr param))))
                      ;; Something else
-                     (t (log-message :warn "Bad parameter supplied to edit-tags: ~A" param))))
+                     (t (log-message :debug "Other parameter supplied to edit-tags: ~A" param))))
                (tbnl:post-parameters*))
        ;; At least one of those updates broke:
        (if update-errors
-           (let ((html-template:*string-modifier* #'cl:identity))
-             (setf (tbnl:content-type*) "text/html")
-             (setf (tbnl:return-code*) tbnl:+http-bad-request+)
-             (with-output-to-string (outstr)
-               (html-template:fill-and-print-template
-                 (make-pathname :defaults
-                                (concatenate 'string
-                                             (template-path tbnl:*acceptor*)
-                                             "/display_layout.tmpl"))
-                 `(:resourcetype ,resourcetype
-                   :uid ,uid
-                   :title ,(format nil "Failed to create ~A" uid)
-                   :content ,(with-output-to-string (contstr)
-                               (html-template:fill-and-print-template
-                                 (make-pathname
-                                   :defaults
-                                   (concatenate 'string
-                                                (template-path tbnl:*acceptor*)
-                                                "/display_default.tmpl"))
-                                 (list :attributes update-errors)
-                                 :stream contstr)))
-                 :stream outstr)))
-           ;; Happy path: no errors
-           (tbnl:redirect (concatenate 'string "/display/" resourcetype "/" uid )))))
+         (let ((html-template:*string-modifier* #'cl:identity))
+           (setf (tbnl:content-type*) "text/html")
+           (setf (tbnl:return-code*) tbnl:+http-bad-request+)
+           (with-output-to-string (outstr)
+             (html-template:fill-and-print-template
+               (make-pathname :defaults
+                              (concatenate 'string
+                                           (template-path tbnl:*acceptor*)
+                                           "/display_layout.tmpl"))
+               `(:resourcetype ,resourcetype
+                               :uid ,uid
+                               :title ,(format nil "Failed to create ~A" uid)
+                               :content ,(with-output-to-string (contstr)
+                                           (html-template:fill-and-print-template
+                                             (make-pathname
+                                               :defaults
+                                               (concatenate 'string
+                                                            (template-path tbnl:*acceptor*)
+                                                            "/display_default.tmpl"))
+                                             (list :attributes update-errors)
+                                             :stream contstr)))
+               :stream outstr)))
+         ;; Happy path: no errors
+         (tbnl:redirect (concatenate 'string "/display/" resourcetype "/" uid )))))
     (t (method-not-allowed))))
 
 (defun searchpage ()
