@@ -35,6 +35,19 @@
         <ul id="grouplist"></ul>
       </div>
 
+      <!-- Outbound links -->
+      <div>
+        <h2 id="outbound_links">Outbound links</h2>
+        <ul id="outbound_links">
+          <!-- TMPL_LOOP outbound -->
+          <li>
+            <a href="/display//<!-- TMPL_VAR resourcetype -->/<!-- TMPL_VAR uid -->">
+              /<!-- TMPL_VAR relationship -->/<!-- TMPL_VAR resourcetype -->/<!-- TMPL_VAR uid --></a>
+          </li>
+          <!-- /TMPL_LOOP -->
+        </ul>
+      </div>
+
     <!-- Page-grid ends -->
     </div>
   </body>

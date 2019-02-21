@@ -323,7 +323,8 @@ and any forward-slashes that sneaked through are also now underscores.
          (uid (third uri-parts))
          (content (rg-request-json (rg-server tbnl:*acceptor*)
                                    (format nil "/~A/~A" resourcetype uid)))
-         (schema (mapcar #'(lambda (attr) (intern (string-upcase attr) 'keyword))
+         (schema (mapcar #'(lambda (attr)
+                             (intern (string-upcase attr) 'keyword))
                          (cdr (assoc :attributes
                                      (rg-request-json (rg-server tbnl:*acceptor*)
                                                       (format nil "/~A" resourcetype)
@@ -331,58 +332,60 @@ and any forward-slashes that sneaked through are also now underscores.
     (log-message :debug "Content: ~A" content)
     (log-message :debug "Schema ~A" schema)
     (if content
-      (let ((filtered-content
-              (mapcar #'(lambda (attrname)
-                          (list :attrname attrname
-                                :attrval (or (cdr (assoc attrname content)) "")))
-                      (sort schema #'string<)))
-            (layout-template-path (concatenate 'string
-                                               (template-path tbnl:*acceptor*)
-                                               "/display_layout.tmpl"))
-            (html-template:*string-modifier* #'cl:identity))
-        (log-message :debug "Filtered content: ~A" filtered-content)
-        (setf (tbnl:content-type*) "text/html")
-        (setf (tbnl:return-code*) tbnl:+http-ok+)
-        (with-output-to-string (outstr)
-          (html-template:fill-and-print-template
-            (make-pathname :defaults layout-template-path)
-            (list :resourcetype resourcetype
-                  :uid uid
-                  ;; If it's a wikipage _and_ it has a title, use that.
-                  ;; Otherwise, just de-url-escape the UID
-                  :title (if (and
-                               (equal resourcetype "wikipages")
-                               (assoc :title filtered-content))
-                           (cdr (assoc :title filtered-content))
-                           (uid-to-title uid))
-                  :content (if (equal resourcetype "wikipages")
-                             ;; Display a wikipage
-                             (with-output-to-string (contstr)
-                               (html-template:fill-and-print-template
-                                 (make-pathname :defaults (concatenate
-                                                            'string
-                                                            (template-path tbnl:*acceptor*)
-                                                            "/display_wikipage.tmpl"))
-                                 (list :content
-                                       (with-output-to-string (mdstr)
-                                         (3bmd:parse-string-and-print-to-stream
-                                          (cdr (assoc :text content))
-                                          mdstr)))
-                                 :stream contstr))
-                             ;; Default item display
-                             (with-output-to-string (contstr)
-                               (html-template:fill-and-print-template
-                                 (make-pathname :defaults (concatenate
-                                                            'string
-                                                            (template-path tbnl:*acceptor*)
-                                                            "/display_default.tmpl"))
-                                 (list :attributes filtered-content)
-                                 :stream contstr))))
-            :stream outstr)))
-      (progn
-        (setf (tbnl:content-type*) "text/plain")
-        (setf (tbnl:return-code*) tbnl:+http-not-found+)
-        "No content"))))
+        (let ((filtered-content
+                (mapcar #'(lambda (attrname)
+                            (list :attrname attrname
+                                  :attrval (or (cdr (assoc attrname content)) "")))
+                        (sort schema #'string<)))
+              (layout-template-path (concatenate 'string
+                                                 (template-path tbnl:*acceptor*)
+                                                 "/display_layout.tmpl"))
+              (html-template:*string-modifier* #'cl:identity))
+          (log-message :debug "Filtered content: ~A" filtered-content)
+          (setf (tbnl:content-type*) "text/html")
+          (setf (tbnl:return-code*) tbnl:+http-ok+)
+          (with-output-to-string (outstr)
+            (html-template:fill-and-print-template
+              (make-pathname :defaults layout-template-path)
+              (list :resourcetype resourcetype
+                    :uid uid
+                    ;; If it's a wikipage _and_ it has a title, use that.
+                    ;; Otherwise, just de-url-escape the UID
+                    :title (if (and
+                                 (equal resourcetype "wikipages")
+                                 (assoc :title filtered-content))
+                               (cdr (assoc :title filtered-content))
+                               (uid-to-title uid))
+                    :content (if (equal resourcetype "wikipages")
+                                 ;; Display a wikipage
+                                 (with-output-to-string (contstr)
+                                   (html-template:fill-and-print-template
+                                     (make-pathname :defaults (concatenate
+                                                                'string
+                                                                (template-path tbnl:*acceptor*)
+                                                                "/display_wikipage.tmpl"))
+                                     (list :content
+                                           (with-output-to-string (mdstr)
+                                             (3bmd:parse-string-and-print-to-stream
+                                              (cdr (assoc :text content))
+                                              mdstr)))
+                                     :stream contstr))
+                                 ;; Default item display
+                                 (with-output-to-string (contstr)
+                                   (html-template:fill-and-print-template
+                                     (make-pathname :defaults (concatenate
+                                                                'string
+                                                                (template-path tbnl:*acceptor*)
+                                                                "/display_default.tmpl"))
+                                     (list :attributes filtered-content)
+                                     :stream contstr)))
+                    :outbound (get-linked-resources (rg-server tbnl:*acceptor*)
+                                                    (cdr uri-parts)))
+              :stream outstr)))
+        (progn
+          (setf (tbnl:content-type*) "text/plain")
+          (setf (tbnl:return-code*) tbnl:+http-not-found+)
+          "No content"))))
 
 (defun edit-resource ()
   "Handle the edit-page for an item"
