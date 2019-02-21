@@ -247,6 +247,74 @@ and any forward-slashes that sneaked through are also now underscores.
       " ")
     "_"))
 
+(defun get-outbound-rels (server resourcetype)
+  "Return a plist of all valid outgoing relationships from this resourcetype,
+   including those from the 'any' type.
+   Keys:
+   - relationship
+   - dependent-p
+   - resourcetype"
+  (mapcar #'(lambda (rel)
+              (list :relationship (cdr (assoc :relationship rel))
+                    :dependent-p (when (equal (cdr (assoc :dependent rel))
+                                              "true")
+                                   t)
+                    :resourcetype (first (cdr (assoc :resourcetype rel)))))
+          (append
+            ;; ...both from this exact type...
+            (cdr (assoc :relationships (get-schema server resourcetype)))
+            ;; ...and from the "any" type.
+            (cdr (assoc :relationships (get-schema server "any"))))))
+
+(defun get-linked-resources (server uri-parts)
+  "Retrieve a list of all resources linked from the given one.
+   - server: an rg-server object
+   - uri-parts: the output of get-uri-parts.
+   Return an alist:
+   - relationship
+   - dependent-p
+   - resourcetype
+   - uid"
+  ;; Sanity check: is this plausibly a path to a resource?
+  (if (= (mod (length uri-parts) 3) 2)
+      ;; Yes: carry on.
+      ;; Get a list of the resources to which this resource has links.
+      ;; Do this by finding out what valid outgoing relationships it has,
+      ;; then asking what's at the end of each of those relationships.
+      ;;
+      ;; Get a list of the valid outgoing relationships from this type
+      (apply #'append
+             (let* ((resourcetype (car (last uri-parts 2)))
+                    (rels (get-outbound-rels server resourcetype)))
+               (log-message :debug "Outbound rels for resourcetype ~A: ~A"
+                            resourcetype rels)
+               (remove-if #'null
+                          (mapcar
+                            #'(lambda (rel)
+                                (log-message
+                                  :debug
+                                  "Getting ~A resources with relationship ~A to resource ~{/~A~}"
+                                  (getf rel :resourcetype) (getf rel :relationship) uri-parts)
+                                ;; Create plists of the query results for returning
+                                (mapcar #'(lambda (res)
+                                            (list :relationship (getf rel :relationship)
+                                                  :dependent-p (getf rel :dependent-p)
+                                                  :resourcetype (getf rel :resourcetype)
+                                                  :uid (cdr (assoc :uid res))))
+                                        ;; Make the request
+                                        (rg-request-json
+                                          server
+                                          (format nil "~{/~A~}/~A/~A"
+                                                  uri-parts
+                                                  (getf rel :relationship)
+                                                  (getf rel :resourcetype)))))
+                            rels))))
+      ;; This can't be a resource
+      (progn
+        (log-message :error "get-linked-resources failed: ~{/~A~} can't be a resource" uri-parts)
+        ;; Return nil
+        nil)))
+
 (defun display-item ()
   "Display an item"
   (log-message :debug "Handling display request from URI ~A" (tbnl:request-uri*))
