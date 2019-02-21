@@ -46,14 +46,22 @@
 
 (defun get-uri-parts (uri acceptor)
   "Break the URI into parts for processing by uri-node-helper.
-  Expects a string; returns a list of strings."
+   Expects a string; returns a list of strings."
   (mapcar
     #'sanitise-uid
-    (cdr
-        (ppcre:split "/"
-                     (cl-ppcre:regex-replace
-                       (url-base acceptor)
-                       uri "")))))
+    ;; Remove any null elements returned by the split.
+    ;; We only expect it to come from the leading / but make sure anyway.
+    (remove-if #'(lambda (x)
+                   (or (null x)
+                       (equal x "")))
+               ;; Break it up on the / delimiter
+               (cl-ppcre:split "/"
+                               ;; Trim off GET-style arguments
+                               (first (cl-ppcre:split "\\?"
+                                                      ;; Trim off the base URI
+                                                      (cl-ppcre:regex-replace
+                                                        (url-base acceptor)
+                                                        uri "")))))))
 
 (defun escape-neo4j (str)
   "Escape any undesirable characters in a string, e.g. the single-quote.
