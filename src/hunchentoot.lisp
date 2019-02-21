@@ -396,8 +396,7 @@ and any forward-slashes that sneaked through are also now underscores.
                                                ;; groups
                                                (and
                                                  (equal (getf link :resourcetype) "groups")
-                                                 (equal (getf link :relationship) "Member")))
-                                             :test #'equal)
+                                                 (equal (getf link :relationship) "Member"))))
                                          outbound-links))
               :stream outstr)))
         (progn
