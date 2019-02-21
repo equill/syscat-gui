@@ -28,12 +28,19 @@
         <!-- Tags -->
         <h2 id="tags_header">Tags</h2>
         <ul id="taglist"></ul>
-        <div id="taglink"><a href="/edit_links/<!-- TMPL_VAR resourcetype -->/<!-- TMPL_VAR uid -->">Edit tags and groups</a></div>
-
+        <!-- TMPL_LOOP tags -->
+            <li><!-- TMPL_VAR uid --></li>
+        <!-- /TMPL_LOOP -->
         <!-- Groups -->
         <h2 id="groups_header">Groups</h2>
-        <ul id="grouplist"></ul>
+        <ul id="grouplist">
+          <!-- TMPL_LOOP groups -->
+          <li><!-- TMPL_VAR uid --></li>
+          <!-- /TMPL_LOOP -->
+        </ul>
       </div>
+      <div id="taglink"><a href="/edit_links/<!-- TMPL_VAR resourcetype -->/<!-- TMPL_VAR uid -->">Edit tags and groups</a></div>
+
 
       <!-- Outbound links -->
       <div>
@@ -41,7 +48,7 @@
         <ul id="outbound_links">
           <!-- TMPL_LOOP outbound -->
           <li>
-            <a href="/display//<!-- TMPL_VAR resourcetype -->/<!-- TMPL_VAR uid -->">
+            <a href="/display/<!-- TMPL_VAR resourcetype -->/<!-- TMPL_VAR uid -->">
               /<!-- TMPL_VAR relationship -->/<!-- TMPL_VAR resourcetype -->/<!-- TMPL_VAR uid --></a>
           </li>
           <!-- /TMPL_LOOP -->

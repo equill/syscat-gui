@@ -340,7 +340,9 @@ and any forward-slashes that sneaked through are also now underscores.
               (layout-template-path (concatenate 'string
                                                  (template-path tbnl:*acceptor*)
                                                  "/display_layout.tmpl"))
-              (html-template:*string-modifier* #'cl:identity))
+              (html-template:*string-modifier* #'cl:identity)
+              (outbound-links (get-linked-resources (rg-server tbnl:*acceptor*)
+                                                    (cdr uri-parts))))
           (log-message :debug "Filtered content: ~A" filtered-content)
           (setf (tbnl:content-type*) "text/html")
           (setf (tbnl:return-code*) tbnl:+http-ok+)
@@ -379,8 +381,24 @@ and any forward-slashes that sneaked through are also now underscores.
                                                                 "/display_default.tmpl"))
                                      (list :attributes filtered-content)
                                      :stream contstr)))
-                    :outbound (get-linked-resources (rg-server tbnl:*acceptor*)
-                                                    (cdr uri-parts)))
+                    :tags (remove-if-not #'(lambda (link)
+                                             (equal (getf link :relationship) "Tags"))
+                                           outbound-links)
+                    :groups (remove-if-not #'(lambda (link)
+                                               (and
+                                                 (equal (getf link :resourcetype) "groups")
+                                                 (equal (getf link :relationship) "Member")))
+                                           outbound-links)
+                    :outbound (remove-if #'(lambda (link)
+                                             (or
+                                               ;; Tags
+                                               (equal (getf link :relationship) "Tags")
+                                               ;; groups
+                                               (and
+                                                 (equal (getf link :resourcetype) "groups")
+                                                 (equal (getf link :relationship) "Member")))
+                                             :test #'equal)
+                                         outbound-links))
               :stream outstr)))
         (progn
           (setf (tbnl:content-type*) "text/plain")
