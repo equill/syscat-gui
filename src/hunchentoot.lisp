@@ -762,6 +762,7 @@ and any forward-slashes that sneaked through are also now underscores.
   "Display the create-item page"
   (cond
     ((equal (tbnl:request-method*) :GET)
+     (log-message :debug "Handling create request ~A" (tbnl:request-uri*))
      (let ((schema (mapcar #'(lambda (rtype)
                                (list :name rtype :selected nil))
                            (get-resourcetypes (rg-server tbnl:*acceptor*)))))
@@ -853,7 +854,7 @@ and any forward-slashes that sneaked through are also now underscores.
   "Fallthrough handler, for anything we haven't already defined."
   (setf (tbnl:content-type*) "text/plain")
   (setf (tbnl:return-code*) tbnl:+http-not-found+)
-  "This is not a valid URI")
+  "cl-webcat: this is not a valid URI")
 
 (defun method-not-allowed ()
   "Default response for a client making a request we don't support"
