@@ -2,9 +2,6 @@
   /* Where within the parent grid */
   grid-row: 2;
   /* What goes inside it */
-  display: grid;
-  grid-template-columns: auto auto;
-  grid-row-gap: 5px;
   justify-content: start;
 }
 
@@ -19,12 +16,11 @@
 }
 
 .attrnames {
-  grid-column: 1;
   font-weight: bold;
 }
 
 .attrvals {
-  grid-column: 2;
+  font-weight: normal;
 }
 /* End of attributes section */
 
@@ -42,7 +38,7 @@ h2#tags_header {
   grid-column: 1;
 }
 
-ul#taglist {
+ul.taglist {
   grid-row: 2;
   grid-column: 1;
   list-style-type: none;
@@ -62,7 +58,7 @@ h2#groups_header {
   grid-column: 2;
 }
 
-ul#grouplist {
+ul.grouplist {
   grid-row: 2;
   grid-column: 2;
   list-style-type: none;
