@@ -67,9 +67,14 @@ ul.grouplist {
 }
 /* End groups */
 
+div#link-resources {
+  grid-row 3;
+  grid-column: 1 / span 2;
+}
+
 /* Edit-membership form */
 div#edit-membership {
-  grid-row: 3;
+  grid-row: 4;
   grid-column: 1;
   display: grid;
   justify-content: start;
@@ -98,7 +103,8 @@ div#remove_groups {
 }
 
 input#update_membership {
-  grid-row: 3;
+  grid-row: 4;
   grid-column: 1 / span 2;
+  margin: 50px
 }
 /* End edit-membership form */

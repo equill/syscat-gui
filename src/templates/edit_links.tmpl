@@ -20,11 +20,12 @@
 
       <!-- Content - must already be wrapped in a suitable div -->
       <form method="post" action="/edit_links<!-- TMPL_VAR resource -->">
+        <input type="hidden" name="resource" value="<!-- TMPL_VAR resource -->">
         <div id="edit-membership">
 
           <div id="add_tags">
             <h3>Add tags</h3>
-            <select multiple="multiple" name="add-tags">
+            <select multiple="multiple" name="add-tags" size="10">
               <!-- TMPL_LOOP add-tags -->
               <option name="<!-- TMPL_VAR tag -->"><!-- TMPL_VAR tag --></option>
               <!-- /TMPL_LOOP -->
@@ -33,7 +34,7 @@
 
           <div id="remove_tags">
             <h3>Remove tags</h3>
-            <select multiple="multiple" name="remove-tags">
+            <select multiple="multiple" name="remove-tags" size="10">
               <!-- TMPL_LOOP remove-tags -->
               <option name="<!-- TMPL_VAR tag -->"><!-- TMPL_VAR tag --></option>
               <!-- /TMPL_LOOP -->
@@ -42,7 +43,7 @@
 
           <div id="add_groups">
             <h3>Add groups</h3>
-            <select multiple="multiple" name="add-groups">
+            <select multiple="multiple" name="add-groups" size="10">
               <!-- TMPL_LOOP add-groups -->
               <option name="<!-- TMPL_VAR group -->"><!-- TMPL_VAR group --></option>
               <!-- /TMPL_LOOP -->
@@ -51,7 +52,7 @@
 
           <div id="remove-groups">
             <h3>Remove groups</h3>
-            <select multiple="multiple" name="remove-groups">
+            <select multiple="multiple" name="remove-groups" size="10">
               <!-- TMPL_LOOP remove-groups -->
               <option name="<!-- TMPL_VAR group -->"><!-- TMPL_VAR group --></option>
               <!-- /TMPL_LOOP -->
@@ -60,13 +61,11 @@
 
           <div id="link-resources">
             <h3>Link to other resources</h3>
-            <p>Space-separated list of resource paths, leading with the relationship</p>
+            <p>Space-separated list of resource paths, leading with the relationship:</p>
             <input type="text" name="resource_links" value="">
           </div>
 
           <input type="submit" id="update_membership" value="Update tags and groups">
-
-          <input type="hidden" name="resource" value="<!-- TMPL_VAR resource -->">
 
         </div>
       </form>
