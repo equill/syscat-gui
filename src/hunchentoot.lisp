@@ -455,7 +455,8 @@ and any forward-slashes that sneaked through are also now underscores.
                                    (list :attrname attrname
                                          :attrval (or (cdr (assoc
                                                              (intern (string-upcase attrname) 'keyword)
-                                                             content)) "")))
+                                                             content)) "")
+                                         :textarea (when (equal attrname "description") t)))
                                schema)))
                  (log-message :debug "Filtered content: ~A" filtered-content)
                  (setf (tbnl:content-type*) "text/html")

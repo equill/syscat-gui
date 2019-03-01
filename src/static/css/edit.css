@@ -4,25 +4,34 @@
   grid-row: 2;
   /* What goes inside it */
   display: grid;
-  grid-template-columns: auto auto;
+  grid-template-columns: auto;
   grid-row-gap: 5px;
   justify-content: start;
 }
 
 .title-attributes {
   grid-row: 1;
-  grid-column: 1 / span 2;
 }
 
-.attributes {
+table.attributes {
   grid-column: 1;
 }
 
 .attrnames {
-  grid-column: 1;
   font-weight: bold;
 }
 
+.attrvals {
+  width: 100%;
+}
+
+textarea.attrvals {
+  width: 640px;
+  height: 80px;
+}
+/* End of attributes section */
+
+/* Wikipage-specific styling */
 .wikititle-title {
   grid-row: 1;
   grid-column: 1;
@@ -33,11 +42,7 @@
   grid-row: 1;
   grid-column: 2;
 }
-
-.attrvals {
-  grid-column: 2;
-}
-/* End of attributes section */
+/* End of wikipage-specific styling */
 
 #createbutton {
   grid-row: 3;

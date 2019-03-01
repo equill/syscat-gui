@@ -24,7 +24,13 @@
         <!-- TMPL_LOOP attributes -->
         <tr>
         <td><!-- TMPL_VAR attrname --></td>
-        <td><input class="attrvals" name="<!-- TMPL_VAR attrname -->" value="<!-- TMPL_VAR attrval -->"></td>
+        <td>
+          <!-- TMPL_IF textarea -->
+          <textarea class="attrvals" name="<!-- TMPL_VAR attrname -->"><!-- TMPL_VAR attrval --></textarea>
+          <!-- TMPL_ELSE -->
+          <input class="attrvals" name="<!-- TMPL_VAR attrname -->" value="<!-- TMPL_VAR attrval -->">
+          <!-- /TMPL_IF -->
+        </td>
         </tr>
         <!-- /TMPL_LOOP -->
         </table>
