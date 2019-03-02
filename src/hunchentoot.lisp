@@ -205,11 +205,19 @@
 (defun search-results-to-template (res)
   "Transform the output of a search into something digestible by html-template.
   Accepts a list of alists.
-  Returns a list of plists."
+  Returns a list of plists, with keys:
+  - :uid
+  - :title = UID after escaping via uid-to-title to be more human-friendly.
+  Only pulls out the UID because that's the only attribute we can expect to get.
+  We're currently searching specifically by resourcetype, so we already know that and
+  it's not in the returned results anyway."
   (log-message :debug "search-results-to-template formatting results ~A" res)
   (mapcar #'(lambda (result)
-              `(:uid ,(cdr (assoc :uid result))))
-          res))
+              `(:uid ,(cdr (assoc :uid result))
+                     :title  ,(uid-to-title (cdr (assoc :uid result)))))
+          (sort res #'(lambda (row1 row2)
+                        (string< (cdr (assoc :uid row1))
+                                 (cdr (assoc :uid row2)))))))
 
 
 ;; Request handlers
