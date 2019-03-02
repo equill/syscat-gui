@@ -17,10 +17,12 @@
 
 .attrnames {
   font-weight: bold;
+  vertical-align: top;
 }
 
 .attrvals {
   font-weight: normal;
+  vertical-align: top;
 }
 /* End of attributes section */
 
