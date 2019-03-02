@@ -161,7 +161,7 @@
   (let ((query-string (if params
                         (format nil "/~A?~{~A~^&~}" rtype params)
                         (format nil "/~A" rtype))))
-    ;(log-message :debug "search-for-resources using query string '~A'" query-string)
+    (log-message :debug "search-for-resources using query string '~A'" query-string)
     (let ((result (rg-request-json server query-string)))
       (if (equal result "")
         nil
@@ -434,7 +434,8 @@ and any forward-slashes that sneaked through are also now underscores.
               (sort (cdr (assoc :attributes
                                 (rg-request-json (rg-server tbnl:*acceptor*)
                                                  (format nil "/~A" resourcetype)
-                                                 :schema-p t))) #'string<)))
+                                                 :schema-p t)))
+                    #'string<)))
        (log-message :debug "Resourcetype: ~A" resourcetype)
        (log-message :debug "UID: ~A" uid)
        (log-message :debug "Schema ~A" schema)
