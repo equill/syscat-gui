@@ -67,11 +67,6 @@ ul.grouplist {
 }
 /* End groups */
 
-div#link-resources {
-  grid-row 3;
-  grid-column: 1 / span 2;
-}
-
 /* Edit-membership form */
 div#edit-membership {
   grid-row: 4;
@@ -108,3 +103,14 @@ input#update_membership {
   margin: 50px
 }
 /* End edit-membership form */
+
+/* Outbound links */
+div#link-resources {
+  grid-row 3;
+  grid-column: 1 / span 2;
+}
+
+input#resource_links {
+  width: 100%;
+}
+/* End outbound links */

@@ -303,7 +303,10 @@ and any forward-slashes that sneaked through are also now underscores.
                                   :debug
                                   "Getting ~A resources with relationship ~A to resource ~{/~A~}"
                                   (getf rel :resourcetype) (getf rel :relationship) uri-parts)
-                                ;; Create plists of the query results for returning
+                                ;; Create plists of the query results for returning.
+                                ;; Don't bother turning them into structs or objects, because
+                                ;; html-template requires plists, so we'd only have to convert
+                                ;; them back again.
                                 (mapcar #'(lambda (res)
                                             (list :relationship (getf rel :relationship)
                                                   :dependent-p (getf rel :dependent-p)
@@ -595,6 +598,7 @@ and any forward-slashes that sneaked through are also now underscores.
                      ;; Add a tag
                      ((equal (car param) "add-tags")
                       (multiple-value-bind (body status-code)
+                        (log-message :debug "Adding tag ~A" (cdr param))
                         (rg-post-json (rg-server tbnl:*acceptor*)
                                       (concatenate 'string
                                                    "/" resourcetype "/" uid "/Tags")
@@ -607,9 +611,10 @@ and any forward-slashes that sneaked through are also now underscores.
                                                              "Failed to add tag " (cdr param))
                                       :attrval (format nil "~A: ~A" status-code body))
                                 update-errors))))
+                     ;; Add it to a group
                      ((equal (car param) "add-groups")
                       (multiple-value-bind (body status-code)
-                        ;; Add it to a group
+                        (log-message :debug "Adding to group ~A" (cdr param))
                         (rg-post-json (rg-server tbnl:*acceptor*)
                                       (concatenate 'string
                                                    "/" resourcetype "/" uid "/Member/")
@@ -627,6 +632,7 @@ and any forward-slashes that sneaked through are also now underscores.
                      ;; Remove a tag
                      ((equal (car param) "remove-tags")
                       (multiple-value-bind (status-code body)
+                        (log-message :debug "Removing tag ~A" (cdr param))
                         (rg-delete (rg-server tbnl:*acceptor*)
                                    (concatenate 'string
                                                 "/" resourcetype "/" uid "/Tags")
@@ -641,6 +647,7 @@ and any forward-slashes that sneaked through are also now underscores.
                      ;; Remove it from a group
                      ((equal (car param) "remove-groups")
                       (multiple-value-bind (status-code body)
+                        (log-message :debug "Removing from group ~A" (cdr param))
                         (rg-delete (rg-server tbnl:*acceptor*)
                                    (concatenate 'string
                                                 "/" resourcetype "/" uid "/Member")
@@ -654,6 +661,7 @@ and any forward-slashes that sneaked through are also now underscores.
                                 update-errors))))
                      ;; Links to other resources
                      ((equal (car param) "resource_links")
+                      (log-message :debug "Linking to resources '~A'" (cdr param))
                       (mapcar #'(lambda (target)
                                   (let* ((target-parts
                                            (remove-if #'(lambda (x)
@@ -672,7 +680,7 @@ and any forward-slashes that sneaked through are also now underscores.
                                       sourcepath
                                       :payload `(("target" . ,targetpath)))))
                               ;; Split on any quantity of whitespace
-                              (cl-ppcre:split "[W]+" (cdr param))))
+                              (cl-ppcre:split "[ ]+" (cdr param))))
                      ;; Something else
                      (t (log-message :debug "Other parameter supplied to edit-tags: ~A" param))))
                (tbnl:post-parameters*))
