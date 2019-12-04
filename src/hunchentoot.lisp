@@ -597,8 +597,8 @@ and any forward-slashes that sneaked through are also now underscores.
                    (cond
                      ;; Add a tag
                      ((equal (car param) "add-tags")
+                      (log-message :debug "Adding tag ~A" (cdr param))
                       (multiple-value-bind (body status-code)
-                        (log-message :debug "Adding tag ~A" (cdr param))
                         (rg-post-json (rg-server tbnl:*acceptor*)
                                       (concatenate 'string
                                                    "/" resourcetype "/" uid "/Tags")
@@ -613,8 +613,8 @@ and any forward-slashes that sneaked through are also now underscores.
                                 update-errors))))
                      ;; Add it to a group
                      ((equal (car param) "add-groups")
+                      (log-message :debug "Adding to group ~A" (cdr param))
                       (multiple-value-bind (body status-code)
-                        (log-message :debug "Adding to group ~A" (cdr param))
                         (rg-post-json (rg-server tbnl:*acceptor*)
                                       (concatenate 'string
                                                    "/" resourcetype "/" uid "/Member/")
@@ -631,8 +631,8 @@ and any forward-slashes that sneaked through are also now underscores.
                                 update-errors))))
                      ;; Remove a tag
                      ((equal (car param) "remove-tags")
+                      (log-message :debug "Removing tag ~A" (cdr param))
                       (multiple-value-bind (status-code body)
-                        (log-message :debug "Removing tag ~A" (cdr param))
                         (rg-delete (rg-server tbnl:*acceptor*)
                                    (concatenate 'string
                                                 "/" resourcetype "/" uid "/Tags")
@@ -646,8 +646,8 @@ and any forward-slashes that sneaked through are also now underscores.
                                 update-errors))))
                      ;; Remove it from a group
                      ((equal (car param) "remove-groups")
+                      (log-message :debug "Removing from group ~A" (cdr param))
                       (multiple-value-bind (status-code body)
-                        (log-message :debug "Removing from group ~A" (cdr param))
                         (rg-delete (rg-server tbnl:*acceptor*)
                                    (concatenate 'string
                                                 "/" resourcetype "/" uid "/Member")
@@ -675,10 +675,18 @@ and any forward-slashes that sneaked through are also now underscores.
                                     (log-message :debug
                                                  (format nil "Linking ~A to ~A"
                                                          sourcepath targetpath))
-                                    (rg-post-json
-                                      (rg-server tbnl:*acceptor*)
-                                      sourcepath
-                                      :payload `(("target" . ,targetpath)))))
+                                    (multiple-value-bind (body status-code)
+                                      (rg-post-json
+                                        (rg-server tbnl:*acceptor*)
+                                        sourcepath
+                                        :payload `(("target" . ,targetpath)))
+                                      ;; Did it work?
+                                      (if (or (< status-code 200)
+                                              (> status-code 299))
+                                        (push (list :attrname (concatenate 'string
+                                                                           "Failed to add tag " (cdr param))
+                                                    :attrval (format nil "~A: ~A" status-code body))
+                                              update-errors)))))
                               ;; Split on any quantity of whitespace
                               (cl-ppcre:split "[ ]+" (cdr param))))
                      ;; Something else
