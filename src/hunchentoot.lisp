@@ -800,6 +800,7 @@ and any forward-slashes that sneaked through are also now underscores.
      (let ((schema (mapcar #'(lambda (rtype)
                                (list :name rtype :selected nil))
                            (get-resourcetypes (rg-server tbnl:*acceptor*)))))
+       (log-message :debug "Retrieved schema data.")
        (setf (tbnl:content-type*) "text/html")
        (setf (tbnl:return-code*) tbnl:+http-ok+)
        (with-output-to-string (outstr)
