@@ -792,7 +792,7 @@ and any forward-slashes that sneaked through are also now underscores.
     ;; Fallback: not by this method
     (t (method-not-allowed))))
 
-(defun createitem ()
+(defun create-item ()
   "Display the create-item page"
   (cond
     ((equal (tbnl:request-method*) :GET)
@@ -1019,7 +1019,7 @@ and any forward-slashes that sneaked through are also now underscores.
         (setf tbnl:*dispatch-table*
               (list
                 ;; Include the additional dispatchers here
-                (tbnl:create-regex-dispatcher "/create$" 'createitem)
+                (tbnl:create-regex-dispatcher "/create$" 'create-item)
                 (tbnl:create-prefix-dispatcher "/search" 'searchpage)
                 (tbnl:create-prefix-dispatcher "/display" 'display-item)
                 (tbnl:create-prefix-dispatcher "/editresource" 'edit-resource)
