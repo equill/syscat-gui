@@ -803,53 +803,64 @@ and any forward-slashes that sneaked through are also now underscores.
             (neo4cl:neo4j-transaction
               db
               '((:STATEMENTS
-                  ((:STATEMENT . "MATCH (n:task_status) RETURN n.uid"))))))))
+                  ((:STATEMENT . "MATCH (n:task_status) RETURN n.uid ORDER BY n.uid"))))))))
+
+(defun get-task-tags (db)
+  "Return a list of tags applied to existing tasks"
+  (declare (type neo4cl:neo4j-rest-server db))
+  (mapcar #'car
+          (neo4cl:extract-rows-from-get-request
+            (neo4cl:neo4j-transaction
+              db
+              '((:STATEMENTS
+                  ((:STATEMENT . "MATCH (t:tasks)-[:Tags]->(n:tags) RETURN DISTINCT n.uid ORDER BY n.uid"))))))))
+
+(defun search-for-tasks (db tags statuses)
+  "Search for tasks using the requested parameters"
+  (declare (type neo4cl:neo4j-rest-server db)
+           (type list tags)         ; List of strings
+           (type list statuses))    ; List of strings
+  (log-message :debug "Searching for tasks with tags ~{~A~^, ~} and statuses ~{~A~^, ~}" tags statuses)
+  (let* ((tag-clause (if tags (format nil "t.uid IN [~{\"~A\"~^, ~}]" tags) ""))
+         (status-clause (if statuses (format nil "s.uid IN [~{\"~A\"~^, ~}]" statuses) ""))
+         (where-clause (if (or tags statuses)
+                           (format nil "WHERE ~A~A~A"
+                                   tag-clause
+                                   (if (and tags statuses) " AND " "")
+                                   status-clause)
+                           ""))
+         (query (format nil "MATCH (n:tasks)-[:Tags]->(t:tags), (n)-[Status]->(s:task_status) ~A RETURN DISTINCT n.uid, n.description, n.scale, n.importance, n.urgency ORDER BY n.uid"
+                        where-clause)))
+    (mapcar #'(lambda (row)
+                `(:uid ,(first row) :title ,(uid-to-title (first row))))
+            (neo4cl:extract-rows-from-get-request
+              (neo4cl:neo4j-transaction
+                db
+                `((:STATEMENTS
+                    ((:STATEMENT . ,query)))))))))
 
 (defun tasks ()
   "Display the tasks page"
   (cond
     ((equal (tbnl:request-method*) :GET)
-     (let* ((schema (mapcar #'(lambda (rtype)
-                                (list :name rtype
-                                      :selected (when (equal rtype
-                                                             (tbnl:get-parameter "resourcetype"))
-                                                  "selected")))
-                            (remove-if #'(lambda (name)
-                                           (cl-ppcre:all-matches "^rg" name))
-                                       (get-resourcetypes (rg-server tbnl:*acceptor*)))))
-            (tags-available (sort (get-uids (rg-server tbnl:*acceptor*) "tags") #'string<))
+     (let* ((statuses (sort
+                        (get-statuses (cl-webcat::neo4j-server cl-webcat::*cl-webcat-acceptor*))
+                        #'string<))
+            (statuses-requested (remove-if #'null
+                                           (mapcar #'(lambda (par)
+                                                       (when (equal (car par) "status") (cdr par)))
+                                                   (tbnl:get-parameters*))))
+            (tags-available (get-task-tags (cl-webcat::neo4j-server cl-webcat::*cl-webcat-acceptor*)))
             (tags-requested (remove-if #'null
                                        (mapcar #'(lambda (par)
                                                    (when (equal (car par) "tags") (cdr par)))
                                                (tbnl:get-parameters*))))
             (tbnl-formatted-results
-              (if (tbnl:get-parameter "resourcetype")
-                  (search-results-to-template
-                    (let* ((requested-attributes
-                             (remove-if #'null
-                                        (mapcar #'(lambda (attr)
-                                                    (let ((val (tbnl:get-parameter attr)))
-                                                      (when val (format nil "~A=~A" attr val))))
-                                                (get-attrs (rg-server tbnl:*acceptor*)
-                                                           (tbnl:get-parameter "resourcetype")))))
-                           (tags-requested-formatted
-                             (mapcar #'(lambda (par)
-                                         (concatenate 'string
-                                                      "outbound=/Tags/tags/" par))
-                                     tags-requested))
-                           (search-criteria (append ()
-                                                    (when (tbnl:get-parameter "uid_regex")
-                                                      (list (format nil "uid=~A"
-                                                                    (tbnl:get-parameter "uid_regex")))))))
-                      (progn
-                        (log-message :debug "Searching with criteria '~A'" search-criteria)
-                        (search-for-resources (rg-server tbnl:*acceptor*)
-                                              (tbnl:get-parameter "resourcetype")
-                                              (append tags-requested-formatted search-criteria requested-attributes)))))
-                  ;; If no resourcetype was specified, tbnl-formatted-results is NIL:
-                  ())))
+              (search-for-tasks (cl-webcat::neo4j-server cl-webcat::*cl-webcat-acceptor*)
+                                tags-requested
+                                statuses-requested)))
        ;; Debug logging for what we've obtained so far
-       (log-message :debug "Schema: ~A" schema)
+       (log-message :debug "Statuses: ~A" statuses)
        (log-message :debug "Tags: ~A" tags-available)
        (log-message :debug "Resourcetype supplied: ~A"
                     (if
@@ -863,8 +874,13 @@ and any forward-slashes that sneaked through are also now underscores.
            (make-pathname :defaults
                           (concatenate 'string
                                        (template-path tbnl:*acceptor*)
-                                       "/display_search.tmpl"))
-           (list :schema schema
+                                       "/display_tasks.tmpl"))
+           (list :statuses (mapcar
+                             #'(lambda (status)
+                                 (list :name status
+                                       :selected (when (member status statuses-requested :test #'equal)
+                                                   "selected")))
+                             statuses)
                  :tags (mapcar #'(lambda (tag)
                                    (list :tag tag
                                          :selected (when (member tag tags-requested :test #'equal)

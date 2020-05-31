@@ -15,10 +15,10 @@
   <!-- Start of grid layout -->
   <div id="pagegrid">
   <!-- Start of form -->
-  <form action="/search" method="get" class="formgrid" id="searchform">
-  <!-- Resource types -->
+  <form action="/tasks" method="get" class="formgrid" id="searchform">
+  <!-- Statuses -->
     <p class="header" id="header-resourcetypes">Status</p>
-    <select name="resourcetype" id="resourcetype" size="15">
+    <select name="status" id="resourcetype" size="15">
       <!-- TMPL_LOOP statuses -->
         <!-- TMPL_IF selected -->
         <option value="<!-- TMPL_VAR name -->" selected="selected"><!-- TMPL_VAR name --></option>
@@ -27,7 +27,7 @@
         <!-- /TMPL_IF -->
       <!-- /TMPL_LOOP -->
     </select>
-  <!-- End of resource types -->
+  <!-- End of Statuses -->
   <!-- Tags -->
     <p class="header" id="header-tags">Available tags</p>
     <select name="tags" id="tags" size="15" multiple="multiple">
@@ -59,7 +59,7 @@
 
   <ul>
     <!-- TMPL_LOOP results -->
-    <li><a href="display/<!-- TMPL_VAR resourcetype -->/<!-- TMPL_VAR uid -->"><!-- TMPL_VAR title --></a></li>
+    <li><a href="display/tasks/<!-- TMPL_VAR uid -->"><!-- TMPL_VAR title --></a></li>
     <!-- /TMPL_LOOP -->
   </ul>
   <!-- End search results -->
