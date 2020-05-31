@@ -18,7 +18,7 @@
   <form action="/tasks" method="get" class="formgrid" id="searchform">
   <!-- Statuses -->
     <p class="header" id="header-resourcetypes">Status</p>
-    <select name="status" id="resourcetype" size="15">
+    <select name="status" id="resourcetype" size="15" multiple="multiple">
       <!-- TMPL_LOOP statuses -->
         <!-- TMPL_IF selected -->
         <option value="<!-- TMPL_VAR name -->" selected="selected"><!-- TMPL_VAR name --></option>
