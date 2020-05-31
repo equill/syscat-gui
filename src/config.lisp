@@ -12,6 +12,10 @@
     :listen-port 8080
     :rg-hostname "localhost"
     :rg-port 4955
+    :dbhostname "10.255.0.1"
+    :dbport 7677
+    :dbusername "neo4j"
+    :dbpasswd "wallaby"
     :api-uri-base "/raw/v1"
     :schema-uri-base "/schema/v1"
     :template-path "/home/james/devel/syscat/cl-webcat/src/templates"

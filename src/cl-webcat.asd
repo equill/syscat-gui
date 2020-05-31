@@ -8,13 +8,14 @@
   :license "GPLv3"
   :author "James Fleming <james@electronic-quill.net>"
   :description "Generates a REST API from a shema defined in Neo4J"
-  :depends-on (#:hunchentoot
-               #:drakma
-               #:flexi-streams
+  :depends-on (#:3bmd
                #:cl-json
                #:cl-ppcre
+               #:drakma
+               #:flexi-streams
                #:html-template
-               #:3bmd)
+               #:hunchentoot
+               #:neo4cl)
   :components ((:file "package")
                (:file "config")
                (:file "logging")

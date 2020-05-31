@@ -15,6 +15,9 @@
   ((rg-server :initarg :rg-server
               :reader rg-server
               :initform (make-acceptor))
+   (neo4j-server :initarg :neo4j-server
+                 :reader neo4j-server
+                 :initform (error "neo4j-server parameter is required"))
    (url-base :initarg :url-base
              :reader url-base
              :initform "localhost")
@@ -792,6 +795,88 @@ and any forward-slashes that sneaked through are also now underscores.
     ;; Fallback: not by this method
     (t (method-not-allowed))))
 
+(defun get-statuses (db)
+  "Return a list of status UIDs, as a list of strings."
+  (declare (type neo4cl:neo4j-rest-server db))
+  (mapcar #'car
+          (neo4cl:extract-rows-from-get-request
+            (neo4cl:neo4j-transaction
+              db
+              '((:STATEMENTS
+                  ((:STATEMENT . "MATCH (n:task_status) RETURN n.uid"))))))))
+
+(defun tasks ()
+  "Display the tasks page"
+  (cond
+    ((equal (tbnl:request-method*) :GET)
+     (let* ((schema (mapcar #'(lambda (rtype)
+                                (list :name rtype
+                                      :selected (when (equal rtype
+                                                             (tbnl:get-parameter "resourcetype"))
+                                                  "selected")))
+                            (remove-if #'(lambda (name)
+                                           (cl-ppcre:all-matches "^rg" name))
+                                       (get-resourcetypes (rg-server tbnl:*acceptor*)))))
+            (tags-available (sort (get-uids (rg-server tbnl:*acceptor*) "tags") #'string<))
+            (tags-requested (remove-if #'null
+                                       (mapcar #'(lambda (par)
+                                                   (when (equal (car par) "tags") (cdr par)))
+                                               (tbnl:get-parameters*))))
+            (tbnl-formatted-results
+              (if (tbnl:get-parameter "resourcetype")
+                  (search-results-to-template
+                    (let* ((requested-attributes
+                             (remove-if #'null
+                                        (mapcar #'(lambda (attr)
+                                                    (let ((val (tbnl:get-parameter attr)))
+                                                      (when val (format nil "~A=~A" attr val))))
+                                                (get-attrs (rg-server tbnl:*acceptor*)
+                                                           (tbnl:get-parameter "resourcetype")))))
+                           (tags-requested-formatted
+                             (mapcar #'(lambda (par)
+                                         (concatenate 'string
+                                                      "outbound=/Tags/tags/" par))
+                                     tags-requested))
+                           (search-criteria (append ()
+                                                    (when (tbnl:get-parameter "uid_regex")
+                                                      (list (format nil "uid=~A"
+                                                                    (tbnl:get-parameter "uid_regex")))))))
+                      (progn
+                        (log-message :debug "Searching with criteria '~A'" search-criteria)
+                        (search-for-resources (rg-server tbnl:*acceptor*)
+                                              (tbnl:get-parameter "resourcetype")
+                                              (append tags-requested-formatted search-criteria requested-attributes)))))
+                  ;; If no resourcetype was specified, tbnl-formatted-results is NIL:
+                  ())))
+       ;; Debug logging for what we've obtained so far
+       (log-message :debug "Schema: ~A" schema)
+       (log-message :debug "Tags: ~A" tags-available)
+       (log-message :debug "Resourcetype supplied: ~A"
+                    (if
+                       (tbnl:get-parameter "resourcetype")
+                       (tbnl:get-parameter "resourcetype") "none"))
+       (log-message :debug "tbnl-formatted search results: ~A" tbnl-formatted-results)
+       (setf (tbnl:content-type*) "text/html")
+       (setf (tbnl:return-code*) tbnl:+http-ok+)
+       (with-output-to-string (outstr)
+         (html-template:fill-and-print-template
+           (make-pathname :defaults
+                          (concatenate 'string
+                                       (template-path tbnl:*acceptor*)
+                                       "/display_search.tmpl"))
+           (list :schema schema
+                 :tags (mapcar #'(lambda (tag)
+                                   (list :tag tag
+                                         :selected (when (member tag tags-requested :test #'equal)
+                                                     "selected")))
+                               tags-available)
+                 :resourcetype (tbnl:get-parameter "resourcetype")
+                 :uid-regex (or (tbnl:get-parameter "uid_regex") "")
+                 :results tbnl-formatted-results)
+           :stream outstr))))
+    ;; Fallback: not by this method
+    (t (method-not-allowed))))
+
 (defun create-item ()
   "Display the create-item page"
   (cond
@@ -987,7 +1072,17 @@ and any forward-slashes that sneaked through are also now underscores.
                               :raw-base (or (sb-ext:posix-getenv "RG_RAW_BASE")
                                             (getf *config-vars* :api-uri-base))
                               :schema-base (or (sb-ext:posix-getenv "RG_SCHEMA_BASE")
-                                               (getf *config-vars* :schema-uri-base)))))
+                                               (getf *config-vars* :schema-uri-base)))
+                 :neo4j-server (make-instance
+                                 'neo4cl:neo4j-rest-server
+                                 :hostname (or (sb-ext:posix-getenv "NEO4J_HOSTNAME")
+                                               (getf *config-vars* :dbhostname))
+                                 :port (or (sb-ext:posix-getenv "NEO4J_PORT")
+                                           (getf *config-vars* :dbport))
+                                 :dbuser (or (sb-ext:posix-getenv "NEO4J_USER")
+                                             (getf *config-vars* :dbusername))
+                                 :dbpasswd (or (sb-ext:posix-getenv "NEO4J_PASSWORD")
+                                               (getf *config-vars* :dbpasswd)))))
 
 (defun startup (&key acceptor static-path template-path docker)
   "Start up the appserver.
@@ -1021,6 +1116,7 @@ and any forward-slashes that sneaked through are also now underscores.
                 ;; Include the additional dispatchers here
                 (tbnl:create-regex-dispatcher "/create$" 'create-item)
                 (tbnl:create-prefix-dispatcher "/search" 'searchpage)
+                (tbnl:create-prefix-dispatcher "/tasks" 'tasks)
                 (tbnl:create-prefix-dispatcher "/display" 'display-item)
                 (tbnl:create-prefix-dispatcher "/editresource" 'edit-resource)
                 (tbnl:create-prefix-dispatcher "/edit_links" 'edit-links)
