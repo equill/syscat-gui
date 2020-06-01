@@ -346,97 +346,104 @@ and any forward-slashes that sneaked through are also now underscores.
     (log-message :debug "Content: ~A" content)
     (log-message :debug "Schema ~A" schema)
     (if content
-      (let ((filtered-content
-              (mapcar #'(lambda (attrname)
-                          (let ((val (cdr (assoc attrname content))))
-                            (list :attrname attrname
-                                  ; Ensure all values are strings, for the template.
-                                  :attrval (or (when val
-                                                 ;; Render all descriptions as Markdown
-                                                 (if (equal attrname :description)
-                                                   (with-output-to-string (mdstr)
-                                                     (3bmd:parse-string-and-print-to-stream val mdstr))
-                                                   val))
-                                               ""))))
-                      (sort schema #'string<)))
-            (layout-template-path (concatenate 'string
-                                               (template-path tbnl:*acceptor*)
-                                               "/display_layout.tmpl"))
-            (html-template:*string-modifier* #'cl:identity)
-            (outbound-links (get-linked-resources (rg-server tbnl:*acceptor*)
-                                                  (cdr uri-parts))))
-        (log-message :debug "Filtered content: ~A" filtered-content)
-        (setf (tbnl:content-type*) "text/html")
-        (setf (tbnl:return-code*) tbnl:+http-ok+)
-        (with-output-to-string (outstr)
-          (html-template:fill-and-print-template
-            (make-pathname :defaults layout-template-path)
-            (list :resourcetype resourcetype
-                  :uid uid
-                  ;; If it's a wikipage _and_ it has a title, use that.
-                  ;; Otherwise, just de-url-escape the UID
-                  :title (if (and
-                               (equal resourcetype "wikipages")
-                               (assoc :title filtered-content))
-                             (cdr (assoc :title filtered-content))
-                             (uid-to-title uid))
-                  :content (cond
-                             ;; Display a task
-                             ((equal resourcetype "tasks")
-                              (with-output-to-string (contstr)
-                                (html-template:fill-and-print-template
-                                  (make-pathname :defaults (concatenate 'string
-                                                                        (template-path tbnl:*acceptor*)
-                                                                        "/display_task.tmpl"))
-                                  (list :description (or (cdr (assoc :description content)) "(No description found)")
-                                  :importance (or (cdr (assoc :importance content)) "(No importance found)")
-                                  :urgency (or (cdr (assoc :urgency content)) "(No urgency found)")
-                                  :scale (or (cdr (assoc :scale content)) "(No scale found)")
-                                  )
-                                  :stream contstr)))
-                             ;; Display a wikipage
-                             ((equal resourcetype "wikipages")
-                              (with-output-to-string (contstr)
-                                (html-template:fill-and-print-template
-                                  (make-pathname :defaults (concatenate 'string
-                                                                        (template-path tbnl:*acceptor*)
-                                                                        "/display_wikipage.tmpl"))
-                                  (list :content
-                                        (with-output-to-string (mdstr)
-                                          (3bmd:parse-string-and-print-to-stream
-                                           (cdr (assoc :text content))
-                                           mdstr)))
-                                  :stream contstr)))
-                             ;; Default item display
-                             (t (with-output-to-string (contstr)
+        (let ((filtered-content
+                (mapcar #'(lambda (attrname)
+                            (let ((val (cdr (assoc attrname content))))
+                              (list :attrname attrname
+                                    ; Ensure all values are strings, for the template.
+                                    :attrval (or (when val
+                                                   ;; Render all descriptions as Markdown
+                                                   (if (equal attrname :description)
+                                                       (with-output-to-string (mdstr)
+                                                         (3bmd:parse-string-and-print-to-stream val mdstr))
+                                                       val))
+                                                 ""))))
+                        (sort schema #'string<)))
+              (layout-template-path (concatenate 'string
+                                                 (template-path tbnl:*acceptor*)
+                                                 "/display_layout.tmpl"))
+              (html-template:*string-modifier* #'cl:identity)
+              (outbound-links (get-linked-resources (rg-server tbnl:*acceptor*)
+                                                    (cdr uri-parts))))
+          (log-message :debug "Filtered content: ~A" filtered-content)
+          (setf (tbnl:content-type*) "text/html")
+          (setf (tbnl:return-code*) tbnl:+http-ok+)
+          (with-output-to-string (outstr)
+            (html-template:fill-and-print-template
+              (make-pathname :defaults layout-template-path)
+              (list :resourcetype resourcetype
+                    :uid uid
+                    ;; If it's a wikipage _and_ it has a title, use that.
+                    ;; Otherwise, just de-url-escape the UID
+                    :title (if (and
+                                 (equal resourcetype "wikipages")
+                                 (assoc :title filtered-content))
+                               (cdr (assoc :title filtered-content))
+                               (uid-to-title uid))
+                    :content (cond
+                               ;; Display a task
+                               ((equal resourcetype "tasks")
+                                (with-output-to-string (contstr)
                                   (html-template:fill-and-print-template
                                     (make-pathname :defaults (concatenate 'string
                                                                           (template-path tbnl:*acceptor*)
-                                                                          "/display_default.tmpl"))
-                                    (list :attributes filtered-content)
-                                    :stream contstr))))
-                  :tags (remove-if-not #'(lambda (link)
-                                           (equal (getf link :relationship) "Tags"))
-                                       outbound-links)
-                  :groups (remove-if-not #'(lambda (link)
-                                             (and
-                                               (equal (getf link :resourcetype) "groups")
-                                               (equal (getf link :relationship) "Member")))
+                                                                          "/display_task.tmpl"))
+                                    (list :description (or (cdr (assoc :description content)) "(No description found)")
+                                          :importance (or (cdr (assoc :importance content)) "(No importance found)")
+                                          :urgency (or (cdr (assoc :urgency content)) "(No urgency found)")
+                                          :scale (or (cdr (assoc :scale content)) "(No scale found)")
+                                          :status (or
+                                                    (cdr (assoc :uid
+                                                                (car
+                                                                  (rg-request-json
+                                                                    (rg-server tbnl:*acceptor*)
+                                                                    (format nil "/tasks/~A/Status/task_status" uid)
+                                                                    :schema-p nil))))
+                                                    "(No status found)"))
+                                    :stream contstr)))
+                               ;; Display a wikipage
+                               ((equal resourcetype "wikipages")
+                                (with-output-to-string (contstr)
+                                  (html-template:fill-and-print-template
+                                    (make-pathname :defaults (concatenate 'string
+                                                                          (template-path tbnl:*acceptor*)
+                                                                          "/display_wikipage.tmpl"))
+                                    (list :content
+                                          (with-output-to-string (mdstr)
+                                            (3bmd:parse-string-and-print-to-stream
+                                             (cdr (assoc :text content))
+                                             mdstr)))
+                                    :stream contstr)))
+                               ;; Default item display
+                               (t (with-output-to-string (contstr)
+                                    (html-template:fill-and-print-template
+                                      (make-pathname :defaults (concatenate 'string
+                                                                            (template-path tbnl:*acceptor*)
+                                                                            "/display_default.tmpl"))
+                                      (list :attributes filtered-content)
+                                      :stream contstr))))
+                    :tags (remove-if-not #'(lambda (link)
+                                             (equal (getf link :relationship) "Tags"))
                                          outbound-links)
-                  :outbound (remove-if #'(lambda (link)
-                                           (or
-                                             ;; Tags
-                                             (equal (getf link :relationship) "Tags")
-                                             ;; groups
-                                             (and
-                                               (equal (getf link :resourcetype) "groups")
-                                               (equal (getf link :relationship) "Member"))))
-                                       outbound-links))
-            :stream outstr)))
-      (progn
-        (setf (tbnl:content-type*) "text/plain")
-        (setf (tbnl:return-code*) tbnl:+http-not-found+)
-        "No content"))))
+                    :groups (remove-if-not #'(lambda (link)
+                                               (and
+                                                 (equal (getf link :resourcetype) "groups")
+                                                 (equal (getf link :relationship) "Member")))
+                                           outbound-links)
+                    :outbound (remove-if #'(lambda (link)
+                                             (or
+                                               ;; Tags
+                                               (equal (getf link :relationship) "Tags")
+                                               ;; groups
+                                               (and
+                                                 (equal (getf link :resourcetype) "groups")
+                                                 (equal (getf link :relationship) "Member"))))
+                                         outbound-links))
+              :stream outstr)))
+        (progn
+          (setf (tbnl:content-type*) "text/plain")
+          (setf (tbnl:return-code*) tbnl:+http-not-found+)
+          "No content"))))
 
 (defun edit-resource ()
   "Handle the edit-page for an item"
