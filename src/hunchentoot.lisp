@@ -817,16 +817,6 @@ and any forward-slashes that sneaked through are also now underscores.
     ;; Fallback: not by this method
     (t (method-not-allowed))))
 
-(defun get-statuses (db)
-  "Return a list of status UIDs, as a list of strings."
-  (declare (type neo4cl:neo4j-rest-server db))
-  (mapcar #'car
-          (neo4cl:extract-rows-from-get-request
-            (neo4cl:neo4j-transaction
-              db
-              '((:STATEMENTS
-                  ((:STATEMENT . "MATCH (n:task_status) RETURN n.uid ORDER BY n.uid"))))))))
-
 (defun get-task-tags (db)
   "Return a list of tags applied to existing tasks"
   (declare (type neo4cl:neo4j-rest-server db))
@@ -844,15 +834,16 @@ and any forward-slashes that sneaked through are also now underscores.
            (type list statuses))    ; List of strings
   (log-message :debug "Searching for tasks with tags ~{~A~^, ~} and statuses ~{~A~^, ~}" tags statuses)
   (let* ((tag-clause (if tags (format nil "t.uid IN [~{\"~A\"~^, ~}]" tags) ""))
-         (status-clause (if statuses (format nil "s.uid IN [~{\"~A\"~^, ~}]" statuses) ""))
+         (status-clause (if statuses (format nil "n.status IN [~{\"~A\"~^, ~}]" statuses) ""))
          (where-clause (if (or tags statuses)
                            (format nil "WHERE ~A~A~A"
                                    tag-clause
                                    (if (and tags statuses) " AND " "")
                                    status-clause)
                            ""))
-         (query (format nil "MATCH (n:tasks)-[:Tags]->(t:tags), (n)-[Status]->(s:task_status) ~A RETURN DISTINCT n.uid, n.description, n.scale, n.importance, n.urgency ORDER BY n.uid"
+         (query (format nil "MATCH (n:tasks)-[:Tags]->(t:tags) ~A RETURN DISTINCT n.uid, n.description, n.scale, n.importance, n.urgency ORDER BY n.uid"
                         where-clause)))
+    (log-message :debug "Using query string '~A'" query)
     (mapcar #'(lambda (row)
                 `(:uid ,(first row) :title ,(uid-to-title (first row))))
             (neo4cl:extract-rows-from-get-request
@@ -861,13 +852,21 @@ and any forward-slashes that sneaked through are also now underscores.
                 `((:STATEMENTS
                     ((:STATEMENT . ,query)))))))))
 
+(defun get-enum-vals (attr attrlist)
+  "Extract the enum values for an attribute, from the list of alists returned by get-attrs"
+  (log-message :debug (format nil "Extracting values for '~A' from attribute-list ~A" attr attrlist))
+  (when (car attrlist)
+    (if (equal attr (cdr (assoc :NAME (car attrlist))))
+        (when (stringp (cdr (assoc :VALS (car attrlist))))
+          (cl-ppcre:split "," (cdr (assoc :VALS (car attrlist)))))
+        ;; If not this one, try the next
+        (get-enum-vals attr (cdr attrlist)))))
+
 (defun tasks ()
   "Display the tasks page"
   (cond
     ((equal (tbnl:request-method*) :GET)
-     (let* ((statuses (sort
-                        (get-statuses (cl-webcat::neo4j-server cl-webcat::*cl-webcat-acceptor*))
-                        #'string<))
+     (let* ((task-attrs (get-attrs (rg-server tbnl:*acceptor*) "tasks"))
             (statuses-requested (remove-if #'null
                                            (mapcar #'(lambda (par)
                                                        (when (equal (car par) "status") (cdr par)))
@@ -882,12 +881,9 @@ and any forward-slashes that sneaked through are also now underscores.
                                 tags-requested
                                 statuses-requested)))
        ;; Debug logging for what we've obtained so far
-       (log-message :debug "Statuses: ~A" statuses)
+       (log-message :debug "Attributes: ~A" task-attrs)
+       (log-message :debug "Statuses available: ~A" (get-enum-vals "status" task-attrs))
        (log-message :debug "Tags: ~A" tags-available)
-       (log-message :debug "Resourcetype supplied: ~A"
-                    (if
-                       (tbnl:get-parameter "resourcetype")
-                       (tbnl:get-parameter "resourcetype") "none"))
        (log-message :debug "tbnl-formatted search results: ~A" tbnl-formatted-results)
        (setf (tbnl:content-type*) "text/html")
        (setf (tbnl:return-code*) tbnl:+http-ok+)
@@ -902,7 +898,22 @@ and any forward-slashes that sneaked through are also now underscores.
                                  (list :name status
                                        :selected (when (member status statuses-requested :test #'equal)
                                                    "selected")))
-                             statuses)
+                             (get-enum-vals "status" task-attrs))
+                 :importance (mapcar
+                               #'(lambda (imp)
+                                   (list :name imp
+                                         :selected (when (equal imp (tbnl:get-parameter "importance")) "selected")))
+                               (get-enum-vals "importance" task-attrs))
+                 :urgency (mapcar
+                               #'(lambda (urge)
+                                   (list :name urge
+                                         :selected (when (equal urge (tbnl:get-parameter "urgency")) "selected")))
+                               (get-enum-vals "urgency" task-attrs))
+                 :scale (mapcar
+                               #'(lambda (scale)
+                                   (list :name scale
+                                         :selected (when (equal scale (tbnl:get-parameter "scale")) "selected")))
+                               (get-enum-vals "scale" task-attrs))
                  :tags (mapcar #'(lambda (tag)
                                    (list :tag tag
                                          :selected (when (member tag tags-requested :test #'equal)
