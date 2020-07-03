@@ -192,7 +192,7 @@
    Arguments:
    - server = instance of rg-server struct
    - resourcetype = string
-   Returns a list of strings."
+   Returns a list of alists representing attributes."
   (cdr (assoc :attributes
               (get-schema server resourcetype))))
 
@@ -337,14 +337,14 @@ and any forward-slashes that sneaked through are also now underscores.
          (uid (third uri-parts))
          (content (rg-request-json (rg-server tbnl:*acceptor*)
                                    (format nil "/~A/~A" resourcetype uid)))
-         (schema (mapcar #'(lambda (attr)
-                             (intern (string-upcase attr) 'keyword))
-                         (cdr (assoc :attributes
-                                     (rg-request-json (rg-server tbnl:*acceptor*)
-                                                      (format nil "/~A" resourcetype)
-                                                      :schema-p t))))))
+         (attributes (mapcar #'(lambda (attr)
+                                 (intern (string-upcase (car (assoc :name attr))) 'keyword))
+                             (cdr (assoc :attributes
+                                         (rg-request-json (rg-server tbnl:*acceptor*)
+                                                          (format nil "/~A" resourcetype)
+                                                          :schema-p t))))))
     (log-message :debug "Content: ~A" content)
-    (log-message :debug "Schema ~A" schema)
+    (log-message :debug "Resource-type atributes: ~A" attributes)
     (if content
         (let ((filtered-content
                 (mapcar #'(lambda (attrname)
@@ -358,7 +358,7 @@ and any forward-slashes that sneaked through are also now underscores.
                                                          (3bmd:parse-string-and-print-to-stream val mdstr))
                                                        val))
                                                  ""))))
-                        (sort schema #'string<)))
+                        (sort attributes #'string<)))
               (layout-template-path (concatenate 'string
                                                  (template-path tbnl:*acceptor*)
                                                  "/display_layout.tmpl"))
@@ -761,37 +761,40 @@ and any forward-slashes that sneaked through are also now underscores.
                                                (tbnl:get-parameters*))))
             (tbnl-formatted-results
               (if (tbnl:get-parameter "resourcetype")
-                  (search-results-to-template
-                    (let* ((requested-attributes
-                             (remove-if #'null
-                                        (mapcar #'(lambda (attr)
-                                                    (let ((val (tbnl:get-parameter attr)))
-                                                      (when val (format nil "~A=~A" attr val))))
-                                                (get-attrs (rg-server tbnl:*acceptor*)
-                                                           (tbnl:get-parameter "resourcetype")))))
-                           (tags-requested-formatted
-                             (mapcar #'(lambda (par)
-                                         (concatenate 'string
-                                                      "outbound=/Tags/tags/" par))
-                                     tags-requested))
-                           (search-criteria (append ()
-                                                    (when (tbnl:get-parameter "uid_regex")
-                                                      (list (format nil "uid=~A"
-                                                                    (tbnl:get-parameter "uid_regex")))))))
-                      (progn
-                        (log-message :debug "Searching with criteria '~A'" search-criteria)
-                        (search-for-resources (rg-server tbnl:*acceptor*)
-                                              (tbnl:get-parameter "resourcetype")
-                                              (append tags-requested-formatted search-criteria requested-attributes)))))
-                  ;; If no resourcetype was specified, tbnl-formatted-results is NIL:
-                  ())))
+                (search-results-to-template
+                  (let* ((requested-attributes
+                           (remove-if #'null
+                                      (mapcar #'(lambda (attr)
+                                                  (let ((val (tbnl:get-parameter attr)))
+                                                    (when val (format nil "~A=~A"
+                                                                      attr val))))
+                                              (mapcar #'(lambda (attralist)
+                                                          (cdr (assoc :name attralist)))
+                                                      (get-attrs (rg-server tbnl:*acceptor*)
+                                                                 (tbnl:get-parameter "resourcetype"))))))
+                         (tags-requested-formatted
+                           (mapcar #'(lambda (par)
+                                       (concatenate 'string
+                                                    "outbound=/Tags/tags/" par))
+                                   tags-requested))
+                         (search-criteria (append ()
+                                                  (when (tbnl:get-parameter "uid_regex")
+                                                    (list (format nil "uid=~A"
+                                                                  (tbnl:get-parameter "uid_regex")))))))
+                    (progn
+                      (log-message :debug "Searching with criteria '~A'" search-criteria)
+                      (search-for-resources (rg-server tbnl:*acceptor*)
+                                            (tbnl:get-parameter "resourcetype")
+                                            (append tags-requested-formatted search-criteria requested-attributes)))))
+                ;; If no resourcetype was specified, tbnl-formatted-results is NIL:
+                ())))
        ;; Debug logging for what we've obtained so far
        (log-message :debug "Schema: ~A" schema)
        (log-message :debug "Tags: ~A" tags-available)
        (log-message :debug "Resourcetype supplied: ~A"
                     (if
-                       (tbnl:get-parameter "resourcetype")
-                       (tbnl:get-parameter "resourcetype") "none"))
+                      (tbnl:get-parameter "resourcetype")
+                      (tbnl:get-parameter "resourcetype") "none"))
        (log-message :debug "tbnl-formatted search results: ~A" tbnl-formatted-results)
        (setf (tbnl:content-type*) "text/html")
        (setf (tbnl:return-code*) tbnl:+http-ok+)
