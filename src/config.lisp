@@ -14,6 +14,7 @@
     :rg-port 4955
     :dbhostname "10.255.0.1"
     :dbport 7677
+    :dbname "graph.db"
     :dbusername "neo4j"
     :dbpasswd "wallaby"
     :api-uri-base "/raw/v1"
