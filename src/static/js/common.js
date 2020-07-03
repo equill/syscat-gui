@@ -46,14 +46,14 @@ function update_attrs(resourcetype) {
         // if it matches the selected resourcetype,
         // check for a GET parameter whose name matches the one we're looking at right now
         if (req_resourcetype && req_resourcetype == resourcetype) {
-          req_val = getparam(attr);
+          req_val = getparam(attr.name);
           // If all that is true, set `val` to the value of the supplied parameter
           if (req_val != null) { val = req_val };
         // Otherwise, default to an empty string.
         } else { val = ''; };
         // Construct and add the element
-        $('div#attrnames').append('<p class="attrname">' + attr + '</p>');
-        $('div#attrvals').append('<p class="attrval"><input type=text name="' + attr + '" value="' + val + '"></input></p>');
+        $('div#attrnames').append('<p class="attrname">' + attr.name + '</p>');
+        $('div#attrvals').append('<p class="attrval"><input type=text name="' + attr.name + '" value="' + val + '"></input></p>');
       });
     });
 }
