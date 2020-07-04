@@ -396,14 +396,7 @@ and any forward-slashes that sneaked through are also now underscores.
                                           :importance (or (cdr (assoc :importance content)) "(No importance found)")
                                           :urgency (or (cdr (assoc :urgency content)) "(No urgency found)")
                                           :scale (or (cdr (assoc :scale content)) "(No scale found)")
-                                          :status (or
-                                                    (cdr (assoc :uid
-                                                                (car
-                                                                  (rg-request-json
-                                                                    (rg-server tbnl:*acceptor*)
-                                                                    (format nil "/tasks/~A/Status/task_status" uid)
-                                                                    :schema-p nil))))
-                                                    "(No status found)"))
+                                          :status (or (cdr (assoc :status content)) "(No status found)"))
                                     :stream contstr)))
                                ;; Display a wikipage
                                ((equal resourcetype "wikipages")
@@ -460,77 +453,122 @@ and any forward-slashes that sneaked through are also now underscores.
             (content (rg-request-json (rg-server tbnl:*acceptor*)
                                       (format nil "/~A/~A" resourcetype uid)))
             (attributes (get-attrs (rg-server tbnl:*acceptor*) resourcetype)))
+       (log-message :debug "Attempting to display the edit page for ~A ~A" resourcetype uid)
        (log-message :debug "Resourcetype: ~A" resourcetype)
        (log-message :debug "UID: ~A" uid)
        (log-message :debug "Attributes: ~A" attributes)
        (log-message :debug "Content: ~A" content)
-       (if (and content attributes)
-           (if (equal resourcetype "wikipages")
-               (progn
-                 (log-message :debug "Rendering wikipage ~A" uid)
-                 (setf (tbnl:content-type*) "text/html")
-                 (setf (tbnl:return-code*) tbnl:+http-ok+)
-                 (with-output-to-string (outstr)
-                   (html-template:fill-and-print-template
-                     (make-pathname :defaults (concatenate 'string
-                                                           (template-path tbnl:*acceptor*)
-                                                           "/edit_wikipage.tmpl"))
-                     (list :title (if (and
-                                        (assoc :title content)
-                                        (not (equal (cdr (assoc :title content)) "")))
-                                      (cdr (assoc :title content))
-                                      (uid-to-title uid))
-                           :uid uid
-                           :content (cdr (assoc :text content)))
-                     :stream outstr)))
-               (let ((filtered-content
-                       (mapcar #'(lambda (attrname)
-                                   (list :attrname attrname
-                                         :attrval (or (cdr (assoc
-                                                             (intern (string-upcase attrname) 'keyword)
-                                                             content)) "")
-                                         :textarea (when (equal attrname "description") t)))
-                               (mapcar #'(lambda (attr)
-                                           (cdr (assoc :NAME attr)))
-                                       attributes))))
-                 (log-message :debug "Filtered content: ~A" filtered-content)
-                 (setf (tbnl:content-type*) "text/html")
-                 (setf (tbnl:return-code*) tbnl:+http-ok+)
-                 (with-output-to-string (outstr)
-                   (html-template:fill-and-print-template
-                     (make-pathname :defaults (concatenate 'string
-                                                           (template-path tbnl:*acceptor*)
-                                                           "/edit_resource.tmpl"))
-                     (list :resourcetype resourcetype
-                           :uid uid
-                           :title (uid-to-title uid)
-                           :attributes filtered-content)
-                     :stream outstr))))
+       ;; Render the content according to resourcetype
+       (if content
+           (cond ((equal resourcetype "wikipages")
+                  (progn
+                    (log-message :debug "Rendering wikipage ~A" uid)
+                    (setf (tbnl:content-type*) "text/html")
+                    (setf (tbnl:return-code*) tbnl:+http-ok+)
+                    (with-output-to-string (outstr)
+                      (html-template:fill-and-print-template
+                        (make-pathname :defaults (concatenate 'string
+                                                              (template-path tbnl:*acceptor*)
+                                                              "/edit_wikipage.tmpl"))
+                        (list :title (if (and
+                                           (assoc :title content)
+                                           (not (equal (cdr (assoc :title content)) "")))
+                                         (cdr (assoc :title content))
+                                         (uid-to-title uid))
+                              :uid uid
+                              :content (cdr (assoc :text content)))
+                        :stream outstr))))
+                 (t
+                  (progn
+                    (log-message :debug "Rendering ~A ~A" resourcetype uid)
+                  ;; Render the attributes for editing
+                  (let ((attributes-to-display
+                          (mapcar
+                            #'(lambda (attribute)
+                                ;; Handle differently according to type
+                                (cond ((stringp (cdr (assoc :VALS attribute)))
+                                       (let ((existing-value
+                                               (cdr
+                                                 (assoc
+                                                   (intern (string-upcase
+                                                             (cdr (assoc :NAME attribute)))
+                                                           'keyword)
+                                                   content))))
+                                         (log-message :debug (format nil "Existing value of ~A: ~A"
+                                                                     (cdr (assoc :NAME attribute))
+                                                                     existing-value))
+                                         (list :attrname (cdr (assoc :NAME attribute))
+                                               :attrvals
+                                               (mapcar
+                                                 #'(lambda (val)
+                                                     (list :val val
+                                                           :selected (when (equal existing-value val) t)))
+                                                 ;; Split the vals on commas
+                                                 (cl-ppcre:split "," (cdr (assoc :VALS attribute))))
+                                               :textarea nil)))
+                                      ;; Description attribute
+                                      ((equal (cdr (assoc :NAME attribute))
+                                              "description")
+                                       (list :attrname "description"
+                                             :attrval (or (cdr (assoc
+                                                                 (intern (string-upcase
+                                                                           (cdr (assoc :NAME attribute)))
+                                                                         'keyword)
+                                                                 content)) "")
+                                             :attrvals nil
+                                             :textarea t))
+                                      ;; Default style
+                                      (t
+                                       (list :attrname (cdr (assoc :NAME attribute))
+                                             :attrval (or (cdr (assoc
+                                                                 (intern (string-upcase
+                                                                           (cdr (assoc :NAME attribute)))
+                                                                         'keyword)
+                                                                 content)) "")
+                                             :attrvals nil
+                                             :textarea nil))))
+                            attributes)))
+                    (log-message :debug "Attributes: ~A" attributes-to-display)
+                    (setf (tbnl:content-type*) "text/html")
+                    (setf (tbnl:return-code*) tbnl:+http-ok+)
+                    (with-output-to-string (outstr)
+                      (html-template:fill-and-print-template
+                        (make-pathname :defaults (concatenate 'string
+                                                              (template-path tbnl:*acceptor*)
+                                                              "/edit_resource.tmpl"))
+                        (list :resourcetype resourcetype
+                              :uid uid
+                              :title (uid-to-title uid)
+                              :attributes attributes-to-display)
+                        :stream outstr))))))
+           ;; Content not retrieved
            (progn
              (setf (tbnl:content-type*) "text/plain")
              (setf (tbnl:return-code*) tbnl:+http-not-found+)
              "No content"))))
+    ;;; POST request: update the resource
     ((equal (tbnl:request-method*) :POST)
      (let* ((uri-parts (get-uri-parts (tbnl:request-uri*) tbnl:*acceptor*))
             (resourcetype (second uri-parts))
             (uid (third uri-parts))
             ;; Extract attributes relevant to this resourcetype
-            (validated-attrs
+            (valid-attrnames
               (mapcar #'(lambda (attr)
-                          (log-message :debug "Checking for parameter ~A" attr)
-                          (let ((val (tbnl:post-parameter attr)))
-                            (when val
-                              (cons attr val))))
-                      (cdr (assoc :attributes
-                                  (rg-request-json (rg-server tbnl:*acceptor*)
-                                                   (concatenate 'string "/" resourcetype)
-                                                   :schema-p t))))))
+                          (cdr (assoc :NAME attr)))
+                      (get-attrs (rg-server tbnl:*acceptor*) resourcetype)))
+            (validated-attrs
+              (mapcar #'(lambda (param)
+                          (log-message :debug "Validating parameter ~A" (car param))
+                          (when (member (car param) valid-attrnames :test #'equal) param))
+                      (tbnl:post-parameters*))))
+       (log-message :debug (format nil "Processing edit request for ~A ~A" resourcetype uid))
        (log-message :debug "Validated attributes: ~A" validated-attrs)
        ;; Send the update
        (multiple-value-bind (body status-code)
          (rg-post-json (rg-server tbnl:*acceptor*)
                        (concatenate 'string "/" resourcetype "/" uid)
                        :payload validated-attrs
+                       ;:payload (tbnl:post-parameters*)
                        :put-p t)
          ;; Did it work?
          (if (and (> status-code 199)

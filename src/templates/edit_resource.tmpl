@@ -28,7 +28,19 @@
           <!-- TMPL_IF textarea -->
           <textarea class="attrvals" name="<!-- TMPL_VAR attrname -->"><!-- TMPL_VAR attrval --></textarea>
           <!-- TMPL_ELSE -->
-          <input class="attrvals" name="<!-- TMPL_VAR attrname -->" value="<!-- TMPL_VAR attrval -->">
+            <!-- TMPL_IF attrvals -->
+            <select class="attrvals" name="<!-- TMPL_VAR attrname -->">
+              <!-- TMPL_LOOP attrvals -->
+                <!-- TMPL_IF selected -->
+                <option name="<!-- TMPL_VAR val -->" selected="true"><!-- TMPL_VAR val --></option>
+                <!-- TMPL_ELSE -->
+                <option name="<!-- TMPL_VAR val -->"><!-- TMPL_VAR val --></option>
+                <!-- /TMPL_IF -->
+              <!-- /TMPL_LOOP -->
+            </select>
+            <!-- TMPL_ELSE -->
+            <input class="attrvals" name="<!-- TMPL_VAR attrname -->" value="<!-- TMPL_VAR attrval -->">
+            <!-- /TMPL_IF -->
           <!-- /TMPL_IF -->
         </td>
         </tr>
