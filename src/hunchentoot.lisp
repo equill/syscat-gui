@@ -373,6 +373,10 @@ and any forward-slashes that sneaked through are also now underscores.
               (make-pathname :defaults layout-template-path)
               (list :resourcetype resourcetype
                     :uid uid
+                    ;; Additional stylesheets for specific resource-types
+                    :stylesheets (if (equal "tasks" resourcetype)
+                                     '((:sheet "tasks_display"))
+                                     ())
                     ;; If it's a wikipage _and_ it has a title, use that.
                     ;; Otherwise, just de-url-escape the UID
                     :title (if (and
