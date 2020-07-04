@@ -66,15 +66,6 @@
                                                         (url-base acceptor)
                                                         uri "")))))))
 
-(defun escape-neo4j (str)
-  "Escape any undesirable characters in a string, e.g. the single-quote.
-  Expects a string, and returns another string."
-  (cl-ppcre:regex-replace-all
-    "'"
-    str
-    "´"))
-
-
 ;;; Data retrieval functions
 
 (defun decode-json-response (json)
@@ -1123,9 +1114,8 @@ and any forward-slashes that sneaked through are also now underscores.
 
 (defun sanitise-uid (uid)
   "Replace UID-unfriendly characters in UIDs with something safe.
-  Expects a string and returns another string."
-  (escape-neo4j
-    (cl-ppcre:regex-replace-all "[/ ]" uid "_")))
+   Expects a string and returns another string."
+  (cl-ppcre:regex-replace-all "[/ ]" uid "_"))
 
 (defun get-sub-uri (uri base-uri)
   "Extract the URI from the full request string,
