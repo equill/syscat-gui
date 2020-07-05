@@ -1000,22 +1000,22 @@ and any forward-slashes that sneaked through are also now underscores.
              ;; We have both; carry on
              (t
               ;; Extract attributes relevant to this resourcetype
-              (let ((validated-attrs
-                      (mapcar #'(lambda (attr)
-                                  (log-message :debug "Checking for parameter ~A" attr)
-                                  (let ((val (tbnl:post-parameter attr)))
-                                    (when val
-                                      (cons attr val))))
-                              (cdr (assoc :attributes
-                                          (rg-request-json (rg-server tbnl:*acceptor*)
-                                                           (concatenate 'string "/" resourcetype)
-                                                           :schema-p t))))))
+              (let* ((valid-attrnames
+                       (mapcar #'(lambda (attr)
+                                   (cdr (assoc :NAME attr)))
+                               (get-attrs (rg-server tbnl:*acceptor*) resourcetype)))
+                     (validated-attrs
+                       (remove-if #'null
+                                  (mapcar #'(lambda (param)
+                                              (log-message :debug "Validating parameter ~A" (car param))
+                                              (when (member (car param) valid-attrnames :test #'equal) param))
+                                          (tbnl:post-parameters*)))))
                 (log-message :debug "Validated attributes: ~A" validated-attrs)
                 ;; Send the update
                 (multiple-value-bind (body status-code)
                   (rg-post-json (rg-server tbnl:*acceptor*)
                                 (concatenate 'string "/" resourcetype)
-                                :payload (append `(("uid" . ,uid)) validated-attrs))
+                                :payload (append `(("uid" . ,(sanitise-uid uid))) validated-attrs))
                   ;; Did it work?
                   (if (and (> status-code 199)
                            (< status-code 300))
