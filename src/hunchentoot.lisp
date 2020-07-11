@@ -999,7 +999,7 @@ and any forward-slashes that sneaked through are also now underscores.
               "The resourcetype must be specified in the URL")
              ;; We have both; carry on
              (t
-              ;; Extract attributes relevant to this resourcetype
+              ;; Extract non-empty attributes relevant to this resourcetype
               (let* ((valid-attrnames
                        (mapcar #'(lambda (attr)
                                    (cdr (assoc :NAME attr)))
@@ -1008,7 +1008,10 @@ and any forward-slashes that sneaked through are also now underscores.
                        (remove-if #'null
                                   (mapcar #'(lambda (param)
                                               (log-message :debug "Validating parameter ~A" (car param))
-                                              (when (member (car param) valid-attrnames :test #'equal) param))
+                                              (when (and (not (or (null (cdr param))
+                                                                  (equal "" (cdr param))))
+                                                         (member (car param) valid-attrnames :test #'equal))
+                                                param))
                                           (tbnl:post-parameters*)))))
                 (log-message :debug "Validated attributes: ~A" validated-attrs)
                 ;; Send the update
