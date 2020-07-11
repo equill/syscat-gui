@@ -865,14 +865,14 @@ and any forward-slashes that sneaked through are also now underscores.
   (log-message :debug "Searching for tasks with tags ~{~A~^, ~} and statuses ~{~A~^, ~}" tags statuses)
   (let* ((tag-clause (if tags (format nil "t.uid IN [~{\"~A\"~^, ~}]" tags) ""))
          (status-clause (if statuses (format nil "n.status IN [~{\"~A\"~^, ~}]" statuses) ""))
-         (where-clause (if (or tags statuses)
-                           (format nil "WHERE ~A~A~A"
-                                   tag-clause
-                                   (if (and tags statuses) " AND " "")
-                                   status-clause)
-                           ""))
-         (query (format nil "MATCH (n:tasks)-[:Tags]->(t:tags) ~A RETURN DISTINCT n.uid, n.description, n.scale, n.importance, n.urgency ORDER BY n.uid"
-                        where-clause)))
+         (query (format nil "MATCH (n:tasks)~A RETURN DISTINCT n.uid, n.description, n.scale, n.importance, n.urgency, n.status ORDER BY n.uid"
+                        ;; Construct the where-clause
+                        (if (or tags statuses)
+                            (format nil " WHERE ~A~A~A"
+                                    tag-clause
+                                    (if (and tags statuses) " AND " "")
+                                    status-clause)
+                            ""))))
     (log-message :debug "Using query string '~A'" query)
     (mapcar #'(lambda (row)
                 `(:uid ,(first row) :title ,(uid-to-title (first row))))
