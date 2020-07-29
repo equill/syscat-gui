@@ -42,6 +42,7 @@
   (hostname nil :type string :read-only t)
   (port nil :type integer :read-only t)
   (raw-base nil :type string :read-only t)
+  (files-base nil :type string :read-only t)
   (schema-base nil :type string :read-only t))
 
 
@@ -1197,6 +1198,8 @@ and any forward-slashes that sneaked through are also now underscores.
                                         (getf *config-vars* :rg-port))
                               :raw-base (or (sb-ext:posix-getenv "RG_RAW_BASE")
                                             (getf *config-vars* :api-uri-base))
+                              :files-base (or (sb-ext:posix-getenv "RG_FILES_BASE")
+                                            (getf *config-vars* :files-uri-base))
                               :schema-base (or (sb-ext:posix-getenv "RG_SCHEMA_BASE")
                                                (getf *config-vars* :schema-uri-base)))
                  :neo4j-server (make-instance
