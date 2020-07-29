@@ -1,0 +1,31 @@
+.uploadform {
+  display: grid;
+  justify-content: start;
+  grid-column-gap: 50px;
+  grid-row-gap: 50px;
+}
+
+#filename-title {
+  grid-column: 1;
+  grid-row: 1;
+}
+
+#filename {
+  grid-column: 2;
+  grid-row: 1;
+}
+
+#file-title {
+  grid-column: 1;
+  grid-row: 2;
+}
+
+#file{
+  grid-column: 2;
+  grid-row: 2;
+}
+
+#submit{
+  grid-column: 1 / span 2;
+  grid-row: 3;
+}

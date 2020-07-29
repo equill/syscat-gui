@@ -1,21 +1,16 @@
-<!DOCTYPE HTML>
 <html>
-<head>
-    <title>Webcat file upload</title>
-    <script src="/static/js/jquery-3.3.1.js"></script>
-    <script src="/static/js/common.js"></script>
-    <script src="/static/js/search.js"></script>
-    <link rel="stylesheet" type="text/css" href="/static/css/common.css">
-    <link rel="stylesheet" type="text/css" href="/static/css/upload.css">
-</head>
-
-<body>
-  <h1>Upload a file</h1>
-  <form action="/files" method="post">
-    <input type="text" name="filename"></input>
-    <!-- file-upload field goes here -->
-    <input type="file" name="file"></input>
-    <input type="submit" name="Upload" value="Upload"></input>
-  </form>
-</body>
+<!-- TMPL_INCLUDE "templates/head.tmpl" -->
+  <body>
+    <h1>File upload</h1>
+    <div id="pagegrid">
+    <!-- TMPL_INCLUDE "templates/navbar_top.html" -->
+      <form action="/files" method="post" class="uploadform">
+        <div id="filename-title">File name:</div>
+        <input id="filename" type="text" name="filename"></input>
+        <div id="file-title">File:</div>
+        <input id="file" type="file" name="file"></input>
+        <input id="submit" type="submit" name="Upload" value="Upload"></input>
+      </form>
+    </div>
+  </body>
 </html>
