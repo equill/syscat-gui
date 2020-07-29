@@ -113,13 +113,15 @@
       (drakma:http-request url :method :DELETE)
       (values status-code body))))
 
-(defun rg-post-json (server uri &key payload schema-p put-p)
+(defun rg-post-json (server uri &key payload schema-p put-p files-p)
   "Make a POST request to a Restagraph backend, and decode the JSON response if there was one.
    Arguments:
    - rg-server object
    - URI
    - :payload = Drakma-ready alist of values to POST
    - :schema-p = whether this is updating the schema instead of a resource
+   - :put-p = whether we're invoking the PUT method
+   - :form-p = whether to treat the request as a form-style upload
    Return the body as the primary value, and the status-code as a secondary value."
   (log-message :debug "~Aing a request to URI ~A" (if put-p "PUT" "POST") uri)
   (log-message :debug "Payload: ~A" payload)
@@ -128,11 +130,16 @@
       (format nil "http://~A:~D~A~A"
               (rg-server-hostname server)
               (rg-server-port server)
-              (if schema-p
-                  (rg-server-schema-base server)
-                  (rg-server-raw-base server))
+              (cond
+                (files-p
+                  (rg-server-files-base server))
+                (schema-p
+                  (rg-server-schema-base server))
+                (t
+                  (rg-server-raw-base server)))
               uri)
       :parameters payload
+      :form-data files-p
       :method (if put-p :PUT :POST))
     ;; Now decide what to do with it.
     ;; If it was successful, return it
