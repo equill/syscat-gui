@@ -902,6 +902,41 @@ and any forward-slashes that sneaked through are also now underscores.
   (log-message :debug (format nil "Extracting values for '~A' from attribute-list ~A" attr attrlist))
   (schema-rtype-attrs-values (cdr (assoc attr attrlist))))
 
+(defun files ()
+  "Display the files page."
+  (cond
+    ;; Fetch a file
+    ((and
+       (equal (tbnl:request-method*) :GET)
+       (tbnl:get-parameter "uid"))
+     (with-output-to-string (outstr)
+       (html-template:fill-and-print-template
+         (make-pathname :defaults
+                        (concatenate 'string
+                                     (template-path tbnl:*acceptor*)
+                                     "/display_tasks_search.tmpl"))
+         (list ())
+         :stream outstr)))
+    ;; Display the file-upload form
+    ((equal (tbnl:request-method*) :GET)
+     (setf (tbnl:content-type*) "text/html")
+     (setf (tbnl:return-code*) tbnl:+http-ok+)
+     (with-output-to-string (outstr)
+       (html-template:fill-and-print-template
+         (make-pathname :defaults (concatenate
+                                    'string
+                                    (template-path tbnl:*acceptor*)
+                                    "/display_fileupload.tmpl"))
+         ;; Nothing to put in here yet
+         (list :title "File upload"
+               :stylesheets '((:sheet "upload")))
+         :stream outstr)))
+    ;; Delete a file
+    ((equal (tbnl:request-method*) :DELETE)
+     ())
+    ;; Fallback: not by this method
+    (t (method-not-allowed))))
+
 (defun tasks ()
   "Display the tasks page"
   (cond
@@ -1211,6 +1246,7 @@ and any forward-slashes that sneaked through are also now underscores.
                 (tbnl:create-regex-dispatcher "/create$" 'create-item)
                 (tbnl:create-prefix-dispatcher "/search" 'searchpage)
                 (tbnl:create-prefix-dispatcher "/tasks" 'tasks)
+                (tbnl:create-prefix-dispatcher "/files" 'files)
                 (tbnl:create-prefix-dispatcher "/display" 'display-item)
                 (tbnl:create-prefix-dispatcher "/editresource" 'edit-resource)
                 (tbnl:create-prefix-dispatcher "/edit_links" 'edit-links)
