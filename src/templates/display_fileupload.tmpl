@@ -1,0 +1,21 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <title>Webcat file upload</title>
+    <script src="/static/js/jquery-3.3.1.js"></script>
+    <script src="/static/js/common.js"></script>
+    <script src="/static/js/search.js"></script>
+    <link rel="stylesheet" type="text/css" href="/static/css/common.css">
+    <link rel="stylesheet" type="text/css" href="/static/css/upload.css">
+</head>
+
+<body>
+  <h1>Upload a file</h1>
+  <form action="/files" method="post">
+    <input type="text" name="filename"></input>
+    <!-- file-upload field goes here -->
+    <input type="file" name="file"></input>
+    <input type="submit" name="Upload" value="Upload"></input>
+  </form>
+</body>
+</html>
