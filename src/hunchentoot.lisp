@@ -178,27 +178,42 @@
     (log-message :debug "Retrieving the schema for resourcetype '~A'" resourcetype))
   (rg-request-json server (format nil "/~A" resourcetype) :schema-p t))
 
+(defstruct schema-rtype-attrs
+  "Attributes of resource-types. Copy-pasted straight from restagraph/src/structures.lisp."
+  (name nil :type string :read-only t)
+  (description "" :type string :read-only t)
+  (values nil :type list :read-only t)
+  ;; The type of value. To be used for validation, and for rendering of the value.
+  (valuetype "text" :type string :read-only t))
+
 (defun get-attrs (server resourcetype)
   "Retrieve a list of attributes for a resourcetype.
-   Arguments:
-   - server = instance of rg-server struct
-   - resourcetype = string
-   Returns a list of alists representing attributes."
-  (cdr (assoc :attributes
-              (get-schema server resourcetype))))
+  Arguments:
+  - server = instance of rg-server struct
+  - resourcetype = string
+  Returns a list of schema-rtype-attrs structs."
+  (mapcar #'(lambda (attribute)
+              (make-schema-rtype-attrs
+                :name (cdr (assoc :name attribute))
+                :description (cdr (assoc :description attribute))
+                :values (cl-ppcre:split "," (cdr (assoc :vals attribute)))
+                ;; Not yet implemented in RG.
+                ;:valuetype (cdr (assoc :valuetype attribute))
+                ))
+          (sort
+            (cdr (assoc :attributes
+                        (get-schema server resourcetype)))
+            #'string<
+            :key #'(lambda (attr) (cdr (assoc :name attr))))))
 
 (defun get-attrs-with-keywords (server resourcetype)
   "Return a sorted alist of the attribute definitions for a resourcetype.
-   Key = attribute name, interned into the keyword package.
-   Value = definition, including the name."
+  Key = attribute name, interned into the keyword package.
+  Value = definition, including the name."
   (mapcar #'(lambda (attribute)
-              (cons (intern (string-upcase (cdr (assoc :name attribute))) 'keyword)
+              (cons (intern (string-upcase (schema-rtype-attrs-name attribute)) 'keyword)
                     attribute))
-          (sort
-            (get-attrs server resourcetype)
-            #'string<
-            :key #'(lambda (attr)
-                     (cdr (assoc :name attr))))))
+          (get-attrs server resourcetype)))
 
 (defun get-resourcetypes (server)
   "Retrieve a sorted list of resourcetypes.
@@ -410,16 +425,16 @@ and any forward-slashes that sneaked through are also now underscores.
                                                   ;; Extract the value, using the keyworded version of the attribute-name
                                                   (let ((val (cdr (assoc (car attribute) content))))
                                                     ;; Conditionally render the type
-                                                    (list :attrname (cdr (assoc :name (cdr attribute)))
+                                                    (list :attrname (schema-rtype-attrs-name (cdr attribute))
                                                           ; Ensure all values are strings, for the template.
                                                           :attrval (if val
                                                                        ;; Render all descriptions as Markdown
-                                                                       (if (or
-                                                                             (member (car attribute) '(:description :text))
-                                                                             (equal "commonmark" (cdr (assoc :valuetype (cdr attribute)))))
-                                                                           (with-output-to-string (mdstr) (3bmd:parse-string-and-print-to-stream val mdstr)
-                                                                             mdstr)
-                                                                           val)
+                                                                       (if (or (member (car attribute) '(:description :text))
+                                                                               (equal "commonmark" (schema-rtype-attrs-valuetype (cdr attribute))))
+                                                                         (with-output-to-string (mdstr)
+                                                                           (3bmd:parse-string-and-print-to-stream val mdstr)
+                                                                           mdstr)
+                                                                         val)
                                                                        ""))))
                                               attrdefs))
                                       :stream contstr))))
@@ -455,92 +470,88 @@ and any forward-slashes that sneaked through are also now underscores.
             (resourcetype (second uri-parts))
             (uid (third uri-parts))
             (content (rg-request-json (rg-server tbnl:*acceptor*)
-                                      (format nil "/~A/~A" resourcetype uid)))
-            (attributes (get-attrs (rg-server tbnl:*acceptor*) resourcetype)))
+                                      (format nil "/~A/~A" resourcetype uid))))
        (log-message :debug "Attempting to display the edit page for ~A ~A" resourcetype uid)
        (log-message :debug "Resourcetype: ~A" resourcetype)
        (log-message :debug "UID: ~A" uid)
-       (log-message :debug "Attributes: ~A" attributes)
        (log-message :debug "Content: ~A" content)
        ;; Render the content according to resourcetype
        (if content
-           (cond ((equal resourcetype "wikipages")
-                  (progn
-                    (log-message :debug "Rendering wikipage ~A" uid)
-                    (setf (tbnl:content-type*) "text/html")
-                    (setf (tbnl:return-code*) tbnl:+http-ok+)
-                    (with-output-to-string (outstr)
-                      (html-template:fill-and-print-template
-                        (make-pathname :defaults (concatenate 'string
-                                                              (template-path tbnl:*acceptor*)
-                                                              "/edit_wikipage.tmpl"))
-                        (list :title (if (and
-                                           (assoc :title content)
-                                           (not (equal (cdr (assoc :title content)) "")))
-                                         (cdr (assoc :title content))
-                                         (uid-to-title uid))
-                              :uid uid
-                              :content (cdr (assoc :text content)))
-                        :stream outstr))))
-                 (t
-                  (progn
-                    (log-message :debug "Rendering ~A ~A" resourcetype uid)
-                  ;; Render the attributes for editing
-                  (let ((attributes-to-display
-                          (mapcar
-                            #'(lambda (attribute)
-                                ;; Handle differently according to type
-                                (cond ((stringp (cdr (assoc :VALS attribute)))
-                                       (let ((existing-value
-                                               (cdr
-                                                 (assoc
-                                                   (intern (string-upcase
-                                                             (cdr (assoc :NAME attribute)))
-                                                           'keyword)
-                                                   content))))
-                                         (log-message :debug (format nil "Existing value of ~A: ~A"
-                                                                     (cdr (assoc :NAME attribute))
-                                                                     existing-value))
-                                         (list :attrname (cdr (assoc :NAME attribute))
-                                               :attrvals
-                                               (mapcar
-                                                 #'(lambda (val)
-                                                     (list :val val
-                                                           :selected (when (equal existing-value val) t)))
-                                                 ;; Split the vals on commas
-                                                 (cl-ppcre:split "," (cdr (assoc :VALS attribute))))
-                                               :textarea nil)))
-                                      ;; Default style
-                                      (t
-                                       (list :attrname (cdr (assoc :NAME attribute))
-                                             :attrval (or (cdr (assoc
-                                                                 (intern (string-upcase
-                                                                           (cdr (assoc :NAME attribute)))
-                                                                         'keyword)
-                                                                 content)) "")
-                                             :attrvals nil
-                                             :textarea (member (cdr (assoc :NAME attribute))
-                                                               '("description" "text")
-                                                               :test #'equal)))))
-                            attributes)))
-                    (log-message :debug "Attributes: ~A" attributes-to-display)
-                    (setf (tbnl:content-type*) "text/html")
-                    (setf (tbnl:return-code*) tbnl:+http-ok+)
-                    (with-output-to-string (outstr)
-                      (html-template:fill-and-print-template
-                        (make-pathname :defaults (concatenate 'string
-                                                              (template-path tbnl:*acceptor*)
-                                                              "/edit_resource.tmpl"))
-                        (list :resourcetype resourcetype
-                              :uid uid
-                              :title (uid-to-title uid)
-                              :attributes attributes-to-display)
-                        :stream outstr))))))
-           ;; Content not retrieved
-           (progn
-             (setf (tbnl:content-type*) "text/plain")
-             (setf (tbnl:return-code*) tbnl:+http-not-found+)
-             "No content"))))
+         (cond ((equal resourcetype "wikipages")
+                (progn
+                  (log-message :debug "Rendering wikipage ~A" uid)
+                  (setf (tbnl:content-type*) "text/html")
+                  (setf (tbnl:return-code*) tbnl:+http-ok+)
+                  (with-output-to-string (outstr)
+                    (html-template:fill-and-print-template
+                      (make-pathname :defaults (concatenate 'string
+                                                            (template-path tbnl:*acceptor*)
+                                                            "/edit_wikipage.tmpl"))
+                      (list :title (if (and
+                                         (assoc :title content)
+                                         (not (equal (cdr (assoc :title content)) "")))
+                                     (cdr (assoc :title content))
+                                     (uid-to-title uid))
+                            :uid uid
+                            :content (cdr (assoc :text content)))
+                      :stream outstr))))
+               (t
+                 (progn
+                   (log-message :debug "Rendering ~A ~A" resourcetype uid)
+                   ;; Render the attributes for editing
+                   (let ((attributes-to-display
+                           (mapcar
+                             #'(lambda (attribute)
+                                 ;; Memoise this to simplify the following code
+                                 (let ((attrname (schema-rtype-attrs-name attribute)))
+                                   ;; Handle differently according to type
+                                   (cond ((stringp (schema-rtype-attrs-values attribute))
+                                          (let ((existing-value
+                                                  (cdr
+                                                    (assoc
+                                                      (intern (string-upcase attrname) 'keyword)
+                                                      content))))
+                                            (log-message :debug (format nil "Existing value of ~A: ~A"
+                                                                        attrname existing-value))
+                                            (list :attrname attrname
+                                                  :attrvals
+                                                  (mapcar
+                                                    #'(lambda (val)
+                                                        (list :val val
+                                                              :selected (when (equal existing-value val) t)))
+                                                    ;; Split the vals on commas
+                                                    (cl-ppcre:split "," (schema-rtype-attrs-values attribute)))
+                                                  :textarea nil)))
+                                         ;; Default style
+                                         (t
+                                           (list :attrname attrname
+                                                 :attrval (or (cdr (assoc
+                                                                     (intern (string-upcase attrname) 'keyword)
+                                                                     content))
+                                                              "")
+                                                 :attrvals nil
+                                                 :textarea (member attrname '("description" "text")
+                                                                   :test #'equal))))))
+                             ;; Retrieve the attribute-definitions for this resourcetype
+                             (get-attrs (rg-server tbnl:*acceptor*) resourcetype))))
+                     (log-message :debug "Attributes: ~A" attributes-to-display)
+                     (setf (tbnl:content-type*) "text/html")
+                     (setf (tbnl:return-code*) tbnl:+http-ok+)
+                     (with-output-to-string (outstr)
+                       (html-template:fill-and-print-template
+                         (make-pathname :defaults (concatenate 'string
+                                                               (template-path tbnl:*acceptor*)
+                                                               "/edit_resource.tmpl"))
+                         (list :resourcetype resourcetype
+                               :uid uid
+                               :title (uid-to-title uid)
+                               :attributes attributes-to-display)
+                         :stream outstr))))))
+         ;; Content not retrieved
+         (progn
+           (setf (tbnl:content-type*) "text/plain")
+           (setf (tbnl:return-code*) tbnl:+http-not-found+)
+           "No content"))))
     ;;; POST request: update the resource
     ((equal (tbnl:request-method*) :POST)
      (let* ((uri-parts (get-uri-parts (tbnl:request-uri*) tbnl:*acceptor*))
@@ -568,32 +579,32 @@ and any forward-slashes that sneaked through are also now underscores.
          ;; Did it work?
          (if (and (> status-code 199)
                   (< status-code 300))
-             ;; Happy path
-             (tbnl:redirect (concatenate 'string "/display/" resourcetype "/" uid ))
-             ;; Less-happy path
-             (let ((html-template:*string-modifier* #'cl:identity))
-               (setf (tbnl:content-type*) "text/html")
-               (setf (tbnl:return-code*) tbnl:+http-bad-request+)
-               (with-output-to-string (outstr)
-                 (html-template:fill-and-print-template
-                   (make-pathname :defaults
-                                  (concatenate 'string
-                                               (template-path tbnl:*acceptor*)
-                                               "/display_layout.tmpl"))
-                   `(:resourcetype ,resourcetype
-                     :uid ,uid
-                     :title ,(format nil "Failed to create ~A" uid)
-                     :content ,(with-output-to-string (contstr)
-                                 (html-template:fill-and-print-template
-                                   (make-pathname
-                                     :defaults
-                                     (concatenate 'string
-                                                  (template-path tbnl:*acceptor*)
-                                                  "/display_default.tmpl"))
-                                   `(:attributes ((:attrname "Server message"
-                                                   :attrval ,body)))
-                                   :stream contstr)))
-                   :stream outstr)))))))
+           ;; Happy path
+           (tbnl:redirect (concatenate 'string "/display/" resourcetype "/" uid ))
+           ;; Less-happy path
+           (let ((html-template:*string-modifier* #'cl:identity))
+             (setf (tbnl:content-type*) "text/html")
+             (setf (tbnl:return-code*) tbnl:+http-bad-request+)
+             (with-output-to-string (outstr)
+               (html-template:fill-and-print-template
+                 (make-pathname :defaults
+                                (concatenate 'string
+                                             (template-path tbnl:*acceptor*)
+                                             "/display_layout.tmpl"))
+                 `(:resourcetype ,resourcetype
+                                 :uid ,uid
+                                 :title ,(format nil "Failed to create ~A" uid)
+                                 :content ,(with-output-to-string (contstr)
+                                             (html-template:fill-and-print-template
+                                               (make-pathname
+                                                 :defaults
+                                                 (concatenate 'string
+                                                              (template-path tbnl:*acceptor*)
+                                                              "/display_default.tmpl"))
+                                               `(:attributes ((:attrname "Server message"
+                                                                         :attrval ,body)))
+                                               :stream contstr)))
+                 :stream outstr)))))))
     ;; Fallback: not by this method
     (t (method-not-allowed))))
 
@@ -802,8 +813,7 @@ and any forward-slashes that sneaked through are also now underscores.
                                                   (let ((val (tbnl:get-parameter attr)))
                                                     (when val (format nil "~A=~A"
                                                                       attr val))))
-                                              (mapcar #'(lambda (attralist)
-                                                          (cdr (assoc :name attralist)))
+                                              (mapcar #'schema-rtype-attrs-name
                                                       (get-attrs (rg-server tbnl:*acceptor*)
                                                                  (tbnl:get-parameter "resourcetype"))))))
                          (tags-requested-formatted
@@ -887,20 +897,16 @@ and any forward-slashes that sneaked through are also now underscores.
                     ((:STATEMENT . ,query)))))))))
 
 (defun get-enum-vals (attr attrlist)
-  "Extract the enum values for an attribute, from the list of alists returned by get-attrs"
+  "Extract the enum values for an attribute,
+  from the alist of schema-rtype-attr structs returned by get-attrs-with-keywords"
   (log-message :debug (format nil "Extracting values for '~A' from attribute-list ~A" attr attrlist))
-  (when (car attrlist)
-    (if (equal attr (cdr (assoc :NAME (car attrlist))))
-        (when (stringp (cdr (assoc :VALS (car attrlist))))
-          (cl-ppcre:split "," (cdr (assoc :VALS (car attrlist)))))
-        ;; If not this one, try the next
-        (get-enum-vals attr (cdr attrlist)))))
+  (schema-rtype-attrs-values (cdr (assoc attr attrlist))))
 
 (defun tasks ()
   "Display the tasks page"
   (cond
     ((equal (tbnl:request-method*) :GET)
-     (let* ((task-attrs (get-attrs (rg-server tbnl:*acceptor*) "tasks"))
+     (let* ((task-attrs (get-attrs-with-keywords (rg-server tbnl:*acceptor*) "tasks"))
             (statuses-requested (remove-if #'null
                                            (mapcar #'(lambda (par)
                                                        (when (equal (car par) "status") (cdr par)))
@@ -916,7 +922,7 @@ and any forward-slashes that sneaked through are also now underscores.
                                 statuses-requested)))
        ;; Debug logging for what we've obtained so far
        (log-message :debug "Attributes: ~A" task-attrs)
-       (log-message :debug "Statuses available: ~A" (get-enum-vals "status" task-attrs))
+       (log-message :debug "Statuses available: ~A" (get-enum-vals :status task-attrs))
        (log-message :debug "Tags: ~A" tags-available)
        (log-message :debug "tbnl-formatted search results: ~A" tbnl-formatted-results)
        (setf (tbnl:content-type*) "text/html")
@@ -932,22 +938,22 @@ and any forward-slashes that sneaked through are also now underscores.
                                  (list :name status
                                        :selected (when (member status statuses-requested :test #'equal)
                                                    "selected")))
-                             (get-enum-vals "status" task-attrs))
+                             (get-enum-vals :status task-attrs))
                  :importance (mapcar
                                #'(lambda (imp)
                                    (list :name imp
                                          :selected (when (equal imp (tbnl:get-parameter "importance")) "selected")))
-                               (get-enum-vals "importance" task-attrs))
+                               (get-enum-vals :importance task-attrs))
                  :urgency (mapcar
-                               #'(lambda (urge)
-                                   (list :name urge
-                                         :selected (when (equal urge (tbnl:get-parameter "urgency")) "selected")))
-                               (get-enum-vals "urgency" task-attrs))
+                            #'(lambda (urge)
+                                (list :name urge
+                                      :selected (when (equal urge (tbnl:get-parameter "urgency")) "selected")))
+                            (get-enum-vals :urgency task-attrs))
                  :scale (mapcar
-                               #'(lambda (scale)
-                                   (list :name scale
-                                         :selected (when (equal scale (tbnl:get-parameter "scale")) "selected")))
-                               (get-enum-vals "scale" task-attrs))
+                          #'(lambda (scale)
+                              (list :name scale
+                                    :selected (when (equal scale (tbnl:get-parameter "scale")) "selected")))
+                          (get-enum-vals :scale task-attrs))
                  :tags (mapcar #'(lambda (tag)
                                    (list :tag tag
                                          :selected (when (member tag tags-requested :test #'equal)
@@ -1005,8 +1011,7 @@ and any forward-slashes that sneaked through are also now underscores.
              (t
               ;; Extract non-empty attributes relevant to this resourcetype
               (let* ((valid-attrnames
-                       (mapcar #'(lambda (attr)
-                                   (cdr (assoc :NAME attr)))
+                       (mapcar #'schema-rtype-attrs-name
                                (get-attrs (rg-server tbnl:*acceptor*) resourcetype)))
                      (validated-attrs
                        (remove-if #'null
