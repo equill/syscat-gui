@@ -40,6 +40,11 @@ body {
   grid-row: 1;
   grid-column: 4;
 }
+
+.nav-item-5 {
+  grid-row: 1;
+  grid-column: 5;
+}
 /* End of nav-bar section */
 
 .header {
