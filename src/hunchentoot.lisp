@@ -559,8 +559,7 @@ and any forward-slashes that sneaked through are also now underscores.
             (uid (third uri-parts))
             ;; Extract attributes relevant to this resourcetype
             (valid-attrnames
-              (mapcar #'(lambda (attr)
-                          (cdr (assoc :NAME attr)))
+              (mapcar #'schema-rtype-attrs-name
                       (get-attrs (rg-server tbnl:*acceptor*) resourcetype)))
             (validated-attrs
               (mapcar #'(lambda (param)
