@@ -329,7 +329,7 @@ and any forward-slashes that sneaked through are also now underscores.
          (content (rg-request-json (rg-server tbnl:*acceptor*)
                                    (format nil "/~A/~A" resourcetype uid)))
          (attributes (mapcar #'(lambda (attr)
-                                 (intern (string-upcase (car (assoc :name attr))) 'keyword))
+                                 (intern (string-upcase (cdr (assoc :name attr))) 'keyword))
                              (cdr (assoc :attributes
                                          (rg-request-json (rg-server tbnl:*acceptor*)
                                                           (format nil "/~A" resourcetype)
