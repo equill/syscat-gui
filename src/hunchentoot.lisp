@@ -187,6 +187,19 @@
   (cdr (assoc :attributes
               (get-schema server resourcetype))))
 
+(defun get-attrs-with-keywords (server resourcetype)
+  "Return a sorted alist of the attribute definitions for a resourcetype.
+   Key = attribute name, interned into the keyword package.
+   Value = definition, including the name."
+  (mapcar #'(lambda (attribute)
+              (cons (intern (string-upcase (cdr (assoc :name attribute))) 'keyword)
+                    attribute))
+          (sort
+            (get-attrs server resourcetype)
+            #'string<
+            :key #'(lambda (attr)
+                     (cdr (assoc :name attr))))))
+
 (defun get-resourcetypes (server)
   "Retrieve a sorted list of resourcetypes.
    Filter out rgResource, rgAttribute et al."
