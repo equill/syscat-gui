@@ -510,17 +510,6 @@ and any forward-slashes that sneaked through are also now underscores.
                                                  ;; Split the vals on commas
                                                  (cl-ppcre:split "," (cdr (assoc :VALS attribute))))
                                                :textarea nil)))
-                                      ;; Description attribute
-                                      ((equal (cdr (assoc :NAME attribute))
-                                              "description")
-                                       (list :attrname "description"
-                                             :attrval (or (cdr (assoc
-                                                                 (intern (string-upcase
-                                                                           (cdr (assoc :NAME attribute)))
-                                                                         'keyword)
-                                                                 content)) "")
-                                             :attrvals nil
-                                             :textarea t))
                                       ;; Default style
                                       (t
                                        (list :attrname (cdr (assoc :NAME attribute))
@@ -530,7 +519,9 @@ and any forward-slashes that sneaked through are also now underscores.
                                                                          'keyword)
                                                                  content)) "")
                                              :attrvals nil
-                                             :textarea nil))))
+                                             :textarea (member (cdr (assoc :NAME attribute))
+                                                               '("description" "text")
+                                                               :test #'equal)))))
                             attributes)))
                     (log-message :debug "Attributes: ~A" attributes-to-display)
                     (setf (tbnl:content-type*) "text/html")
