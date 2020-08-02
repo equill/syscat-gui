@@ -913,6 +913,31 @@ and any forward-slashes that sneaked through are also now underscores.
 (defun files ()
   "Display the files page."
   (cond
+    ;; Upload a file
+    ;; On success, redirect to the item-view page.
+    ((and (equal (tbnl:request-method*) :POST)
+          (tbnl:post-parameter "file")
+          (tbnl:post-parameter "name"))
+     (log-message :debug "Received a file-upload attempt.")
+     (log-message :debug "Requested filename was ~A" (tbnl:post-parameter "name"))
+     ;(log-message :debug "Original filepath was ~A" (second (tbnl:post-parameter "file")))
+     (log-message :debug "Original filepath was ~A" (tbnl:post-parameter "file"))
+     (multiple-value-bind (response-body status-code)
+                           (rg-post-json
+                             (rg-server tbnl:*acceptor*)
+                             "/files/v1"
+                             :payload `(("name" . ,(tbnl:post-parameter "name"))
+                                        ;; It's already a pathname, so we just pass it on through:
+                                        ("file" . ,(first (tbnl:post-parameter "file"))))
+                             :schema-p nil
+                             :files-p t)
+                           ;; Expected status code is 201
+                           (if (equal 201 status-code)
+                             (tbnl:redirect response-body)
+                             (tbnl:redirect (format nil "/files?reason=~A" response-body)))))
+    ;; Fail to upload a file
+    ((equal (tbnl:request-method*) :POST)
+     (tbnl:redirect "/files/?reason=~You didn't meet a single one of the requirements."))
     ;; Fetch a file
     ((and
        (equal (tbnl:request-method*) :GET)
@@ -925,6 +950,27 @@ and any forward-slashes that sneaked through are also now underscores.
                                      "/display_tasks_search.tmpl"))
          (list ())
          :stream outstr)))
+    ;; Display the failed-to-upload page
+    ((and
+       (equal (tbnl:request-method*) :GET)
+       (tbnl:get-parameter "reason"))
+     (progn
+       (log-message :debug "Displaying the failed-to-upload page")
+       (log-message :debug "Reason for failure: '~A'" (tbnl:get-parameter "reason"))
+       (setf (tbnl:content-type*) "text/html")
+       (setf (tbnl:return-code*) tbnl:+http-ok+)
+       (with-output-to-string (outstr)
+         (html-template:fill-and-print-template
+           (make-pathname :defaults (concatenate
+                                      'string
+                                      (template-path tbnl:*acceptor*)
+                                      "/display_fileupload_failed.tmpl"))
+           (list :title "File upload failed"
+                 :stylesheets '((:sheet "upload"))
+                 :reason (tbnl:get-parameter "reason")
+                 :resourcetype nil
+                 :uid nil)
+           :stream outstr))))
     ;; Display the file-upload form
     ((equal (tbnl:request-method*) :GET)
      (setf (tbnl:content-type*) "text/html")
@@ -935,9 +981,10 @@ and any forward-slashes that sneaked through are also now underscores.
                                     'string
                                     (template-path tbnl:*acceptor*)
                                     "/display_fileupload.tmpl"))
-         ;; Nothing to put in here yet
          (list :title "File upload"
-               :stylesheets '((:sheet "upload")))
+               :stylesheets '((:sheet "upload"))
+               :resourcetype nil
+               :uid nil)
          :stream outstr)))
     ;; Delete a file
     ((equal (tbnl:request-method*) :DELETE)

@@ -4,9 +4,9 @@
     <h1>File upload</h1>
     <div id="pagegrid">
     <!-- TMPL_INCLUDE "templates/navbar_top.html" -->
-      <form action="/files" method="post" class="uploadform">
+      <form action="/files" method="post" class="uploadform" enctype="multipart/form-data">
         <div id="filename-title">File name:</div>
-        <input id="name" type="text" name="filename"></input>
+        <input id="filename" type="text" name="name"></input>
         <div id="file-title">File:</div>
         <input id="file" type="file" name="file"></input>
         <input id="submit" type="submit" name="Upload" value="Upload"></input>
