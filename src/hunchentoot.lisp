@@ -790,6 +790,7 @@ and any forward-slashes that sneaked through are also now underscores.
   "Display the search-page"
   (cond
     ((equal (tbnl:request-method*) :GET)
+     (log-message :debug "Displaying the search page.")
      (let* ((schema (mapcar #'(lambda (rtype)
                                 (list :name rtype
                                       :selected (when (equal rtype
