@@ -195,7 +195,7 @@
   (mapcar #'(lambda (attribute)
               (make-schema-rtype-attrs
                 :name (cdr (assoc :name attribute))
-                :description (cdr (assoc :description attribute))
+                :description (or (cdr (assoc :description attribute)) "")
                 :values (cl-ppcre:split "," (cdr (assoc :vals attribute)))
                 ;; Not yet implemented in RG.
                 ;:valuetype (cdr (assoc :valuetype attribute))
