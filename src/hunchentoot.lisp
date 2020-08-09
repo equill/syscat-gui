@@ -1286,6 +1286,8 @@ and any forward-slashes that sneaked through are also now underscores.
            (type cl-webcat-acceptor acceptor)
            (type (or null string) static-path template-path))
   (log-message :info "Attempting to start up the cl-webcat application server")
+  ;; Control the decoding of JSON identifiers
+  (setf json:*json-identifier-name-to-lisp* 'common-lisp:string-upcase)
   ;; Sanity-check: is an acceptor already running?
   ;;; We can't directly check whether this acceptor is running,
   ;;; so we're using the existence of its special variable as a proxy.
