@@ -1276,66 +1276,69 @@ and any forward-slashes that sneaked through are also now underscores.
 
 (defun startup (&key acceptor static-path template-path docker)
   "Start up the appserver.
-   Ensures the uniqueness constraint on resource-types is present in Neo4j.
-   Keyword arguments:
-   - acceptor = prebuilt acceptor, to use instead of the default.
-   - dispatchers = extra dispatchers to add to tbnl:*dispatch-table* in addition to the defaults.
-   - docker = whether to start up in a manner suitable to running under docker,
-   i.e. return only after Hunchentoot shuts down, instead of immediately after it starts up."
+  Ensures the uniqueness constraint on resource-types is present in Neo4j.
+  Keyword arguments:
+  - acceptor = prebuilt acceptor, to use instead of the default.
+  - dispatchers = extra dispatchers to add to tbnl:*dispatch-table* in addition to the defaults.
+  - docker = whether to start up in a manner suitable to running under docker,
+  i.e. return only after Hunchentoot shuts down, instead of immediately after it starts up."
+  (declare (type (boolean) docker)
+           (type cl-webcat-acceptor acceptor)
+           (type (or null string) static-path template-path))
   (log-message :info "Attempting to start up the cl-webcat application server")
   ;; Sanity-check: is an acceptor already running?
   ;;; We can't directly check whether this acceptor is running,
   ;;; so we're using the existence of its special variable as a proxy.
   (if (boundp '*cl-webcat-acceptor*)
-      ;; There's an acceptor already in play; bail out.
-      (log-message :critical "Acceptor already exists; refusing to create a new one.")
-      ;; No existing acceptor; we're good to go.
-      (let ((myacceptor (or acceptor
-                            (make-acceptor :template-path template-path)))
-            (static-filepath (or static-path
-                                 (sb-ext:posix-getenv "STATIC_PATH")
-                                 (getf *config-vars* :static-path))))
-        ;; Make it available as a dynamic variable, for shutdown to work on
-        (defparameter *cl-webcat-acceptor* myacceptor)
-        ;; Stop html-template raising a warning every time it compiles a template
-        (setf html-template:*warn-on-creation* nil)
-        ;; Set the dispatch table
-        (log-message :info "Configuring the dispatch table")
-        (setf tbnl:*dispatch-table*
-              (list
-                ;; Include the additional dispatchers here
-                (tbnl:create-regex-dispatcher "/create$" 'create-item)
-                (tbnl:create-prefix-dispatcher "/search" 'searchpage)
-                (tbnl:create-prefix-dispatcher "/tasks" 'tasks)
-                (tbnl:create-prefix-dispatcher "/files" 'files)
-                (tbnl:create-prefix-dispatcher "/display" 'display-item)
-                (tbnl:create-prefix-dispatcher "/editresource" 'edit-resource)
-                (tbnl:create-prefix-dispatcher "/edit_links" 'edit-links)
-                (tbnl:create-folder-dispatcher-and-handler "/static/css/"
-                                                           (concatenate 'string static-filepath "/css/")
-                                                           "text/css")
-                (tbnl:create-folder-dispatcher-and-handler "/static/js/"
-                                                           (concatenate 'string static-filepath "/js/")
-                                                           "text/javascript")
-                (tbnl:create-regex-dispatcher "/healthcheck$" 'healthcheck)
-                (tbnl:create-regex-dispatcher "/$" 'root)
-                ;; Default fallback
-                (tbnl:create-prefix-dispatcher "/" 'four-oh-four)))
-        ;; Start up the server
-        (log-message :info "Starting up Hunchentoot to serve HTTP requests")
-        (handler-case
-          (tbnl:start myacceptor)
-          (usocket:address-in-use-error
-            () (log-message :error "Attempted to start an already-running instance!")))
-        (when docker
-          (sb-thread:join-thread
-            (find-if
-                    (lambda (th)
-                      (string= (sb-thread:thread-name th)
-                               (format nil "hunchentoot-listener-~A:~A"
-                                       (tbnl:acceptor-address myacceptor)
-                                       (tbnl:acceptor-port myacceptor))))
-                    (sb-thread:list-all-threads)))))))
+    ;; There's an acceptor already in play; bail out.
+    (log-message :critical "Acceptor already exists; refusing to create a new one.")
+    ;; No existing acceptor; we're good to go.
+    (let ((myacceptor (or acceptor
+                          (make-acceptor :template-path template-path)))
+          (static-filepath (or static-path
+                               (sb-ext:posix-getenv "STATIC_PATH")
+                               (getf *config-vars* :static-path))))
+      ;; Make it available as a dynamic variable, for shutdown to work on
+      (defparameter *cl-webcat-acceptor* myacceptor)
+      ;; Stop html-template raising a warning every time it compiles a template
+      (setf html-template:*warn-on-creation* nil)
+      ;; Set the dispatch table
+      (log-message :info "Configuring the dispatch table")
+      (setf tbnl:*dispatch-table*
+            (list
+              ;; Include the additional dispatchers here
+              (tbnl:create-regex-dispatcher "/create$" 'create-item)
+              (tbnl:create-prefix-dispatcher "/search" 'searchpage)
+              (tbnl:create-prefix-dispatcher "/tasks" 'tasks)
+              (tbnl:create-prefix-dispatcher "/files" 'files)
+              (tbnl:create-prefix-dispatcher "/display" 'display-item)
+              (tbnl:create-prefix-dispatcher "/editresource" 'edit-resource)
+              (tbnl:create-prefix-dispatcher "/edit_links" 'edit-links)
+              (tbnl:create-folder-dispatcher-and-handler "/static/css/"
+                                                         (concatenate 'string static-filepath "/css/")
+                                                         "text/css")
+              (tbnl:create-folder-dispatcher-and-handler "/static/js/"
+                                                         (concatenate 'string static-filepath "/js/")
+                                                         "text/javascript")
+              (tbnl:create-regex-dispatcher "/healthcheck$" 'healthcheck)
+              (tbnl:create-regex-dispatcher "/$" 'root)
+              ;; Default fallback
+              (tbnl:create-prefix-dispatcher "/" 'four-oh-four)))
+      ;; Start up the server
+      (log-message :info "Starting up Hunchentoot to serve HTTP requests")
+      (handler-case
+        (tbnl:start myacceptor)
+        (usocket:address-in-use-error
+          () (log-message :error "Attempted to start an already-running instance!")))
+      (when docker
+        (sb-thread:join-thread
+          (find-if
+            (lambda (th)
+              (string= (sb-thread:thread-name th)
+                       (format nil "hunchentoot-listener-~A:~A"
+                               (tbnl:acceptor-address myacceptor)
+                               (tbnl:acceptor-port myacceptor))))
+            (sb-thread:list-all-threads)))))))
 
 (defun dockerstart ()
     (startup :docker t))
