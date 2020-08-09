@@ -431,18 +431,22 @@ and any forward-slashes that sneaked through are also now underscores.
                                             (mapcar
                                               #'(lambda (attribute)
                                                   ;; Extract the value, using the keyworded version of the attribute-name
-                                                  (let ((val (cdr (assoc (car attribute) content))))
+                                                  (log-message :debug "Extracting value for attribute '~A'" (car attribute))
+                                                  (let* ((attrname (car attribute))
+                                                         (attrval (cdr (assoc attrname content))))
                                                     ;; Conditionally render the type
                                                     (list :attrname (schema-rtype-attrs-name (cdr attribute))
                                                           ; Ensure all values are strings, for the template.
-                                                          :attrval (if val
+                                                          :attrval (if attrval
                                                                        ;; Render all descriptions as Markdown
-                                                                       (if (or (member (car attribute) '(:description :text))
-                                                                               (equal "commonmark" (schema-rtype-attrs-valuetype (cdr attribute))))
+                                                                       (if (or (member attrname '(:description :text))
+                                                                               (equal "commonmark"
+                                                                                      (schema-rtype-attrs-valuetype
+                                                                                        (cdr attribute))))
                                                                          (with-output-to-string (mdstr)
-                                                                           (3bmd:parse-string-and-print-to-stream val mdstr)
+                                                                           (3bmd:parse-string-and-print-to-stream attrval mdstr)
                                                                            mdstr)
-                                                                         val)
+                                                                         attrval)
                                                                        ""))))
                                               attrdefs))
                                       :stream contstr))))
