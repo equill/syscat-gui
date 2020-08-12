@@ -864,7 +864,10 @@ and any forward-slashes that sneaked through are also now underscores.
                           (concatenate 'string
                                        (template-path tbnl:*acceptor*)
                                        "/display_search.tmpl"))
-           (list :schema schema
+           (list :title "Webcat search page"
+                 :stylesheets '((:sheet "search"))
+                 :javascripts '((:script "search"))
+                 :schema schema
                  :tags (mapcar #'(lambda (tag)
                                    (list :tag tag
                                          :selected (when (member tag tags-requested :test #'equal)

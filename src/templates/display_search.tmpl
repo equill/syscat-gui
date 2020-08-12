@@ -1,73 +1,65 @@
 <!DOCTYPE HTML>
 <html>
-<head>
-    <title>Webcat search page</title>
-    <script src="/static/js/jquery-3.3.1.js"></script>
-    <script src="/static/js/common.js"></script>
-    <script src="/static/js/search.js"></script>
-    <link rel="stylesheet" type="text/css" href="/static/css/common.css">
-    <link rel="stylesheet" type="text/css" href="/static/css/search.css">
-</head>
+<!-- TMPL_INCLUDE "templates/head.tmpl" -->
 
-<body>
-  <h1>Webcat search page</h1>
-  <div id="navigation"><a href="/create">Create a new item</a></div>
-  <div id="navigation"><a href="/tasks">Tasks</a></div>
-  <!-- Start of grid layout -->
-  <div id="pagegrid">
-  <!-- Start of form -->
-  <form action="/search" method="get" class="formgrid" id="searchform">
-  <!-- Resource types -->
-    <p class="header" id="header-resourcetypes">Resource types</p>
-    <select name="resourcetype" id="resourcetype" size="15">
-      <!-- TMPL_LOOP schema -->
-        <!-- TMPL_IF selected -->
-        <option value="<!-- TMPL_VAR name -->" selected="selected"><!-- TMPL_VAR name --></option>
-        <!-- TMPL_ELSE -->
-        <option value="<!-- TMPL_VAR name -->"><!-- TMPL_VAR name --></option>
-        <!-- /TMPL_IF -->
+  <body>
+    <h1>Webcat search page</h1>
+    <!-- Start of grid layout -->
+    <div id="pagegrid">
+    <!-- TMPL_INCLUDE "templates/navbar_top.html" -->
+    <!-- Start of form -->
+    <form action="/search" method="get" class="formgrid" id="searchform">
+    <!-- Resource types -->
+      <p class="header" id="header-resourcetypes">Resource types</p>
+      <select name="resourcetype" id="resourcetype" size="15">
+        <!-- TMPL_LOOP schema -->
+          <!-- TMPL_IF selected -->
+          <option value="<!-- TMPL_VAR name -->" selected="selected"><!-- TMPL_VAR name --></option>
+          <!-- TMPL_ELSE -->
+          <option value="<!-- TMPL_VAR name -->"><!-- TMPL_VAR name --></option>
+          <!-- /TMPL_IF -->
+        <!-- /TMPL_LOOP -->
+      </select>
+    <!-- End of resource types -->
+    <!-- Tags -->
+      <p class="header" id="header-tags">Available tags</p>
+      <select name="tags" id="tags" size="15" multiple="multiple">
+        <!-- TMPL_LOOP tags -->
+          <!-- TMPL_IF selected -->
+          <option value="<!-- TMPL_VAR tag -->" selected="selected"><!-- TMPL_VAR tag --></option>
+          <!-- TMPL_ELSE -->
+          <option value="<!-- TMPL_VAR tag -->"><!-- TMPL_VAR tag --></option>
+          <!-- /TMPL_IF -->
+        <!-- /TMPL_LOOP -->
+      </select>
+    <!-- End of tags -->
+
+    <!-- Javascript-updated search refinement -->
+    <p class="header" id="header-refinesearch">Refine your search</p>
+    <div class="attrnames" id="attrnames">
+    <div id="refinesearch">UID regex</div>
+    </div>
+    <div class="attrvals" id="attrvals">
+      <input type="text" name="uid_regex" value="<!-- TMPL_VAR uid-regex -->" id="refinesearch-input"></input>
+    </div>
+    <!-- Submit button -->
+    <input type="submit" value="Search" id="searchbutton">
+    </form>
+    <!-- End of form -->
+
+    <div id="searchresults">
+    <h2>Search results</h2>
+
+    <ul>
+      <!-- TMPL_LOOP results -->
+      <li><a href="display/<!-- TMPL_VAR resourcetype -->/<!-- TMPL_VAR uid -->"><!-- TMPL_VAR title --></a></li>
       <!-- /TMPL_LOOP -->
-    </select>
-  <!-- End of resource types -->
-  <!-- Tags -->
-    <p class="header" id="header-tags">Available tags</p>
-    <select name="tags" id="tags" size="15" multiple="multiple">
-      <!-- TMPL_LOOP tags -->
-        <!-- TMPL_IF selected -->
-        <option value="<!-- TMPL_VAR tag -->" selected="selected"><!-- TMPL_VAR tag --></option>
-        <!-- TMPL_ELSE -->
-        <option value="<!-- TMPL_VAR tag -->"><!-- TMPL_VAR tag --></option>
-        <!-- /TMPL_IF -->
-      <!-- /TMPL_LOOP -->
-    </select>
-  <!-- End of tags -->
+    </ul>
+    <!-- End search results -->
+    </div>
 
-  <!-- Javascript-updated search refinement -->
-  <p class="header" id="header-refinesearch">Refine your search</p>
-  <div class="attrnames" id="attrnames">
-  <div id="refinesearch">UID regex</div>
-  </div>
-  <div class="attrvals" id="attrvals">
-    <input type="text" name="uid_regex" value="<!-- TMPL_VAR uid-regex -->" id="refinesearch-input"></input>
-  </div>
-  <!-- Submit button -->
-  <input type="submit" value="Search" id="searchbutton">
-  </form>
-  <!-- End of form -->
+    <!-- End of grid -->
+    </div>
 
-  <div id="searchresults">
-  <h2>Search results</h2>
-
-  <ul>
-    <!-- TMPL_LOOP results -->
-    <li><a href="display/<!-- TMPL_VAR resourcetype -->/<!-- TMPL_VAR uid -->"><!-- TMPL_VAR title --></a></li>
-    <!-- /TMPL_LOOP -->
-  </ul>
-  <!-- End search results -->
-  </div>
-
-  <!-- End of grid -->
-  </div>
-
-</body>
+  </body>
 </html>
