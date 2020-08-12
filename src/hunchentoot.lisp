@@ -1285,7 +1285,8 @@ and any forward-slashes that sneaked through are also now underscores.
   - docker = whether to start up in a manner suitable to running under docker,
   i.e. return only after Hunchentoot shuts down, instead of immediately after it starts up."
   (declare (type (boolean) docker)
-           (type cl-webcat-acceptor acceptor)
+           ;; Specialising on acceptor doesn't allow for a null value
+           ;(type (or nil cl-webcat-acceptor) acceptor)
            (type (or null string) static-path template-path))
   (log-message :info "Attempting to start up the cl-webcat application server")
   ;; Control the decoding of JSON identifiers
