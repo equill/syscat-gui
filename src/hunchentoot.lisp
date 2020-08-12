@@ -516,34 +516,36 @@ and any forward-slashes that sneaked through are also now underscores.
                              #'(lambda (attribute)
                                  ;; Memoise this to simplify the following code
                                  (let ((attrname (schema-rtype-attrs-name attribute)))
-                                   ;; Handle differently according to type
-                                   (cond ((stringp (schema-rtype-attrs-values attribute))
-                                          (let ((existing-value
-                                                  (cdr
-                                                    (assoc
-                                                      (intern (string-upcase attrname) 'keyword)
-                                                      content))))
-                                            (log-message :debug (format nil "Existing value of ~A: ~A"
-                                                                        attrname existing-value))
-                                            (list :attrname attrname
-                                                  :attrvals
-                                                  (mapcar
-                                                    #'(lambda (val)
-                                                        (list :val val
-                                                              :selected (when (equal existing-value val) t)))
-                                                    ;; Split the vals on commas
-                                                    (cl-ppcre:split "," (schema-rtype-attrs-values attribute)))
-                                                  :textarea nil)))
-                                         ;; Default style
-                                         (t
-                                           (list :attrname attrname
-                                                 :attrval (or (cdr (assoc
-                                                                     (intern (string-upcase attrname) 'keyword)
-                                                                     content))
-                                                              "")
-                                                 :attrvals nil
-                                                 :textarea (member attrname '("description" "text")
-                                                                   :test #'equal))))))
+                                   ;; Handle differently according to attribute type
+                                   (cond
+                                     ;; If the `values` attribute is non-null:
+                                     ((not (null (schema-rtype-attrs-values attribute)))
+                                      (let ((existing-value
+                                              (cdr
+                                                (assoc
+                                                  (intern (string-upcase attrname) 'keyword)
+                                                  content))))
+                                        (log-message :debug (format nil "Existing value of ~A: ~A"
+                                                                    attrname existing-value))
+                                        (list :attrname attrname
+                                              :attrvals
+                                              (mapcar
+                                                #'(lambda (val)
+                                                    (list :val val
+                                                          :selected (when (equal existing-value val) t)))
+                                                ;; Split the vals on commas
+                                                (cl-ppcre:split "," (schema-rtype-attrs-values attribute)))
+                                              :textarea nil)))
+                                     ;; Default style
+                                     (t
+                                       (list :attrname attrname
+                                             :attrval (or (cdr (assoc
+                                                                 (intern (string-upcase attrname) 'keyword)
+                                                                 content))
+                                                          "")
+                                             :attrvals nil
+                                             :textarea (member attrname '("description" "text")
+                                                               :test #'equal))))))
                              ;; Retrieve the attribute-definitions for this resourcetype
                              (get-attrs (rg-server tbnl:*acceptor*) resourcetype))))
                      (log-message :debug "Attributes: ~A" attributes-to-display)
