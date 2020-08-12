@@ -10,7 +10,7 @@
 (defparameter *config-vars*
   `(:listen-address "localhost"
     :listen-port 8080
-    :rg-hostname "localhost"
+    :rg-hostname "10.255.0.1"
     :rg-port 4955
     :dbhostname "10.255.0.1"
     :dbport 7677
