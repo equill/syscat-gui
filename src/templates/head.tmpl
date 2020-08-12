@@ -1,11 +1,14 @@
   <head>
     <title><!-- TMPL_VAR title --></title>
     <link rel="stylesheet" type="text/css" href="/static/css/common.css">
-    <link rel="stylesheet" type="text/css" href="/static/css/display.css">
+    <!-- Page-specific stylesheets -->
     <!-- TMPL_LOOP stylesheets -->
     <link rel="stylesheet" type="text/css" href="/static/css/<!-- TMPL_VAR sheet -->.css">
     <!-- /TMPL_LOOP -->
     <script src="/static/js/jquery-3.3.1.js"></script>
     <script src="/static/js/common.js"></script>
-    <script src="/static/js/display.js"></script>
+    <!-- Page-specific javascript files -->
+    <!-- TMPL_LOOP javascripts -->
+    <script src="/static/js/<!-- TMPL_VAR script -->.js"></script>
+    <!-- /TMPL_LOOP -->
   </head>

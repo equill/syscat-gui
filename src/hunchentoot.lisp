@@ -990,7 +990,9 @@ and any forward-slashes that sneaked through are also now underscores.
                                     (template-path tbnl:*acceptor*)
                                     "/display_fileupload.tmpl"))
          (list :title "File upload"
-               :stylesheets '((:sheet "upload"))
+               :stylesheets '((:sheet "upload")
+                              (:sheet "display"))
+               :javascripts '((:script "display"))
                :resourcetype nil
                :uid nil)
          :stream outstr)))
