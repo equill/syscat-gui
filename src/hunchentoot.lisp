@@ -521,20 +521,22 @@ and any forward-slashes that sneaked through are also now underscores.
                                      ;; If the `values` attribute is non-null:
                                      ((not (null (schema-rtype-attrs-values attribute)))
                                       (let ((existing-value
-                                              (cdr
-                                                (assoc
-                                                  (intern (string-upcase attrname) 'keyword)
-                                                  content))))
+                                              (or (cdr
+                                                    (assoc
+                                                      (intern (string-upcase attrname) 'keyword)
+                                                      content))
+                                                  "")))
+                                        (log-message :debug "Extracting value for attribute '~A'" attrname)
                                         (log-message :debug (format nil "Existing value of ~A: ~A"
                                                                     attrname existing-value))
                                         (list :attrname attrname
                                               :attrvals
-                                              (mapcar
-                                                #'(lambda (val)
-                                                    (list :val val
-                                                          :selected (when (equal existing-value val) t)))
-                                                ;; Split the vals on commas
-                                                (cl-ppcre:split "," (schema-rtype-attrs-values attribute)))
+                                              (when (schema-rtype-attrs-values attribute)
+                                                (mapcar
+                                                  #'(lambda (val)
+                                                      (list :val val
+                                                            :selected (when (equal existing-value val) t)))
+                                                  (schema-rtype-attrs-values attribute)))
                                               :textarea nil)))
                                      ;; Default style
                                      (t
