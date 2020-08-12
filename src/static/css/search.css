@@ -1,3 +1,7 @@
+#searchform {
+    grid-row 2;
+}
+
 .formgrid {
     display: grid;
     grid-template-columns: auto auto auto auto;
@@ -48,5 +52,5 @@
 }
 
 #searchresults {
-    grid-row: 2;
+    grid-row: 3;
 }
