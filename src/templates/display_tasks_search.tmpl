@@ -1,24 +1,24 @@
 <!DOCTYPE HTML>
+<!-- Depends on tasks_search.css -->
 <html>
-<head>
-    <title>Webcat tasks page</title>
-    <script src="/static/js/jquery-3.3.1.js"></script>
-    <script src="/static/js/common.js"></script>
-    <script src="/static/js/search.js"></script>
-    <link rel="stylesheet" type="text/css" href="/static/css/common.css">
-    <link rel="stylesheet" type="text/css" href="/static/css/tasks_search.css">
-</head>
-
+<!-- TMPL_INCLUDE "templates/head.tmpl" -->
 <body>
-  <h1>Webcat tasks page</h1>
-  <div id="navigation"><a href="/create">Create a new item</a></div>
   <!-- Start of grid layout -->
   <div id="pagegrid">
+  <h1>Webcat tasks page</h1>
+  <!-- TMPL_INCLUDE "templates/navbar_top.html" -->
+
   <!-- Start of form -->
   <form action="/tasks" method="get" class="formgrid" id="searchform">
-  <!-- Tags -->
-    <p class="header" id="header-tags">Available tags</p>
-    <select name="tags" id="tags" size="15" multiple="multiple">
+
+    <!-- Header row -->
+    <div id="tags-header">Available tags</div>
+    <div id="criteria-header">Refine your search</div>
+
+    <!-- Results row -->
+    <!-- Tags -->
+    <div id="tags-list">
+      <select name="tags" id="tags" size="15" multiple="multiple">
       <!-- TMPL_LOOP tags -->
         <!-- TMPL_IF selected -->
         <option value="<!-- TMPL_VAR tag -->" selected="selected"><!-- TMPL_VAR tag --></option>
@@ -26,86 +26,88 @@
         <option value="<!-- TMPL_VAR tag -->"><!-- TMPL_VAR tag --></option>
         <!-- /TMPL_IF -->
       <!-- /TMPL_LOOP -->
-    </select>
-  <!-- End of tags -->
+      </select>
+    </div>
+    <!-- End of tags -->
 
-  <!-- Search refinement -->
-  <p class="header" id="header-refinesearch">Refine your search</p>
-  <div class="attrnames" id="attrnames">
-    <div id="uid_regex">UID regex</div>
-    <div id="importance">Importance</div>
-    <div id="urgency">Urgency</div>
-    <div id="scale">Scale</div>
-    <div id="status">Status</div>
-  </div>
-  <div class="attrvals" id="attrvals">
-    <div><input type="text" name="uid_regex" value="<!-- TMPL_VAR uid-regex -->" id="refinesearch-input"></input></div>
+    <!-- Search refinement -->
+    <div id="uid-regex-name" class="criteria-name">UID regex</div>
+    <div id="uid-regex-value" class="criteria-value">
+        <input type="text" name="uid_regex" value="<!-- TMPL_VAR uid-regex -->" size=30></input>
+    </div>
+
     <!-- Importance -->
-    <div>
-    <select name="importance" id="importance" size="1">
-      <option value="">Any</option>
-      <!-- TMPL_LOOP importance -->
-        <!-- TMPL_IF selected -->
-        <option value="<!-- TMPL_VAR name -->" selected="selected"><!-- TMPL_VAR name --></option>
-        <!-- TMPL_ELSE -->
-        <option value="<!-- TMPL_VAR name -->"><!-- TMPL_VAR name --></option>
-        <!-- /TMPL_IF -->
-      <!-- /TMPL_LOOP -->
-    </select>
+    <div id="importance-name" class="criteria-name">Importance</div>
+    <div id="importance-value" class="criteria-value">
+      <select name="importance" id="importance" size="1">
+        <option value="">Any</option>
+        <!-- TMPL_LOOP importance -->
+          <!-- TMPL_IF selected -->
+          <option value="<!-- TMPL_VAR name -->" selected="selected"><!-- TMPL_VAR name --></option>
+          <!-- TMPL_ELSE -->
+          <option value="<!-- TMPL_VAR name -->"><!-- TMPL_VAR name --></option>
+          <!-- /TMPL_IF -->
+        <!-- /TMPL_LOOP -->
+      </select>
     </div>
-    <!-- End of importance -->
+
     <!-- Urgency -->
-    <div>
-    <select name="urgency" id="urgency" size="1">
-      <option value="">Any</option>
-      <!-- TMPL_LOOP urgency -->
-        <!-- TMPL_IF selected -->
-        <option value="<!-- TMPL_VAR name -->" selected="selected"><!-- TMPL_VAR name --></option>
-        <!-- TMPL_ELSE -->
-        <option value="<!-- TMPL_VAR name -->"><!-- TMPL_VAR name --></option>
-        <!-- /TMPL_IF -->
-      <!-- /TMPL_LOOP -->
-    </select>
+    <div id="urgency-name" class="criteria-name">Urgency</div>
+    <div id="urgency-value" class="criteria-value">
+      <select name="urgency" id="urgency" size="1">
+        <option value="">Any</option>
+        <!-- TMPL_LOOP urgency -->
+          <!-- TMPL_IF selected -->
+          <option value="<!-- TMPL_VAR name -->" selected="selected"><!-- TMPL_VAR name --></option>
+          <!-- TMPL_ELSE -->
+          <option value="<!-- TMPL_VAR name -->"><!-- TMPL_VAR name --></option>
+          <!-- /TMPL_IF -->
+        <!-- /TMPL_LOOP -->
+      </select>
     </div>
-    <!-- End of urgency -->
+
     <!-- Scale -->
-    <div>
-    <select name="scale" id="scale" size="1">
-      <option value="">Any</option>
-      <!-- TMPL_LOOP scale -->
-        <!-- TMPL_IF selected -->
-        <option value="<!-- TMPL_VAR name -->" selected="selected"><!-- TMPL_VAR name --></option>
-        <!-- TMPL_ELSE -->
-        <option value="<!-- TMPL_VAR name -->"><!-- TMPL_VAR name --></option>
-        <!-- /TMPL_IF -->
-      <!-- /TMPL_LOOP -->
-    </select>
+    <div id="scale-name" class="criteria-name">Scale</div>
+    <div id="scale-value" class="criteria-value">
+      <select name="scale" id="scale" size="1">
+        <option value="">Any</option>
+        <!-- TMPL_LOOP scale -->
+          <!-- TMPL_IF selected -->
+          <option value="<!-- TMPL_VAR name -->" selected="selected"><!-- TMPL_VAR name --></option>
+          <!-- TMPL_ELSE -->
+          <option value="<!-- TMPL_VAR name -->"><!-- TMPL_VAR name --></option>
+          <!-- /TMPL_IF -->
+        <!-- /TMPL_LOOP -->
+      </select>
     </div>
-    <!-- End of scale -->
+
     <!-- Statuses -->
-    <div>
-    <select name="status" id="status" size="5" multiple="multiple">
-      <option value="">Any</option>
-      <!-- TMPL_LOOP statuses -->
-        <!-- TMPL_IF selected -->
-        <option value="<!-- TMPL_VAR name -->" selected="selected"><!-- TMPL_VAR name --></option>
-        <!-- TMPL_ELSE -->
-        <option value="<!-- TMPL_VAR name -->"><!-- TMPL_VAR name --></option>
-        <!-- /TMPL_IF -->
-      <!-- /TMPL_LOOP -->
-    </select>
+    <div id="status-name" class="criteria-name">Status</div>
+    <div id="status-value" class="criteria-value">
+      <select name="status" id="status" size="5" multiple="multiple">
+        <option value="">Any</option>
+        <!-- TMPL_LOOP statuses -->
+          <!-- TMPL_IF selected -->
+          <option value="<!-- TMPL_VAR name -->" selected="selected"><!-- TMPL_VAR name --></option>
+          <!-- TMPL_ELSE -->
+          <option value="<!-- TMPL_VAR name -->"><!-- TMPL_VAR name --></option>
+          <!-- /TMPL_IF -->
+        <!-- /TMPL_LOOP -->
+      </select>
     </div>
-    <!-- End of statuses -->
-  </div>
-  <!-- Submit button -->
-  <input type="submit" value="Search" id="searchbutton">
+
+    <!-- Submit button -->
+    <div id=submit-row>
+        <input type="submit" value="Search" id="searchbutton">
+    </div>
+
   </form>
   <!-- End of form -->
 
   <div id="searchresults">
   <h2>Search results</h2>
 
-  <ul>
+  <ul class="results-list">
     <!-- TMPL_LOOP results -->
     <li><a href="display/tasks/<!-- TMPL_VAR uid -->"><!-- TMPL_VAR title --></a></li>
     <!-- /TMPL_LOOP -->

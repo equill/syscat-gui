@@ -1,53 +1,45 @@
 <!DOCTYPE HTML>
+<!-- Relies on edit.css -->
 <html>
-  <head>
-    <title>Edit <!-- TMPL_VAR resourcetype -->: <!-- TMPL_VAR title --></title>
-    <link rel="stylesheet" type="text/css" href="/static/css/common.css">
-    <link rel="stylesheet" type="text/css" href="/static/css/edit.css">
-  </head>
-
+<!-- TMPL_INCLUDE "templates/head.tmpl" -->
   <body>
-    <h1>Edit <!-- TMPL_VAR resourcetype -->: <!-- TMPL_VAR title --></h1>
     <div id="pagegrid">
-      <!-- Navigation bar -->
-      <div id="navigation">
-        <a class="nav-item-1" href='/search'>Search</a>
-        <a class="nav-item-2" href="/display/<!-- TMPL_VAR resourcetype -->/<!-- TMPL_VAR uid -->">View this item</a>
-        <a class="nav-item-3" href="/create">Create a new item</a>
-      </div>
-      <!-- End navigation bar -->
+    <h1 class="title"> <!-- TMPL_VAR title --></h1>
+    <!-- TMPL_INCLUDE "templates/navbar_top.html" -->
 
-      <!-- Edit attributes -->
-      <form id="edit-form" class="formgrid" action="/editresource/<!-- TMPL_VAR resourcetype -->/<!-- TMPL_VAR uid -->" method="post">
-        <h2 id="title-attributes">Edit attributes</h2>
-        <table class="attributes">
-        <!-- TMPL_LOOP attributes -->
-        <tr>
-        <td><!-- TMPL_VAR attrname --></td>
-        <td>
-          <!-- TMPL_IF textarea -->
-          <textarea class="attrvals" name="<!-- TMPL_VAR attrname -->"><!-- TMPL_VAR attrval --></textarea>
+    <!-- Edit attributes -->
+    <form class="formgrid" action="/editresource/<!-- TMPL_VAR resourcetype -->/<!-- TMPL_VAR uid -->" method="post">
+      <h2 id="title-attributes">Edit attributes</h2>
+      <table class="attributes">
+      <!-- TMPL_LOOP attributes -->
+      <tr>
+      <td><!-- TMPL_VAR attrname --></td>
+      <td>
+        <!-- TMPL_IF textarea -->
+        <textarea class="attrvals" name="<!-- TMPL_VAR attrname -->"><!-- TMPL_VAR attrval --></textarea>
+        <!-- TMPL_ELSE -->
+          <!-- TMPL_IF attrvals -->
+          <select class="attrvals" name="<!-- TMPL_VAR attrname -->">
+            <!-- TMPL_LOOP attrvals -->
+              <!-- TMPL_IF selected -->
+              <option name="<!-- TMPL_VAR val -->" selected="true"><!-- TMPL_VAR val --></option>
+              <!-- TMPL_ELSE -->
+              <option name="<!-- TMPL_VAR val -->"><!-- TMPL_VAR val --></option>
+              <!-- /TMPL_IF -->
+            <!-- /TMPL_LOOP -->
+          </select>
           <!-- TMPL_ELSE -->
-            <!-- TMPL_IF attrvals -->
-            <select class="attrvals" name="<!-- TMPL_VAR attrname -->">
-              <!-- TMPL_LOOP attrvals -->
-                <!-- TMPL_IF selected -->
-                <option name="<!-- TMPL_VAR val -->" selected="true"><!-- TMPL_VAR val --></option>
-                <!-- TMPL_ELSE -->
-                <option name="<!-- TMPL_VAR val -->"><!-- TMPL_VAR val --></option>
-                <!-- /TMPL_IF -->
-              <!-- /TMPL_LOOP -->
-            </select>
-            <!-- TMPL_ELSE -->
-            <input class="attrvals" name="<!-- TMPL_VAR attrname -->" value="<!-- TMPL_VAR attrval -->">
-            <!-- /TMPL_IF -->
+          <input class="attrvals" name="<!-- TMPL_VAR attrname -->" value="<!-- TMPL_VAR attrval -->">
           <!-- /TMPL_IF -->
-        </td>
-        </tr>
-        <!-- /TMPL_LOOP -->
-        </table>
-        <input type="submit" value="Update">
-      </form>
+        <!-- /TMPL_IF -->
+      </td>
+      </tr>
+      <!-- /TMPL_LOOP -->
+      </table>
+      <div id=submit-row>
+        <input id="wikipage-submit" type="submit" value="Update"></input>
+      </div>
+    </form>
     <!-- End edit attributes -->
     </div>
   </body>

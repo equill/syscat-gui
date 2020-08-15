@@ -1,62 +1,46 @@
 <!DOCTYPE HTML>
+<!-- Relies on common.css and display.css -->
 <html>
-  <head>
-    <title><!-- TMPL_VAR resourcetype --> <!-- TMPL_VAR title --></title>
-    <link rel="stylesheet" type="text/css" href="/static/css/common.css">
-    <link rel="stylesheet" type="text/css" href="/static/css/display.css">
-    <!-- TMPL_LOOP stylesheets -->
-    <link rel="stylesheet" type="text/css" href="/static/css/<!-- TMPL_VAR sheet -->.css">
-    <!-- /TMPL_LOOP -->
-    <script src="/static/js/jquery-3.3.1.js"></script>
-    <script src="/static/js/common.js"></script>
-    <script src="/static/js/display.js"></script>
-  </head>
-
+<!-- TMPL_INCLUDE "templates/head.tmpl" -->
   <body>
-    <h1><!-- TMPL_VAR resourcetype --> <!-- TMPL_VAR title --></h1>
     <div id="pagegrid">
-    <!-- Navigation bar -->
-      <div id="navigation">
-        <a class="nav-item-1" href='/search'>Search</a>
-        <a class="nav-item-2" href="/editresource/<!-- TMPL_VAR resourcetype -->/<!-- TMPL_VAR uid -->">Edit</a>
-        <a class="nav-item-3" href="/create">Create a new item</a>
-        <a class="nav-item-4" href="/tasks">Tasks</a>
-      </div>
-      <!-- End navigation bar -->
+    <h1 class="title"><!-- TMPL_VAR resourcetype --> <!-- TMPL_VAR title --></h1>
+    <!-- TMPL_INCLUDE "templates/navbar_top.html" -->
 
       <!-- Content - must already be wrapped in a suitable div -->
       <!-- TMPL_VAR content -->
       <!-- End content -->
 
-      <div id="metadetails">
-        <!-- Tags -->
-        <h2 id="tags_header">Tags</h2>
-        <ul class="taglist">
-        <!-- TMPL_LOOP tags -->
-            <li><!-- TMPL_VAR uid --></li>
-        <!-- /TMPL_LOOP -->
-        </ul>
-        <!-- Groups -->
-        <h2 id="groups_header">Groups</h2>
-        <ul class="grouplist">
-          <!-- TMPL_LOOP groups -->
+      <!-- Tags -->
+      <h2 id="tags_header" class="page-bottom-title">Tags</h2>
+      <ul id="taglist" class="page-bottom-list">
+      <!-- TMPL_LOOP tags -->
           <li><!-- TMPL_VAR uid --></li>
-          <!-- /TMPL_LOOP -->
-        </ul>
-      </div>
+      <!-- /TMPL_LOOP -->
+      </ul>
+
+      <!-- Groups -->
+      <h2 id="groups_header" class="page-bottom-title">Groups</h2>
+      <ul id="grouplist" class="page-bottom-list">
+        <!-- TMPL_LOOP groups -->
+        <li><!-- TMPL_VAR uid --></li>
+        <!-- /TMPL_LOOP -->
+      </ul>
+
       <!-- Outbound links -->
-      <div>
-        <h2 id="outbound_links">Outbound links</h2>
-        <ul id="outbound_links">
-          <!-- TMPL_LOOP outbound -->
-          <li>
-            <a href="/display/<!-- TMPL_VAR resourcetype -->/<!-- TMPL_VAR uid -->">
-              /<!-- TMPL_VAR relationship -->/<!-- TMPL_VAR resourcetype -->/<!-- TMPL_VAR uid --></a>
-          </li>
-          <!-- /TMPL_LOOP -->
-        </ul>
+      <h2 id="outbound_links" class="page-bottom-title">Outbound links</h2>
+      <ul id="outbound_links" class="page-bottom-list">
+        <!-- TMPL_LOOP outbound -->
+        <li>
+          <a href="/display/<!-- TMPL_VAR resourcetype -->/<!-- TMPL_VAR uid -->">
+            /<!-- TMPL_VAR relationship -->/<!-- TMPL_VAR resourcetype -->/<!-- TMPL_VAR uid --></a>
+        </li>
+        <!-- /TMPL_LOOP -->
+      </ul>
+
+      <div id="taglink">
+        <a id="taglink" href="/edit_links/<!-- TMPL_VAR resourcetype -->/<!-- TMPL_VAR uid -->">Edit tags, groups and links</a>
       </div>
-      <div id="taglink"><a href="/edit_links/<!-- TMPL_VAR resourcetype -->/<!-- TMPL_VAR uid -->">Edit tags, groups and links</a></div>
 
     <!-- Page-grid ends -->
     </div>

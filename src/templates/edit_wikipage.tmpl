@@ -1,29 +1,21 @@
 <!DOCTYPE HTML>
+<!-- Relies on edit.css -->
 <html>
-  <head>
-    <title>Edit wikipage: <!-- TMPL_VAR title --></title>
-    <link rel="stylesheet" type="text/css" href="/static/css/common.css">
-    <link rel="stylesheet" type="text/css" href="/static/css/edit.css">
-  </head>
-
+<!-- TMPL_INCLUDE "templates/head.tmpl" -->
   <body>
-    <h1>Edit wikipage: <!-- TMPL_VAR title --></h1>
     <div id="pagegrid">
-      <!-- Navigation bar -->
-      <div id="navigation">
-        <a class="nav-item-1" href='/search'>Search</a>
-        <a class="nav-item-2" href="/display/wikipages/<!-- TMPL_VAR uid -->">View this item</a>
-        <a class="nav-item-3" href="/create">Create a new item</a>
-      </div>
-      <!-- End navigation bar -->
+    <h1 class="title">Edit wikipage: <!-- TMPL_VAR title --></h1>
+    <!-- TMPL_INCLUDE "templates/navbar_top.html" -->
 
-      <!-- Edit attributes -->
-      <form id="edit-form" class="formgrid" action="/editresource/wikipages/<!-- TMPL_VAR uid -->" method="post">
-        <div class="wikititle-title">Title:</div>
-        <input name="title" value="<!-- TMPL_VAR title -->" class="wikititle-value"><!-- TMPL_VAR title --></div>
-        <textarea name="text" class="attrvals" cols="80" rows="25"><!-- TMPL_VAR content --></textarea>
-        <input type="submit" value="Update">
-      </form>
+    <!-- Edit attributes -->
+    <form class="formgrid" action="/editresource/wikipages/<!-- TMPL_VAR uid -->" method="post">
+      <div class="wikititle-title">Title:</div>
+      <input class="wikititle-value" name="title" value="<!-- TMPL_VAR title -->">
+      <textarea id="wikipage-content" name="text" cols="100" rows="25"><!-- TMPL_VAR content --></textarea>
+      <div id=submit-row>
+        <input id="wikipage-submit" type="submit" value="Update"></input>
+      </div>
+    </form>
     <!-- End edit attributes -->
     </div>
   </body>

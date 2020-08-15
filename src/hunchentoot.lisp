@@ -382,16 +382,18 @@ and any forward-slashes that sneaked through are also now underscores.
           (with-output-to-string (outstr)
             (html-template:fill-and-print-template
               (make-pathname :defaults layout-template-path)
-              (list :resourcetype resourcetype
-                    :uid uid
-                    ;; Additional stylesheets for specific resource-types
-                    :stylesheets (if (equal "tasks" resourcetype)
-                                     '((:sheet "tasks_display"))
-                                     ())
-                    ;; If it's a wikipage _and_ it has a title, use that.
+              (list ;; If it's a wikipage _and_ it has a title, use that.
                     ;; Otherwise, just de-url-escape the UID
                     :title (or (cdr (assoc :title content))
                                (uid-to-title uid))
+                    :javascripts '((:script "display"))
+                    :resourcetype resourcetype
+                    :uid uid
+                    ;; Additional stylesheets for specific resource-types
+                    :stylesheets (append
+                                   '((:sheet "display"))
+                                   (when (equal "tasks" resourcetype)
+                                     '((:sheet "tasks_display"))))
                     :content (cond
                                ;; Display a task
                                ((equal resourcetype "tasks")
@@ -504,6 +506,7 @@ and any forward-slashes that sneaked through are also now underscores.
                                          (not (equal (cdr (assoc :title content)) "")))
                                      (cdr (assoc :title content))
                                      (uid-to-title uid))
+                            :stylesheets '((:sheet "edit"))
                             :uid uid
                             :content (cdr (assoc :text content)))
                       :stream outstr))))
@@ -560,7 +563,8 @@ and any forward-slashes that sneaked through are also now underscores.
                                                                "/edit_resource.tmpl"))
                          (list :resourcetype resourcetype
                                :uid uid
-                               :title (uid-to-title uid)
+                               :title (format nil "Edit ~A: ~A" resourcetype (uid-to-title uid))
+                               :stylesheets '((:sheet "edit"))
                                :attributes attributes-to-display)
                          :stream outstr))))))
          ;; Content not retrieved
@@ -606,9 +610,11 @@ and any forward-slashes that sneaked through are also now underscores.
                                 (concatenate 'string
                                              (template-path tbnl:*acceptor*)
                                              "/display_layout.tmpl"))
-                 `(:resourcetype ,resourcetype
+                 `(:resourcetype :title ,(format nil "Failed to create ~A" uid)
+                                 :stylesheets '((:sheet "display"))
+                                 :javascripts '((:script "display"))
+                                 ,resourcetype
                                  :uid ,uid
-                                 :title ,(format nil "Failed to create ~A" uid)
                                  :content ,(with-output-to-string (contstr)
                                              (html-template:fill-and-print-template
                                                (make-pathname
@@ -787,6 +793,8 @@ and any forward-slashes that sneaked through are also now underscores.
                                            "/display_layout.tmpl"))
                `(:resourcetype ,resourcetype
                                :uid ,uid
+                               :stylesheets '((:sheet "display"))
+                               :javascripts '((:script "display"))
                                :title ,(format nil "Failed to create ~A" uid)
                                :content ,(with-output-to-string (contstr)
                                            (html-template:fill-and-print-template
@@ -1036,7 +1044,10 @@ and any forward-slashes that sneaked through are also now underscores.
                           (concatenate 'string
                                        (template-path tbnl:*acceptor*)
                                        "/display_tasks_search.tmpl"))
-           (list :statuses (mapcar
+           (list :stylesheets '((:sheet "tasks_search"))
+                 :javascripts '((:script "search"))
+                 :title "Webcat tasks search"
+                 :statuses (mapcar
                              #'(lambda (status)
                                  (list :name status
                                        :selected (when (member status statuses-requested :test #'equal)
@@ -1147,6 +1158,8 @@ and any forward-slashes that sneaked through are also now underscores.
                                                                   "/display_layout.tmpl"))
                             `(:resourcetype ,resourcetype
                               :uid ,uid
+                              :stylesheets '((:sheet "display"))
+                              :javascripts '((:script "display"))
                               :title ,(format nil "Failed to create ~A" uid)
                               :content ,(with-output-to-string (contstr)
                                           (html-template:fill-and-print-template

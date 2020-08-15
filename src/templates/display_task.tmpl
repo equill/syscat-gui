@@ -1,17 +1,15 @@
-  <div class="content-default">
-  <div class="contentgrid">
+  <div class="task-grid">
     <div class="task_description"><!-- TMPL_VAR description --></div>
-    <div class="taskattr_names">
-      <div>Importance:</div>
-      <div>Urgency:</div>
-      <div>Scale:</div>
-      <div>Status:</div>
-    </div>
-    <div class="taskattr_values">
-      <div><!-- TMPL_VAR importance --></div>
-      <div><!-- TMPL_VAR urgency --></div>
-      <div><!-- TMPL_VAR scale --></div>
-      <div><!-- TMPL_VAR status --></div>
-    </div>
-  </div>
+
+    <div id="importance-name" class="taskattr_name">Importance:</div>
+    <div id="importance-value" class="taskattr_value"><!-- TMPL_VAR importance --></div>
+
+    <div id="urgency-name" class="taskattr_name">Urgency:</div>
+    <div id="urgency-value" class="taskattr_value"><!-- TMPL_VAR urgency --></div>
+
+    <div id="scale-name" class="taskattr_name">Scale:</div>
+    <div id="scale-value" class="taskattr_value"><!-- TMPL_VAR scale --></div>
+
+    <div id="status-name" class="taskattr_name">Status:</div>
+    <div id="status-value" class="taskattr_value"><!-- TMPL_VAR status --></div>
   </div>

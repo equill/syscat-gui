@@ -1,14 +1,5 @@
 #searchform {
-    grid-row 2;
-}
-
-.formgrid {
-    display: grid;
-    grid-template-columns: auto auto auto auto;
-    grid-column-gap: 20px;
-    grid-row-gap: 5px;
-    align-content: start;
-    justify-content: start;
+    grid-row 4;
 }
 
 #header-resourcetypes {
@@ -51,6 +42,16 @@
     grid-column: 1 / span 4;
 }
 
+
+/* List of search results */
+
 #searchresults {
-    grid-row: 3;
+    grid-row: 5;
+}
+
+.results-list {
+  /* No dot-markers */
+  list-style-type: none;
+  /* Don't indent the list */
+  padding: 0;
 }

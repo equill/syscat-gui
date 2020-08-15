@@ -1,4 +1,5 @@
 <!DOCTYPE HTML>
+<!-- Depends on search.css -->
 <html>
 <!-- TMPL_INCLUDE "templates/head.tmpl" -->
 
@@ -7,10 +8,12 @@
     <!-- Start of page-grid layout -->
     <div id="pagegrid">
       <!-- TMPL_INCLUDE "templates/navbar_top.html" -->
+
       <!-- Start of form -->
       <form action="/search" method="get" class="formgrid" id="searchform">
+
       <!-- Resource types -->
-        <p class="header" id="header-resourcetypes">Resource types</p>
+        <div class="header" id="header-resourcetypes">Resource types</div>
         <select name="resourcetype" id="resourcetype" size="15">
           <!-- TMPL_LOOP schema -->
             <!-- TMPL_IF selected -->
@@ -21,8 +24,9 @@
           <!-- /TMPL_LOOP -->
         </select>
       <!-- End of resource types -->
+
       <!-- Tags -->
-        <p class="header" id="header-tags">Available tags</p>
+        <div class="header" id="header-tags">Available tags</div>
         <select name="tags" id="tags" size="15" multiple="multiple">
           <!-- TMPL_LOOP tags -->
             <!-- TMPL_IF selected -->
@@ -35,7 +39,7 @@
       <!-- End of tags -->
 
       <!-- Javascript-updated search refinement -->
-      <p class="header" id="header-refinesearch">Refine your search</p>
+      <div class="header" id="header-refinesearch">Refine your search</div>
       <div class="attrnames" id="attrnames">
         <div id="refinesearch">UID regex</div>
       </div>
@@ -51,7 +55,7 @@
       <div id="searchresults">
       <h2>Search results</h2>
 
-      <ul>
+      <ul class="results-list">
         <!-- TMPL_LOOP results -->
         <li><a href="display/<!-- TMPL_VAR resourcetype -->/<!-- TMPL_VAR uid -->"><!-- TMPL_VAR title --></a></li>
         <!-- /TMPL_LOOP -->
