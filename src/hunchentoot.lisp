@@ -640,7 +640,9 @@ and any forward-slashes that sneaked through are also now underscores.
   (cond
     ((equal (tbnl:request-method*) :GET)
      (let* ((uri-parts (get-uri-parts (tbnl:request-uri*) tbnl:*acceptor*))
-            (resource (concatenate 'string "/" (second uri-parts) "/" (third uri-parts)))
+            (resourcetype (second uri-parts))
+            (resourcename (third uri-parts))
+            (resource (concatenate 'string "/" resourcetype "/" resourcename))
             (extant-tags
               (mapcar #'(lambda (tag)
                           (cdr (assoc :uid tag)))
@@ -660,7 +662,10 @@ and any forward-slashes that sneaked through are also now underscores.
            (make-pathname :defaults (concatenate 'string
                                                  (template-path tbnl:*acceptor*)
                                                  "/edit_links.tmpl"))
-           (list :resource resource
+           (list :title (format nil "Edit tags, groups and links for ~A ~A"
+                                resourcetype (uid-to-title resourcename))
+                 :stylesheets '((:sheet "edit_links"))
+                 :resource resource
                  :add-tags (make-simple-alist
                              (sort
                                (set-difference all-tags extant-tags :test #'equal)
