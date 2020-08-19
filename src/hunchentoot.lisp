@@ -1101,9 +1101,9 @@ and any forward-slashes that sneaked through are also now underscores.
            #p"templates/display_createitem.tmpl"
            (list :title "Create item"
                  :stylesheets '((:sheet "create")))
-                 :javascripts '((:script "search"))
-                 :schema schema)
-           :stream outstr))))
+           :javascripts '((:script "search"))
+           :schema schema)
+         :stream outstr)))
     ((equal (tbnl:request-method*) :POST)
      (let ((uid (tbnl:post-parameter "uid"))
            (resourcetype (tbnl:post-parameter "resourcetype")))
@@ -1131,55 +1131,55 @@ and any forward-slashes that sneaked through are also now underscores.
               "The resourcetype must be specified in the URL")
              ;; We have both; carry on
              (t
-              ;; Extract non-empty attributes relevant to this resourcetype
-              (let* ((valid-attrnames
-                       (mapcar #'schema-rtype-attrs-name
-                               (get-attrs (rg-server tbnl:*acceptor*) resourcetype)))
-                     (validated-attrs
-                       (remove-if #'null
-                                  (mapcar #'(lambda (param)
-                                              (log-message :debug "Validating parameter ~A" (car param))
-                                              (when (and (not (or (null (cdr param))
-                                                                  (equal "" (cdr param))))
-                                                         (member (car param) valid-attrnames :test #'equal))
-                                                param))
-                                          (tbnl:post-parameters*)))))
-                (log-message :debug "Validated attributes: ~A" validated-attrs)
-                ;; Send the update
-                (multiple-value-bind (body status-code)
-                  (rg-post-json (rg-server tbnl:*acceptor*)
-                                (concatenate 'string "/" resourcetype)
-                                :payload (append `(("uid" . ,(sanitise-uid uid))) validated-attrs))
-                  ;; Did it work?
-                  (if (and (> status-code 199)
-                           (< status-code 300))
-                      ;; Happy path
-                      (tbnl:redirect (concatenate 'string "/display/" resourcetype "/" (sanitise-uid uid)))
-                      ;; Less-happy path
-                      (let ((html-template:*string-modifier* #'cl:identity))
-                        (setf (tbnl:content-type*) "text/html")
-                        (setf (tbnl:return-code*) tbnl:+http-bad-request+)
-                        (with-output-to-string (outstr)
-                          (html-template:fill-and-print-template
-                            (make-pathname :defaults (concatenate 'string
-                                                                  (template-path tbnl:*acceptor*)
-                                                                  "/display_layout.tmpl"))
-                            `(:resourcetype ,resourcetype
-                              :uid ,uid
-                              :stylesheets '((:sheet "display"))
-                              :javascripts '((:script "display"))
-                              :title ,(format nil "Failed to create ~A" uid)
-                              :content ,(with-output-to-string (contstr)
-                                          (html-template:fill-and-print-template
-                                            (make-pathname
-                                              :defaults
-                                              (concatenate 'string
-                                                           (template-path tbnl:*acceptor*)
-                                                           "/display_default.tmpl"))
-                                            `(:attributes ((:attrname "Server message"
-                                                            :attrval ,body)))
-                                            :stream contstr)))
-                            :stream outstr))))))))))
+               ;; Extract non-empty attributes relevant to this resourcetype
+               (let* ((valid-attrnames
+                        (mapcar #'schema-rtype-attrs-name
+                                (get-attrs (rg-server tbnl:*acceptor*) resourcetype)))
+                      (validated-attrs
+                        (remove-if #'null
+                                   (mapcar #'(lambda (param)
+                                               (log-message :debug "Validating parameter ~A" (car param))
+                                               (when (and (not (or (null (cdr param))
+                                                                   (equal "" (cdr param))))
+                                                          (member (car param) valid-attrnames :test #'equal))
+                                                 param))
+                                           (tbnl:post-parameters*)))))
+                 (log-message :debug "Validated attributes: ~A" validated-attrs)
+                 ;; Send the update
+                 (multiple-value-bind (body status-code)
+                   (rg-post-json (rg-server tbnl:*acceptor*)
+                                 (concatenate 'string "/" resourcetype)
+                                 :payload (append `(("uid" . ,(sanitise-uid uid))) validated-attrs))
+                   ;; Did it work?
+                   (if (and (> status-code 199)
+                            (< status-code 300))
+                     ;; Happy path
+                     (tbnl:redirect (concatenate 'string "/display/" resourcetype "/" (sanitise-uid uid)))
+                     ;; Less-happy path
+                     (let ((html-template:*string-modifier* #'cl:identity))
+                       (setf (tbnl:content-type*) "text/html")
+                       (setf (tbnl:return-code*) tbnl:+http-bad-request+)
+                       (with-output-to-string (outstr)
+                         (html-template:fill-and-print-template
+                           (make-pathname :defaults (concatenate 'string
+                                                                 (template-path tbnl:*acceptor*)
+                                                                 "/display_layout.tmpl"))
+                           `(:resourcetype ,resourcetype
+                                           :uid ,uid
+                                           :stylesheets '((:sheet "display"))
+                                           :javascripts '((:script "display"))
+                                           :title ,(format nil "Failed to create ~A" uid)
+                                           :content ,(with-output-to-string (contstr)
+                                                       (html-template:fill-and-print-template
+                                                         (make-pathname
+                                                           :defaults
+                                                           (concatenate 'string
+                                                                        (template-path tbnl:*acceptor*)
+                                                                        "/display_default.tmpl"))
+                                                         `(:attributes ((:attrname "Server message"
+                                                                                   :attrval ,body)))
+                                                         :stream contstr)))
+                           :stream outstr))))))))))
     ;; Fallback: not by this method
     (t (method-not-allowed))))
 
