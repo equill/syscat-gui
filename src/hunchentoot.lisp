@@ -87,14 +87,15 @@
   - URI
   - :schema-p = whether this is a schema query instead of a resource one"
   (log-message :debug "Requesting URI '~A' from the ~A API" uri (if schema-p "schema" "raw"))
-  (decode-json-response
-    (drakma:http-request (format nil "http://~A:~D~A~A"
-                                 (rg-server-hostname server)
-                                 (rg-server-port server)
-                                 (if schema-p
-                                   (rg-server-schema-base server)
-                                   (rg-server-raw-base server))
-                                 uri))))
+  (let ((url (format nil "http://~A:~D~A~A"
+                     (rg-server-hostname server)
+                     (rg-server-port server)
+                     (if schema-p
+                       (rg-server-schema-base server)
+                       (rg-server-raw-base server))
+                     uri)))
+    (log-message :debug "Using URL '~A'" url)
+    (decode-json-response (drakma:http-request url))))
 
 (defun rg-delete (server uri &key payload schema-p)
   "Delete a resource from the Restagraph backend.
