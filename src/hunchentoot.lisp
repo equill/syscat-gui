@@ -1101,10 +1101,10 @@ and any forward-slashes that sneaked through are also now underscores.
          (html-template:fill-and-print-template
            #p"templates/display_createitem.tmpl"
            (list :title "Create item"
-                 :stylesheets '((:sheet "create")))
-           :javascripts '((:script "search"))
-           :schema schema)
-         :stream outstr)))
+                 :stylesheets '((:sheet "create"))
+                 :javascripts '((:script "search"))
+                 :schema schema)
+           :stream outstr))))
     ((equal (tbnl:request-method*) :POST)
      (let ((uid (tbnl:post-parameter "uid"))
            (resourcetype (tbnl:post-parameter "resourcetype")))
