@@ -79,20 +79,24 @@
         ;; If we received actual content, on the other hand, decode it.
         (cl-json:decode-json-from-string json-string))))
 
-(defun rg-request-json (server uri &key schema-p)
+(defun rg-request-json (server uri &key (api "raw"))
   "Make a GET request to a Restagraph backend that should return a JSON response.
   Return the decoded JSON.
   Arguments:
   - rg-server object
   - URI
-  - :schema-p = whether this is a schema query instead of a resource one"
-  (log-message :debug "Requesting URI '~A' from the ~A API" uri (if schema-p "schema" "raw"))
+  - :api = which API to invoke: schema, files or raw (default)."
+  (log-message :debug "Requesting URI '~A' from the ~A API" uri api)
   (let ((url (format nil "http://~A:~D~A~A"
                      (rg-server-hostname server)
                      (rg-server-port server)
-                     (if schema-p
-                       (rg-server-schema-base server)
-                       (rg-server-raw-base server))
+                     (cond
+                       ((equal "schema" api)
+                        (rg-server-schema-base server))
+                       ((equal "files" api)
+                        (rg-server-files-base server))
+                       (t   ; default is "raw"
+                         (rg-server-raw-base server)))
                      uri)))
     (log-message :debug "Using URL '~A'" url)
     (decode-json-response (drakma:http-request url))))
@@ -114,15 +118,14 @@
       (drakma:http-request url :method :DELETE)
       (values status-code body))))
 
-(defun rg-post-json (server uri &key payload schema-p put-p files-p)
+(defun rg-post-json (server uri &key payload put-p api)
   "Make a POST request to a Restagraph backend, and decode the JSON response if there was one.
    Arguments:
    - rg-server object
    - URI
    - :payload = Drakma-ready alist of values to POST
-   - :schema-p = whether this is updating the schema instead of a resource
    - :put-p = whether we're invoking the PUT method
-   - :form-p = whether to treat the request as a form-style upload
+   - :api = whether to invoke the schema, files or raw (default) API.
    Return the body as the primary value, and the status-code as a secondary value."
   (log-message :debug "~Aing a request to URI ~A" (if put-p "PUT" "POST") uri)
   (log-message :debug "Payload: ~A" payload)
@@ -132,15 +135,15 @@
               (rg-server-hostname server)
               (rg-server-port server)
               (cond
-                (files-p
-                  (rg-server-files-base server))
-                (schema-p
-                  (rg-server-schema-base server))
-                (t
-                  (rg-server-raw-base server)))
+                ((equal "schema" api)
+                 (rg-server-schema-base server))
+                ((equal "files" api)
+                 (rg-server-files-base server))
+                (t   ; default is "raw"
+                 (rg-server-raw-base server)))
               uri)
       :parameters payload
-      :form-data files-p
+      :form-data (equal "files" api)
       :method (if put-p :PUT :POST))
     ;; Now decide what to do with it.
     ;; If it was successful, return it
@@ -185,7 +188,7 @@
   (if (equal resourcetype "")
     (log-message :debug "Retrieving the whole schema")
     (log-message :debug "Retrieving the schema for resourcetype '~A'" resourcetype))
-  (rg-request-json server (format nil "/~A" resourcetype) :schema-p t))
+  (rg-request-json server (format nil "/~A" resourcetype) :api "schema"))
 
 (defstruct schema-rtype-attrs
   "Attributes of resource-types. Copy-pasted straight from restagraph/src/structures.lisp."
@@ -954,8 +957,7 @@ and any forward-slashes that sneaked through are also now underscores.
                              :payload `(("name" . ,(tbnl:post-parameter "name"))
                                         ;; It's already a pathname, so we just pass it on through:
                                         ("file" . ,(first (tbnl:post-parameter "file"))))
-                             :schema-p nil
-                             :files-p t)
+                             :api "files")
                            ;; Expected status code is 201
                            (if (equal 201 status-code)
                              (tbnl:redirect response-body)
