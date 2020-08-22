@@ -33,7 +33,7 @@
 (defun log-message (severity &rest args)
   (when (>= (getf *loglevels* severity)
             (getf *loglevels* *loglevel*))
-    (format *log-stream* "~A ~A ~A~%"
+    (format *log-stream* "~&~A ~A ~A~%"
             (make-timestamp)
             severity
             (apply #'format (append '(()) args)))))
