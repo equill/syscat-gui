@@ -824,8 +824,8 @@ and any forward-slashes that sneaked through are also now underscores.
                               :name "display_layout")
                `(:resourcetype ,resourcetype
                                :uid ,uid
-                               :stylesheets '((:sheet "display"))
-                               :javascripts '((:script "display"))
+                               :stylesheets ((:sheet "display"))
+                               :javascripts ((:script "display"))
                                :title ,(format nil "Failed to create ~A" uid)
                                :content ,(with-output-to-string (contstr)
                                            (html-template:fill-and-print-template
