@@ -797,12 +797,15 @@ and any forward-slashes that sneaked through are also now underscores.
                                         sourcepath
                                         :payload `(("target" . ,targetpath)))
                                       ;; Did it work?
-                                      (if (or (< status-code 200)
-                                              (> status-code 299))
-                                        (push (list :attrname (concatenate 'string
-                                                                           "Failed to add tag " (cdr param))
-                                                    :attrval (format nil "~A: ~A" status-code body))
-                                              update-errors)))))
+                                      (when (or (< status-code 200)
+                                                (> status-code 299))
+                                        ;; If not, add the error to the error-list
+                                        (progn
+                                          (log-message :debug "Failed to add link to '~A'. ~A: ~A"
+                                                       (cdr param) status-code body)
+                                          (push (list :attrname (format nil "Failed to add link to '~A'" (cdr param))
+                                                      :attrval (format nil "~A: ~A" status-code body))
+                                                update-errors))))))
                               ;; Split on any quantity of whitespace
                               (cl-ppcre:split "[ ]+" (cdr param))))
                      ;; Something else
@@ -811,6 +814,7 @@ and any forward-slashes that sneaked through are also now underscores.
        ;; At least one of those updates broke:
        (if update-errors
          (let ((html-template:*string-modifier* #'cl:identity))
+           (log-message :debug "Detected update errors: ~A" update-errors)
            (setf (tbnl:content-type*) "text/html")
            (setf (tbnl:return-code*) tbnl:+http-bad-request+)
            (with-output-to-string (outstr)
