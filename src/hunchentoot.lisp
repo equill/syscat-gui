@@ -387,92 +387,108 @@ and any forward-slashes that sneaked through are also now underscores.
             (html-template:fill-and-print-template
               (make-pathname :defaults layout-template-path)
               (list ;; If it's a wikipage _and_ it has a title, use that.
-                    ;; Otherwise, just de-url-escape the UID
-                    :title (or (cdr (assoc :title content))
-                               (uid-to-title uid))
-                    :javascripts '((:script "display"))
-                    :resourcetype resourcetype
-                    :uid uid
-                    ;; Additional stylesheets for specific resource-types
-                    :stylesheets (append
-                                   '((:sheet "display"))
-                                   (when (equal "tasks" resourcetype)
-                                     '((:sheet "tasks_display"))))
-                    :content (cond
-                               ;; Display a task
-                               ((equal resourcetype "tasks")
-                                (with-output-to-string (contstr)
-                                  (html-template:fill-and-print-template
-                                    (make-pathname :defaults (concatenate 'string
-                                                                          (template-path tbnl:*acceptor*)
-                                                                          "/display_task.tmpl"))
-                                    (list :description (or (cdr (assoc :description content)) "(No description found)")
-                                          :importance (or (cdr (assoc :importance content)) "(No importance found)")
-                                          :urgency (or (cdr (assoc :urgency content)) "(No urgency found)")
-                                          :scale (or (cdr (assoc :scale content)) "(No scale found)")
-                                          :status (or (cdr (assoc :status content)) "(No status found)"))
-                                    :stream contstr)))
-                               ;; Display a wikipage
-                               ((equal resourcetype "wikipages")
-                                (with-output-to-string (contstr)
-                                  (html-template:fill-and-print-template
-                                    (make-pathname :defaults (concatenate 'string
-                                                                          (template-path tbnl:*acceptor*)
-                                                                          "/display_wikipage.tmpl"))
-                                    (list :content
-                                          (if (cdr (assoc :text content))
-                                              (with-output-to-string (mdstr)
-                                                (3bmd:parse-string-and-print-to-stream
-                                                 (cdr (assoc :text content))
-                                                 mdstr))
-                                              ""))
-                                    :stream contstr)))
-                               ;; Default item display
-                               (t (with-output-to-string (contstr)
-                                    (html-template:fill-and-print-template
-                                      (make-pathname :defaults (concatenate 'string
-                                                                            (template-path tbnl:*acceptor*)
-                                                                            "/display_default.tmpl"))
-                                      (list :attributes
-                                            (mapcar
-                                              #'(lambda (attribute)
-                                                  ;; Extract the value, using the keyworded version of the attribute-name
-                                                  (log-message :debug "Extracting value for attribute '~A'" (car attribute))
-                                                  (let* ((attrname (car attribute))
-                                                         (attrval (cdr (assoc attrname content))))
-                                                    ;; Conditionally render the type
-                                                    (list :attrname (schema-rtype-attrs-name (cdr attribute))
-                                                          ; Ensure all values are strings, for the template.
-                                                          :attrval (if attrval
-                                                                       ;; Render all descriptions as Markdown
-                                                                       (if (or (member attrname '(:description :text))
-                                                                               (equal "commonmark"
-                                                                                      (schema-rtype-attrs-valuetype
-                                                                                        (cdr attribute))))
-                                                                         (with-output-to-string (mdstr)
-                                                                           (3bmd:parse-string-and-print-to-stream attrval mdstr)
-                                                                           mdstr)
-                                                                         attrval)
-                                                                       ""))))
-                                              attrdefs))
-                                      :stream contstr))))
-                    :tags (remove-if-not #'(lambda (link)
-                                             (equal (getf link :relationship) "Tags"))
-                                         outbound-links)
-                    :groups (remove-if-not #'(lambda (link)
-                                               (and
-                                                 (equal (getf link :resourcetype) "groups")
-                                                 (equal (getf link :relationship) "Member")))
-                                           outbound-links)
-                    :outbound (remove-if #'(lambda (link)
-                                             (or
-                                               ;; Tags
-                                               (equal (getf link :relationship) "Tags")
-                                               ;; groups
-                                               (and
-                                                 (equal (getf link :resourcetype) "groups")
-                                                 (equal (getf link :relationship) "Member"))))
-                                         outbound-links))
+                ;; Otherwise, just de-url-escape the UID
+                :title (or (cdr (assoc :title content))
+                           (uid-to-title uid))
+                :javascripts '((:script "display"))
+                :resourcetype resourcetype
+                :uid uid
+                ;; Additional stylesheets for specific resource-types
+                :stylesheets (append
+                               '((:sheet "display"))
+                               (when (equal "files" resourcetype)
+                                 '((:sheet "files_display")))
+                               (when (equal "tasks" resourcetype)
+                                 '((:sheet "tasks_display"))))
+                :content (cond
+                           ;; Display a task
+                           ((equal resourcetype "tasks")
+                            (with-output-to-string (contstr)
+                              (html-template:fill-and-print-template
+                                (make-pathname :defaults (concatenate 'string
+                                                                      (template-path tbnl:*acceptor*)
+                                                                      "/display_task.tmpl"))
+                                (list :description (or (cdr (assoc :description content)) "(No description found)")
+                                      :importance (or (cdr (assoc :importance content)) "(No importance found)")
+                                      :urgency (or (cdr (assoc :urgency content)) "(No urgency found)")
+                                      :scale (or (cdr (assoc :scale content)) "(No scale found)")
+                                      :status (or (cdr (assoc :status content)) "(No status found)"))
+                                :stream contstr)))
+                           ;; Display a wikipage
+                           ((equal resourcetype "wikipages")
+                            (with-output-to-string (contstr)
+                              (html-template:fill-and-print-template
+                                (make-pathname :defaults (concatenate 'string
+                                                                      (template-path tbnl:*acceptor*)
+                                                                      "/display_wikipage.tmpl"))
+                                (list :content
+                                      (if (cdr (assoc :text content))
+                                          (with-output-to-string (mdstr)
+                                            (3bmd:parse-string-and-print-to-stream
+                                             (cdr (assoc :text content))
+                                             mdstr))
+                                          ""))
+                                :stream contstr)))
+                           ;; Display a file
+                           ((equal resourcetype "files")
+                            (with-output-to-string (conststr)
+                              (html-template:fill-and-print-template
+                                (make-pathname :defaults (template-path tbnl:*acceptor*)
+                                               :type "tmpl"
+                                               :name "display_files")
+                                (list :title  (cdr (assoc :title content))
+                                      :mimetype (cdr (assoc :mimetype content))
+                                      :image-url (format nil "http://~A:~D/files/v1/~A"
+                                                         (rg-server-hostname (rg-server tbnl:*acceptor*))
+                                                         (rg-server-port (rg-server tbnl:*acceptor*))
+                                                         uid))
+                                :stream conststr)))
+                           ;; Default item display
+                           (t (with-output-to-string (contstr)
+                                (html-template:fill-and-print-template
+                                  (make-pathname :defaults (concatenate 'string
+                                                                        (template-path tbnl:*acceptor*)
+                                                                        "/display_default.tmpl"))
+                                  (list :attributes
+                                        (mapcar
+                                          #'(lambda (attribute)
+                                              ;; Extract the value, using the keyworded version of the attribute-name
+                                              (log-message :debug "Extracting value for attribute '~A'" (car attribute))
+                                              (let* ((attrname (car attribute))
+                                                     (attrval (cdr (assoc attrname content))))
+                                                ;; Conditionally render the type
+                                                (list :attrname (schema-rtype-attrs-name (cdr attribute))
+                                                      ; Ensure all values are strings, for the template.
+                                                      :attrval (if attrval
+                                                                   ;; Render all descriptions as Markdown
+                                                                   (if (or (member attrname '(:description :text))
+                                                                           (equal "commonmark"
+                                                                                  (schema-rtype-attrs-valuetype
+                                                                                    (cdr attribute))))
+                                                                       (with-output-to-string (mdstr)
+                                                                         (3bmd:parse-string-and-print-to-stream attrval mdstr)
+                                                                         mdstr)
+                                                                       attrval)
+                                                                   ""))))
+                                          attrdefs))
+                                  :stream contstr))))
+                :tags (remove-if-not #'(lambda (link)
+                                         (equal (getf link :relationship) "Tags"))
+                                     outbound-links)
+                :groups (remove-if-not #'(lambda (link)
+                                           (and
+                                             (equal (getf link :resourcetype) "groups")
+                                             (equal (getf link :relationship) "Member")))
+                                       outbound-links)
+                :outbound (remove-if #'(lambda (link)
+                                         (or
+                                           ;; Tags
+                                           (equal (getf link :relationship) "Tags")
+                                           ;; groups
+                                           (and
+                                             (equal (getf link :resourcetype) "groups")
+                                             (equal (getf link :relationship) "Member"))))
+                                     outbound-links))
               :stream outstr)))
         (progn
           (setf (tbnl:content-type*) "text/plain")

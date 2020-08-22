@@ -1,0 +1,31 @@
+.fileattr_name {
+  grid-column: 1;
+  font-weight: bold;
+  vertical-align: top;
+}
+
+.fileattr_value {
+  grid-column: 2;
+  vertical-align: top;
+}
+
+div#mimetype_name {
+  grid-row: 2;
+}
+
+div#mimetype_value {
+  grid-row: 2;
+}
+
+div#files_image {
+  grid-row 3;
+  grid-column: 1 / span 2;
+  width: 100%;
+}
+
+img#files_image {
+  margin: auto;
+  align: center;
+  max-height: 480px;
+  max-width: 640px;
+}
