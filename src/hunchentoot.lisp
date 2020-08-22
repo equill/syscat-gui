@@ -405,9 +405,9 @@ and any forward-slashes that sneaked through are also now underscores.
                            ((equal resourcetype "tasks")
                             (with-output-to-string (contstr)
                               (html-template:fill-and-print-template
-                                (make-pathname :defaults (concatenate 'string
-                                                                      (template-path tbnl:*acceptor*)
-                                                                      "/display_task.tmpl"))
+                                (make-pathname :defaults (template-path tbnl:*acceptor*)
+                                               :type "tmpl"
+                                               :name "display_task")
                                 (list :description (or (cdr (assoc :description content)) "(No description found)")
                                       :importance (or (cdr (assoc :importance content)) "(No importance found)")
                                       :urgency (or (cdr (assoc :urgency content)) "(No urgency found)")
@@ -418,9 +418,9 @@ and any forward-slashes that sneaked through are also now underscores.
                            ((equal resourcetype "wikipages")
                             (with-output-to-string (contstr)
                               (html-template:fill-and-print-template
-                                (make-pathname :defaults (concatenate 'string
-                                                                      (template-path tbnl:*acceptor*)
-                                                                      "/display_wikipage.tmpl"))
+                                (make-pathname :defaults (template-path tbnl:*acceptor*)
+                                               :type "tmpl"
+                                               :name "display_wikipage")
                                 (list :content
                                       (if (cdr (assoc :text content))
                                           (with-output-to-string (mdstr)
@@ -446,9 +446,9 @@ and any forward-slashes that sneaked through are also now underscores.
                            ;; Default item display
                            (t (with-output-to-string (contstr)
                                 (html-template:fill-and-print-template
-                                  (make-pathname :defaults (concatenate 'string
-                                                                        (template-path tbnl:*acceptor*)
-                                                                        "/display_default.tmpl"))
+                                  (make-pathname :defaults (template-path tbnl:*acceptor*)
+                                                 :type "tmpl"
+                                                 :name "display_default")
                                   (list :attributes
                                         (mapcar
                                           #'(lambda (attribute)
@@ -518,9 +518,9 @@ and any forward-slashes that sneaked through are also now underscores.
                   (setf (tbnl:return-code*) tbnl:+http-ok+)
                   (with-output-to-string (outstr)
                     (html-template:fill-and-print-template
-                      (make-pathname :defaults (concatenate 'string
-                                                            (template-path tbnl:*acceptor*)
-                                                            "/edit_wikipage.tmpl"))
+                      (make-pathname :defaults (template-path tbnl:*acceptor*)
+                                     :type "tmpl"
+                                     :name "edit_wikipage")
                       (list :title (if (and
                                          (assoc :title content)
                                          (not (equal (cdr (assoc :title content)) "")))
@@ -578,9 +578,9 @@ and any forward-slashes that sneaked through are also now underscores.
                      (setf (tbnl:return-code*) tbnl:+http-ok+)
                      (with-output-to-string (outstr)
                        (html-template:fill-and-print-template
-                         (make-pathname :defaults (concatenate 'string
-                                                               (template-path tbnl:*acceptor*)
-                                                               "/edit_resource.tmpl"))
+                         (make-pathname :defaults (template-path tbnl:*acceptor*)
+                                        :type "tmpl"
+                                        :name "edit_resource")
                          (list :resourcetype resourcetype
                                :uid uid
                                :title (format nil "Edit ~A: ~A" resourcetype (uid-to-title uid))
@@ -626,10 +626,9 @@ and any forward-slashes that sneaked through are also now underscores.
              (setf (tbnl:return-code*) tbnl:+http-bad-request+)
              (with-output-to-string (outstr)
                (html-template:fill-and-print-template
-                 (make-pathname :defaults
-                                (concatenate 'string
-                                             (template-path tbnl:*acceptor*)
-                                             "/display_layout.tmpl"))
+                 (make-pathname :defaults (template-path tbnl:*acceptor*)
+                                :type "tmpl"
+                                :name "display_layout")
                  `(:resourcetype :title ,(format nil "Failed to create ~A" uid)
                                  :stylesheets '((:sheet "display"))
                                  :javascripts '((:script "display"))
@@ -637,11 +636,9 @@ and any forward-slashes that sneaked through are also now underscores.
                                  :uid ,uid
                                  :content ,(with-output-to-string (contstr)
                                              (html-template:fill-and-print-template
-                                               (make-pathname
-                                                 :defaults
-                                                 (concatenate 'string
-                                                              (template-path tbnl:*acceptor*)
-                                                              "/display_default.tmpl"))
+                                               (make-pathname :defaults (template-path tbnl:*acceptor*)
+                                                              :type "tmpl"
+                                                              :name "display_default")
                                                `(:attributes ((:attrname "Server message"
                                                                          :attrval ,body)))
                                                :stream contstr)))
@@ -679,9 +676,9 @@ and any forward-slashes that sneaked through are also now underscores.
             (all-groups (get-uids (rg-server tbnl:*acceptor*) "groups")))
        (with-output-to-string (outstr)
          (html-template:fill-and-print-template
-           (make-pathname :defaults (concatenate 'string
-                                                 (template-path tbnl:*acceptor*)
-                                                 "/edit_links.tmpl"))
+           (make-pathname :defaults (template-path tbnl:*acceptor*)
+                          :type "tmpl"
+                          :name "edit_links")
            (list :title (format nil "Edit tags, groups and links for ~A ~A"
                                 resourcetype (uid-to-title resourcename))
                  :stylesheets '((:sheet "edit_links"))
@@ -812,10 +809,9 @@ and any forward-slashes that sneaked through are also now underscores.
            (setf (tbnl:return-code*) tbnl:+http-bad-request+)
            (with-output-to-string (outstr)
              (html-template:fill-and-print-template
-               (make-pathname :defaults
-                              (concatenate 'string
-                                           (template-path tbnl:*acceptor*)
-                                           "/display_layout.tmpl"))
+               (make-pathname :defaults (template-path tbnl:*acceptor*)
+                              :type "tmpl"
+                              :name "display_layout")
                `(:resourcetype ,resourcetype
                                :uid ,uid
                                :stylesheets '((:sheet "display"))
@@ -823,11 +819,9 @@ and any forward-slashes that sneaked through are also now underscores.
                                :title ,(format nil "Failed to create ~A" uid)
                                :content ,(with-output-to-string (contstr)
                                            (html-template:fill-and-print-template
-                                             (make-pathname
-                                               :defaults
-                                               (concatenate 'string
-                                                            (template-path tbnl:*acceptor*)
-                                                            "/display_default.tmpl"))
+                                             (make-pathname :defaults (template-path tbnl:*acceptor*)
+                                                            :type "tmpl"
+                                                            :name "display_default")
                                              (list :attributes update-errors)
                                              :stream contstr)))
                :stream outstr)))
@@ -893,10 +887,9 @@ and any forward-slashes that sneaked through are also now underscores.
        (setf (tbnl:return-code*) tbnl:+http-ok+)
        (with-output-to-string (outstr)
          (html-template:fill-and-print-template
-           (make-pathname :defaults
-                          (concatenate 'string
-                                       (template-path tbnl:*acceptor*)
-                                       "/display_search.tmpl"))
+           (make-pathname :defaults (template-path tbnl:*acceptor*)
+                          :type "tmpl"
+                          :name "display_search")
            (list :title "Webcat search page"
                  :stylesheets '((:sheet "search"))
                  :javascripts '((:script "search"))
@@ -993,10 +986,9 @@ and any forward-slashes that sneaked through are also now underscores.
        (setf (tbnl:return-code*) tbnl:+http-ok+)
        (with-output-to-string (outstr)
          (html-template:fill-and-print-template
-           (make-pathname :defaults (concatenate
-                                      'string
-                                      (template-path tbnl:*acceptor*)
-                                      "/display_fileupload_failed.tmpl"))
+           (make-pathname :defaults (template-path tbnl:*acceptor*)
+                          :type "tmpl"
+                          :name "display_fileupload_failed")
            (list :title "File upload failed"
                  :stylesheets '((:sheet "upload"))
                  :reason (tbnl:get-parameter "reason")
@@ -1009,10 +1001,9 @@ and any forward-slashes that sneaked through are also now underscores.
      (setf (tbnl:return-code*) tbnl:+http-ok+)
      (with-output-to-string (outstr)
        (html-template:fill-and-print-template
-         (make-pathname :defaults (concatenate
-                                    'string
-                                    (template-path tbnl:*acceptor*)
-                                    "/display_fileupload.tmpl"))
+         (make-pathname :defaults (template-path tbnl:*acceptor*)
+                        :type "tmpl"
+                        :name "display_fileupload")
          (list :title "File upload"
                :stylesheets '((:sheet "upload")
                               (:sheet "display"))
@@ -1053,10 +1044,9 @@ and any forward-slashes that sneaked through are also now underscores.
        (setf (tbnl:return-code*) tbnl:+http-ok+)
        (with-output-to-string (outstr)
          (html-template:fill-and-print-template
-           (make-pathname :defaults
-                          (concatenate 'string
-                                       (template-path tbnl:*acceptor*)
-                                       "/display_tasks_search.tmpl"))
+           (make-pathname :defaults (template-path tbnl:*acceptor*)
+                          :type "tmpl"
+                          :name "display_tasks_search")
            (list :stylesheets '((:sheet "tasks_search"))
                  :javascripts '((:script "search"))
                  :title "Webcat tasks search"
@@ -1169,9 +1159,9 @@ and any forward-slashes that sneaked through are also now underscores.
                        (setf (tbnl:return-code*) tbnl:+http-bad-request+)
                        (with-output-to-string (outstr)
                          (html-template:fill-and-print-template
-                           (make-pathname :defaults (concatenate 'string
-                                                                 (template-path tbnl:*acceptor*)
-                                                                 "/display_layout.tmpl"))
+                           (make-pathname :defaults (template-path tbnl:*acceptor*)
+                                          :type "tmpl"
+                                          :name "display_layout")
                            `(:resourcetype ,resourcetype
                                            :uid ,uid
                                            :stylesheets '((:sheet "display"))
@@ -1180,10 +1170,9 @@ and any forward-slashes that sneaked through are also now underscores.
                                            :content ,(with-output-to-string (contstr)
                                                        (html-template:fill-and-print-template
                                                          (make-pathname
-                                                           :defaults
-                                                           (concatenate 'string
-                                                                        (template-path tbnl:*acceptor*)
-                                                                        "/display_default.tmpl"))
+                                                           :defaults (template-path tbnl:*acceptor*)
+                                                           :type "tmpl"
+                                                           :name "display_default")
                                                          `(:attributes ((:attrname "Server message"
                                                                                    :attrval ,body)))
                                                          :stream contstr)))
