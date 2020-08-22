@@ -149,15 +149,21 @@
     ;; If it was successful, return it
     (if (and (> status-code 199)
              (< status-code 300))
-        (values
-          (if (equal (cdr (assoc :content-type headers))
-                     "application/json")
-              ;; If it's JSON, decode it
-              (decode-json-response body)
-              ;; If not JSON, just return the boy
-              body)
-          status-code)
-        (values body status-code))))
+        ;; Success!
+        (progn
+          (log-message :debug "Request succeeded.")
+          (values
+            (if (equal (cdr (assoc :content-type headers))
+                       "application/json")
+                ;; If it's JSON, decode it
+                (decode-json-response body)
+                ;; If not JSON, just return the body
+                body)
+            status-code))
+        ;; Failure!
+        (progn
+          (log-message :debug "Failure: ~A ~A" status-code body)
+          (values body status-code)))))
 
 (defun search-for-resources (server rtype &optional params)
   "Search in the backend for a thing.
