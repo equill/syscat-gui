@@ -42,6 +42,7 @@
         (let ((layout-template-path (make-pathname :defaults (template-path tbnl:*acceptor*)
                                                    :type "tmpl"
                                                    :name "display_layout"))
+              ;; Don't escape HTML tags in the nested content
               (html-template:*string-modifier* #'cl:identity)
               (outbound-links (get-linked-resources (rg-server tbnl:*acceptor*)
                                                     (cdr uri-parts))))
@@ -164,6 +165,44 @@
           (setf (tbnl:content-type*) "text/plain")
           (setf (tbnl:return-code*) tbnl:+http-not-found+)
           "No content"))))
+
+(defun image-gallery ()
+  "Display the image gallery"
+  (log-message :debug "Displaying image gallery")
+  (let ((images (rg-request-json (rg-server tbnl:*acceptor*) "/files?mimetype=image/.*"))
+        (layout-template-path (merge-pathnames "display_layout.tmpl" (template-path tbnl:*acceptor*)))
+        (gallery-template-path (merge-pathnames "display_gallery.tmpl" (template-path tbnl:*acceptor*)))
+        ;; Don't escape HTML tags in the nested content
+        (html-template:*string-modifier* #'cl:identity))
+    (log-message :debug "Fetched image data ~A" images)
+    (log-message :debug "State of layout template ~A is ~A"
+                 layout-template-path (probe-file layout-template-path))
+    (log-message :debug "State of gallery template ~A is ~A"
+                 gallery-template-path (probe-file gallery-template-path))
+    (with-output-to-string (outstr)
+      (html-template:fill-and-print-template
+        layout-template-path
+        (list :title "Gallery"
+              :javascripts nil
+              :resourcetype "Images"
+              :uid "All"
+              :stylesheets '((:sheet "display"))
+              :content (with-output-to-string (contstr)
+                         (html-template:fill-and-print-template
+                           gallery-template-path
+                           (list :images
+                                 (mapcar
+                                   #'(lambda (img)
+                                       (list :url (format nil "http://~A:~A/files/v1/~A"
+                                                          (rg-server-hostname (rg-server tbnl:*acceptor*))
+                                                          (rg-server-port (rg-server tbnl:*acceptor*))
+                                                          (cdr (assoc :UID img)))
+                                             :link (format nil "/display/files/~A"
+                                                          (cdr (assoc :UID img)))
+                                             :title (cdr (assoc :TITLE img))))
+                                   images))
+                           :stream contstr)))
+        :stream outstr))))
 
 (defun edit-resource ()
   "Handle the edit-page for an item"
@@ -854,6 +893,7 @@
               (tbnl:create-prefix-dispatcher "/edit_links" 'edit-links)
               (tbnl:create-prefix-dispatcher "/editresource" 'edit-resource)
               (tbnl:create-prefix-dispatcher "/files" 'files)
+              (tbnl:create-prefix-dispatcher "/image-gallery" 'image-gallery)
               (tbnl:create-prefix-dispatcher "/healthcheck" 'healthcheck)
               (tbnl:create-prefix-dispatcher "/search" 'searchpage)
               (tbnl:create-folder-dispatcher-and-handler "/static/css/"

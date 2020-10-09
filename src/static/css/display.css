@@ -81,3 +81,10 @@ a#taglink {
 }
 
 /* End of tags, groups and outbound links section */
+
+
+/* Gallery page section */
+img.gallery-image {
+  max-width: 160px;
+}
+/* End of gallery page section */
