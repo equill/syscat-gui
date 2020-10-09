@@ -18,5 +18,8 @@
                #:neo4cl)
   :components ((:file "package")
                (:file "config")
+               (:file "structures")
                (:file "logging")
+               (:file "utilities")
+               (:file "errors")
                (:file "hunchentoot")))

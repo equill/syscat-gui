@@ -37,3 +37,11 @@
             (make-timestamp)
             severity
             (apply #'format (append '(()) args)))))
+
+(defmethod tbnl:acceptor-log-message ((acceptor cl-webcat-acceptor)
+                                      log-level
+                                      format-string
+                                      &rest format-arguments)
+  (log-message log-level (append (list format-string) format-arguments)))
+
+
