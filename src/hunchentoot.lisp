@@ -848,22 +848,21 @@
       (setf tbnl:*dispatch-table*
             (list
               ;; Include the additional dispatchers here
+              ;; in alphabetical order, to make it easier to keep track of conflicts
               (tbnl:create-regex-dispatcher "/create$" 'create-item)
-              (tbnl:create-prefix-dispatcher "/search" 'searchpage)
-              (tbnl:create-prefix-dispatcher "/tasks" 'tasks)
-              (tbnl:create-prefix-dispatcher "/files" 'files)
               (tbnl:create-prefix-dispatcher "/display" 'display-item)
-              (tbnl:create-prefix-dispatcher "/editresource" 'edit-resource)
               (tbnl:create-prefix-dispatcher "/edit_links" 'edit-links)
-              (tbnl:create-folder-dispatcher-and-handler
-                "/static/css/"
-                (merge-pathnames "css/" (static-path myacceptor))
-                "text/css")
-              (tbnl:create-folder-dispatcher-and-handler
-                "/static/js/"
-                (merge-pathnames "js/" (static-path myacceptor))
-                "text/javascript")
-              (tbnl:create-regex-dispatcher "/healthcheck$" 'healthcheck)
+              (tbnl:create-prefix-dispatcher "/editresource" 'edit-resource)
+              (tbnl:create-prefix-dispatcher "/files" 'files)
+              (tbnl:create-prefix-dispatcher "/healthcheck" 'healthcheck)
+              (tbnl:create-prefix-dispatcher "/search" 'searchpage)
+              (tbnl:create-folder-dispatcher-and-handler "/static/css/"
+                                                         (merge-pathnames "css/" (static-path myacceptor))
+                                                         "text/css")
+              (tbnl:create-folder-dispatcher-and-handler "/static/js/"
+                                                         (merge-pathnames "js/" (static-path myacceptor))
+                                                         "text/javascript")
+              (tbnl:create-prefix-dispatcher "/tasks" 'tasks)
               (tbnl:create-regex-dispatcher "/$" 'root)
               ;; Default fallback
               (tbnl:create-prefix-dispatcher "/" 'four-oh-four)))
