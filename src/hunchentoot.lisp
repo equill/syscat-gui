@@ -35,7 +35,7 @@
          ;; Get a hash-table of attribute definitions
          (attrdefs (get-attrs-with-keywords (rg-server tbnl:*acceptor*) resourcetype)))
     (log-message :debug "Content: ~A" content)
-    (log-message :debug "Resource-type atributes: ~A" attrdefs)
+    (log-message :debug "Resource-type attributes: ~A" attrdefs)
     (if content
         ;; Selectively pre-render attribute values, according to their type.
         ;; Only used as the default option, if we didn't find a special-case for this resource-type
