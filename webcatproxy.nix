@@ -24,7 +24,10 @@
                  ];
         locations."/schema/" = { proxyPass = "http://10.255.0.1:4955/schema/"; };
         locations."/raw/" = { proxyPass = "http://10.255.0.1:4955/raw/"; };
+        # Docker port:
         locations."/" = { proxyPass = "http://127.0.0.1:8080/"; };
+        # Development port:
+        #locations."/" = { proxyPass = "http://127.0.0.1:8081/"; };
       };
     };
   };
