@@ -1,0 +1,11 @@
+;; Minimal .rc file for building a no-frills docker image
+(require 'asdf)
+
+(push :HUNCHENTOOT-NO-SSL *features*)
+
+;; Install Quicklisp
+#-quicklisp
+(let ((quicklisp-init (merge-pathnames "quicklisp/setup.lisp" (user-homedir-pathname))))
+;(let ((quicklisp-init (merge-pathnames "./quicklisp/setup.lisp")))
+  (when (probe-file quicklisp-init)
+    (load quicklisp-init)))
