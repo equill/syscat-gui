@@ -39,9 +39,9 @@
     (if content
         ;; Selectively pre-render attribute values, according to their type.
         ;; Only used as the default option, if we didn't find a special-case for this resource-type
-        (let ((layout-template-path (concatenate 'string
-                                                 (template-path tbnl:*acceptor*)
-                                                 "/display_layout.tmpl"))
+        (let ((layout-template-path (make-pathname :defaults (template-path tbnl:*acceptor*)
+                                                   :type "tmpl"
+                                                   :name "display_layout"))
               (html-template:*string-modifier* #'cl:identity)
               (outbound-links (get-linked-resources (rg-server tbnl:*acceptor*)
                                                     (cdr uri-parts))))
@@ -49,7 +49,7 @@
           (setf (tbnl:return-code*) tbnl:+http-ok+)
           (with-output-to-string (outstr)
             (html-template:fill-and-print-template
-              (make-pathname :defaults layout-template-path)
+              layout-template-path
               (list ;; If it's a wikipage _and_ it has a title, use that.
                 ;; Otherwise, just de-url-escape the UID
                 :title (or (cdr (assoc :title content))
@@ -717,7 +717,9 @@
        (setf (tbnl:return-code*) tbnl:+http-ok+)
        (with-output-to-string (outstr)
          (html-template:fill-and-print-template
-           #p"templates/display_createitem.tmpl"
+           (make-pathname :defaults (template-path tbnl:*acceptor*)
+                          :type "tmpl"
+                          :name "display_createitem")
            (list :title "Create item"
                  :stylesheets '((:sheet "create"))
                  :javascripts '((:script "search"))
@@ -804,7 +806,7 @@
 
 ;; Appserver startup/shutdown
 
-(defun startup (&key acceptor static-path template-path docker)
+(defun startup (&key acceptor docker)
   "Start up the appserver.
   Ensures the uniqueness constraint on resource-types is present in Neo4j.
   Keyword arguments:
@@ -815,7 +817,7 @@
   (declare (type (boolean) docker)
            ;; Specialising on acceptor doesn't allow for a null value
            ;(type (or nil cl-webcat-acceptor) acceptor)
-           (type (or null string) static-path template-path))
+           )
   (log-message :info "Attempting to start up the cl-webcat application server")
   ;; Control the decoding of JSON identifiers
   (setf json:*json-identifier-name-to-lisp* 'common-lisp:string-upcase)
@@ -826,11 +828,7 @@
     ;; There's an acceptor already in play; bail out.
     (log-message :critical "Acceptor already exists; refusing to create a new one.")
     ;; No existing acceptor; we're good to go.
-    (let ((myacceptor (or acceptor
-                          (make-acceptor :template-path template-path)))
-          (static-filepath (or static-path
-                               (sb-ext:posix-getenv "STATIC_PATH")
-                               (getf *config-vars* :static-path))))
+    (let ((myacceptor (or acceptor (make-acceptor))))
       ;; Make it available as a dynamic variable, for shutdown to work on
       (defparameter *cl-webcat-acceptor* myacceptor)
       ;; Stop html-template raising a warning every time it compiles a template
@@ -848,10 +846,10 @@
               (tbnl:create-prefix-dispatcher "/editresource" 'edit-resource)
               (tbnl:create-prefix-dispatcher "/edit_links" 'edit-links)
               (tbnl:create-folder-dispatcher-and-handler "/static/css/"
-                                                         (concatenate 'string static-filepath "/css/")
+                                                         (concatenate 'string (static-path myacceptor) "/css/")
                                                          "text/css")
               (tbnl:create-folder-dispatcher-and-handler "/static/js/"
-                                                         (concatenate 'string static-filepath "/js/")
+                                                         (concatenate 'string (static-path myacceptor) "/js/")
                                                          "text/javascript")
               (tbnl:create-regex-dispatcher "/healthcheck$" 'healthcheck)
               (tbnl:create-regex-dispatcher "/$" 'root)

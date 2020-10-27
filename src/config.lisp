@@ -21,6 +21,6 @@
     :files-uri-base "/files/v1"
     :schema-uri-base "/schema/v1"
     :template-path "/home/james/devel/syscat/cl-webcat/src/templates/"
-    :static-path "/home/james/devel/syscat/cl-webcat/src/static"))
+    :static-path "/home/james/devel/syscat/cl-webcat/src/static/"))
 
 (setf *loglevel* :info)

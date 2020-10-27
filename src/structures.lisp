@@ -20,23 +20,28 @@
              :initform "localhost")
    (template-path :initarg :template-path
                   :reader template-path
-                  :initform "/opt/cl-webcat/templates"))
+                  :initform "/templates/")
+   (static-path :initarg :static-path
+                :reader static-path
+                :initform "/static/"))
   ;; Superclass defaults
   (:default-initargs :address "127.0.0.1")
   ;; Note to those asking.
   (:documentation "vhost object, subclassed from tbnl:easy-acceptor"))
 
-(defun make-acceptor (&key template-path)
+(defun make-acceptor ()
   "Return an instance of 'cl-webcat-acceptor, a subclass of tbnl:easy-acceptor."
   (make-instance 'cl-webcat-acceptor
                  :address (or (sb-ext:posix-getenv "LISTEN_ADDR")
                               (getf *config-vars* :listen-address))
-                 :port (or (sb-ext:posix-getenv "LISTEN_PORT")
+                 :port (or (when (sb-ext:posix-getenv "LISTEN_PORT")
+                             (parse-integer (sb-ext:posix-getenv "LISTEN_PORT")))
                            (getf *config-vars* :listen-port))
                  :url-base (or (getf *config-vars* ::url-base) "")
-                 :template-path (or template-path
-                                    (sb-ext:posix-getenv "TEMPLATE_PATH")
+                 :template-path (or (sb-ext:posix-getenv "TEMPLATE_PATH")
                                     (getf *config-vars* :template-path))
+                 :static-path (or (sb-ext:posix-getenv "STATIC_PATH")
+                                    (getf *config-vars* :static-path))
                  ;; Send all logs to STDOUT, and let Docker sort 'em out
                  :access-log-destination (make-synonym-stream 'cl:*standard-output*)
                  :message-log-destination (make-synonym-stream 'cl:*standard-output*)
@@ -57,7 +62,8 @@
                                  'neo4cl:neo4j-rest-server
                                  :hostname (or (sb-ext:posix-getenv "NEO4J_HOSTNAME")
                                                (getf *config-vars* :dbhostname))
-                                 :port (or (sb-ext:posix-getenv "NEO4J_PORT")
+                                 :port (or (when (sb-ext:posix-getenv "NEO4J_PORT")
+                                             (parse-integer (sb-ext:posix-getenv "NEO4J_PORT")))
                                            (getf *config-vars* :dbport))
                                  :dbname (or (when (sb-ext:posix-getenv "RG_DBNAME")
                                                (sb-ext:posix-getenv "RG_DBNAME"))

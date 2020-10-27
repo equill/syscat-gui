@@ -8,6 +8,7 @@ let
         inherit coreutils libressl;
         system = builtins.currentSystem;
         templatepath = ../../src/templates;
+        staticpath = ../../src/static;
         clwebcatpath = ./clwebcat;
     };
 
