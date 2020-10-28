@@ -19,11 +19,9 @@
              :reader url-base
              :initform "localhost")
    (template-path :initarg :template-path
-                  :reader template-path
-                  :initform "/templates/")
+                  :reader template-path)
    (static-path :initarg :static-path
-                :reader static-path
-                :initform "/static/"))
+                :reader static-path))
   ;; Superclass defaults
   (:default-initargs :address "127.0.0.1")
   ;; Note to those asking.
@@ -38,10 +36,12 @@
                              (parse-integer (sb-ext:posix-getenv "LISTEN_PORT")))
                            (getf *config-vars* :listen-port))
                  :url-base (or (getf *config-vars* ::url-base) "")
-                 :template-path (or (sb-ext:posix-getenv "TEMPLATE_PATH")
-                                    (getf *config-vars* :template-path))
-                 :static-path (or (sb-ext:posix-getenv "STATIC_PATH")
-                                    (getf *config-vars* :static-path))
+                 :template-path (make-pathname :defaults
+                                               (or (sb-ext:posix-getenv "TEMPLATE_PATH")
+                                                   (getf *config-vars* :template-path)))
+                 :static-path (make-pathname :defaults
+                                             (or (sb-ext:posix-getenv "STATIC_PATH")
+                                                 (getf *config-vars* :static-path)))
                  ;; Send all logs to STDOUT, and let Docker sort 'em out
                  :access-log-destination (make-synonym-stream 'cl:*standard-output*)
                  :message-log-destination (make-synonym-stream 'cl:*standard-output*)

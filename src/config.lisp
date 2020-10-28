@@ -9,7 +9,7 @@
 
 (defparameter *config-vars*
   `(:listen-address "localhost"
-    :listen-port 8081
+    :listen-port 8080
     :rg-hostname "10.255.0.1"
     :rg-port 4955
     :dbhostname "10.255.0.1"
@@ -23,4 +23,4 @@
     :template-path "/home/james/devel/syscat/cl-webcat/src/templates/"
     :static-path "/home/james/devel/syscat/cl-webcat/src/static/"))
 
-(setf *loglevel* :info)
+(setf *loglevel* :debug)

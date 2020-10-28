@@ -45,6 +45,8 @@
               (html-template:*string-modifier* #'cl:identity)
               (outbound-links (get-linked-resources (rg-server tbnl:*acceptor*)
                                                     (cdr uri-parts))))
+          (log-message :debug "Path to layout template: ~A" layout-template-path)
+          (log-message :debug "State of layout template: ~A" (probe-file layout-template-path))
           (setf (tbnl:content-type*) "text/html")
           (setf (tbnl:return-code*) tbnl:+http-ok+)
           (with-output-to-string (outstr)
@@ -80,19 +82,21 @@
                                 :stream contstr)))
                            ;; Display a wikipage
                            ((equal resourcetype "wikipages")
-                            (with-output-to-string (contstr)
-                              (html-template:fill-and-print-template
-                                (make-pathname :defaults (template-path tbnl:*acceptor*)
-                                               :type "tmpl"
-                                               :name "display_wikipage")
-                                (list :content
-                                      (if (cdr (assoc :text content))
+                            (let ((content-layout-path (make-pathname :defaults (template-path tbnl:*acceptor*)
+                                                                      :type "tmpl"
+                                                                      :name "display_wikipage")))
+                              (log-message :debug "Content layout path: ~A" content-layout-path)
+                              (with-output-to-string (contstr)
+                                (html-template:fill-and-print-template
+                                  content-layout-path
+                                  (list :content
+                                        (if (cdr (assoc :text content))
                                           (with-output-to-string (mdstr)
                                             (3bmd:parse-string-and-print-to-stream
                                              (cdr (assoc :text content))
                                              mdstr))
                                           ""))
-                                :stream contstr)))
+                                  :stream contstr))))
                            ;; Display a file
                            ((equal resourcetype "files")
                             (with-output-to-string (conststr)
@@ -829,6 +833,10 @@
     (log-message :critical "Acceptor already exists; refusing to create a new one.")
     ;; No existing acceptor; we're good to go.
     (let ((myacceptor (or acceptor (make-acceptor))))
+      ;; Set the template path for html-template's includes
+      (setf html-template:*default-template-pathname* (template-path myacceptor))
+      (log-message :debug "Value of html-template:*default-template-pathname*: ~A"
+                   html-template:*default-template-pathname*)
       ;; Make it available as a dynamic variable, for shutdown to work on
       (defparameter *cl-webcat-acceptor* myacceptor)
       ;; Stop html-template raising a warning every time it compiles a template
@@ -845,12 +853,14 @@
               (tbnl:create-prefix-dispatcher "/display" 'display-item)
               (tbnl:create-prefix-dispatcher "/editresource" 'edit-resource)
               (tbnl:create-prefix-dispatcher "/edit_links" 'edit-links)
-              (tbnl:create-folder-dispatcher-and-handler "/static/css/"
-                                                         (concatenate 'string (static-path myacceptor) "/css/")
-                                                         "text/css")
-              (tbnl:create-folder-dispatcher-and-handler "/static/js/"
-                                                         (concatenate 'string (static-path myacceptor) "/js/")
-                                                         "text/javascript")
+              (tbnl:create-folder-dispatcher-and-handler
+                "/static/css/"
+                (merge-pathnames "css/" (static-path myacceptor))
+                "text/css")
+              (tbnl:create-folder-dispatcher-and-handler
+                "/static/js/"
+                (merge-pathnames "js/" (static-path myacceptor))
+                "text/javascript")
               (tbnl:create-regex-dispatcher "/healthcheck$" 'healthcheck)
               (tbnl:create-regex-dispatcher "/$" 'root)
               ;; Default fallback

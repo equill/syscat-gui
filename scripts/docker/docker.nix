@@ -26,10 +26,17 @@ let
 in
 pkgs.dockerTools.buildImage {
     name = "equill/clwebcat";
-    tag = "0.0.1a20";
+    tag = "0.0.1a36";
     created = "now";
 
-    contents = [ clwebcat_deriv libressl coreutils bash which glibc ];
+    contents = [
+        clwebcat_deriv
+        bash
+        coreutils
+        glibc
+        libressl
+        which
+    ];
 
     config = {
         Cmd = [ "clwebcat" ];
