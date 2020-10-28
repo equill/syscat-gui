@@ -86,6 +86,8 @@
                                                                       :type "tmpl"
                                                                       :name "display_wikipage")))
                               (log-message :debug "Content layout path: ~A" content-layout-path)
+                              (log-message :debug "State of content layout template: ~A"
+                                           (probe-file content-layout-path))
                               (with-output-to-string (contstr)
                                 (html-template:fill-and-print-template
                                   content-layout-path
