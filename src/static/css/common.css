@@ -60,6 +60,12 @@ div#navigation {
   color: white;
   text-decoration: none;
 }
+
+.nav-item-6 {
+  grid-column: 6;
+  color: white;
+  text-decoration: none;
+}
 /* End of nav-bar section */
 
 .formgrid {
