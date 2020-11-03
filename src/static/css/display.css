@@ -84,7 +84,21 @@ a#taglink {
 
 
 /* Gallery page section */
+div.gallery-image {
+  float: left;
+  margin: 5px;
+}
+
 img.gallery-image {
+  margin: 5px;
+  float: left;
+  max-width: 160px;
+  object-fit: contain;
+}
+
+div.gallery-image-text {
+  text-align: center;
+  text-decoration: none;
   max-width: 160px;
 }
 /* End of gallery page section */
