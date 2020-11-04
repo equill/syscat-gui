@@ -708,19 +708,19 @@
   (cond
     ((equal (tbnl:request-method*) :GET)
      (let* ((task-attrs (get-attrs-with-keywords (rg-server tbnl:*acceptor*) "tasks"))
-            (statuses-requested (remove-if #'null
-                                           (mapcar #'(lambda (par)
-                                                       (when (equal (car par) "status") (cdr par)))
-                                                   (tbnl:get-parameters*))))
+            (statuses-requested (filter-params "status" (tbnl:get-parameters*)))
             (tags-available (get-task-tags (cl-webcat::neo4j-server cl-webcat::*cl-webcat-acceptor*)))
-            (tags-requested (remove-if #'null
-                                       (mapcar #'(lambda (par)
-                                                   (when (equal (car par) "tags") (cdr par)))
-                                               (tbnl:get-parameters*))))
+            (tags-requested (filter-params "tags" (tbnl:get-parameters*)))
+            (scale-requested (filter-params "scale" (tbnl:get-parameters*)))
+            (urgency-requested (filter-params "urgency" (tbnl:get-parameters*)))
+            (importance-requested (filter-params "importance" (tbnl:get-parameters*)))
             (tbnl-formatted-results
               (search-for-tasks (cl-webcat::neo4j-server cl-webcat::*cl-webcat-acceptor*)
                                 tags-requested
-                                statuses-requested)))
+                                :statuses statuses-requested
+                                :scale scale-requested
+                                :urgency urgency-requested
+                                :importance importance-requested)))
        ;; Debug logging for what we've obtained so far
        (log-message :debug "Attributes: ~A" task-attrs)
        (log-message :debug "Statuses available: ~A" (get-enum-vals :status task-attrs))

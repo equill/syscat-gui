@@ -319,22 +319,27 @@ and any forward-slashes that sneaked through are also now underscores.
               '((:STATEMENTS
                   ((:STATEMENT . "MATCH (t:tasks)-[:Tags]->(n:tags) RETURN DISTINCT n.uid ORDER BY n.uid"))))))))
 
-(defun search-for-tasks (db tags statuses)
+(defun search-for-tasks (db tags &key statuses scale urgency importance)
   "Search for tasks using the requested parameters"
   (declare (type neo4cl:neo4j-rest-server db)
            (type list tags)         ; List of strings
            (type list statuses))    ; List of strings
   (log-message :debug "Searching for tasks with tags ~{~A~^, ~} and statuses ~{~A~^, ~}" tags statuses)
-  (let* ((tag-clause (if tags (format nil "t.uid IN [~{\"~A\"~^, ~}]" tags) ""))
-         (status-clause (if statuses (format nil "n.status IN [~{\"~A\"~^, ~}]" statuses) ""))
+  (let* ((tag-clause (when tags (format nil "t.uid IN [~{\"~A\"~^, ~}]" tags)))
+         (status-clause (when statuses (format nil "n.status IN [~{\"~A\"~^, ~}]" statuses)))
+         (scale-clause (when scale (format nil "n.scale IN [~{\"~A\"~^, ~}]" scale)))
+         (urgency-clause (when urgency (format nil "n.urgency IN [~{\"~A\"~^, ~}]" urgency)))
+         (importance-clause (when importance (format nil "n.importance IN [~{\"~A\"~^, ~}]" importance)))
          (query (format nil "MATCH (n:tasks)~A RETURN DISTINCT n.uid, n.description, n.scale, n.importance, n.urgency, n.status ORDER BY n.uid"
                         ;; Construct the where-clause
-                        (if (or tags statuses)
-                            (format nil " WHERE ~A~A~A"
-                                    tag-clause
-                                    (if (and tags statuses) " AND " "")
-                                    status-clause)
-                            ""))))
+                        (if (or tag-clause status-clause scale-clause urgency-clause importance-clause)
+                          (format nil " WHERE ~{~A~^ AND ~}"
+                                  (remove-if #'null (list tag-clause
+                                                          status-clause
+                                                          scale-clause
+                                                          urgency-clause
+                                                          importance-clause)))
+                          ""))))
     (log-message :debug "Using query string '~A'" query)
     (mapcar #'(lambda (row)
                 `(:uid ,(first row) :title ,(uid-to-title (first row))))
@@ -361,4 +366,11 @@ and any forward-slashes that sneaked through are also now underscores.
    Expects two strings; returns one string."
   (first (cl-ppcre:split "\\?" (cl-ppcre:regex-replace base-uri uri ""))))
 
-
+(defun filter-params (name params)
+  "Filter Hunchentoot parameters for those matching a specific name."
+  (remove-if #'(lambda (param)
+                 (or (null param)
+                     (equal param "")))
+             (mapcar #'(lambda (par)
+                         (when (equal (car par) name) (cdr par)))
+                     params)))
