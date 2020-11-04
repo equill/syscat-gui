@@ -335,7 +335,7 @@ and any forward-slashes that sneaked through are also now underscores.
                      . ,(format nil "MATCH (t:~A)-[:Tags]->(n:tags) RETURN DISTINCT n.uid ORDER BY n.uid"
                                 item-type)))))))))
 
-(defun search-for-tasks (db tags &key statuses scale urgency importance)
+(defun search-for-tasks (db tags &key statuses scale urgency importance uid-regex)
   "Search for tasks using the requested parameters"
   (declare (type neo4cl:neo4j-rest-server db)
            (type list tags)         ; List of strings
@@ -346,17 +346,25 @@ and any forward-slashes that sneaked through are also now underscores.
          (scale-clause (when scale (format nil "n.scale IN [~{\"~A\"~^, ~}]" scale)))
          (urgency-clause (when urgency (format nil "n.urgency IN [~{\"~A\"~^, ~}]" urgency)))
          (importance-clause (when importance (format nil "n.importance IN [~{\"~A\"~^, ~}]" importance)))
+         (regex-clause (when uid-regex (format nil "n.uid =~~ \"~A\""
+                                               uid-regex)))
          (query (format nil "MATCH (n:tasks)~A RETURN DISTINCT n.uid, n.description, n.scale, n.importance, n.urgency, n.status ORDER BY n.uid"
                         ;; Construct the where-clause
-                        (if (or tag-clause status-clause scale-clause urgency-clause importance-clause)
+                        (if (or tag-clause
+                                status-clause
+                                scale-clause
+                                urgency-clause
+                                importance-clause
+                                regex-clause)
                           (format nil " WHERE ~{~A~^ AND ~}"
                                   (remove-if #'null (list tag-clause
                                                           status-clause
                                                           scale-clause
                                                           urgency-clause
-                                                          importance-clause)))
+                                                          importance-clause
+                                                          regex-clause)))
                           ""))))
-    (log-message :debug "Using query string '~A'" query)
+    (log-message :info "Using query string '~A'" query)
     (mapcar #'(lambda (row)
                 `(:uid ,(first row) :title ,(uid-to-title (first row))))
             (neo4cl:extract-rows-from-get-request

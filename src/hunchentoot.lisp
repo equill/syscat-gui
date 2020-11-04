@@ -720,7 +720,9 @@
                                 :statuses statuses-requested
                                 :scale scale-requested
                                 :urgency urgency-requested
-                                :importance importance-requested)))
+                                :importance importance-requested
+                                :uid-regex (when (tbnl:get-parameter "uid_regex")
+                                             (tbnl:get-parameter "uid_regex")))))
        ;; Debug logging for what we've obtained so far
        (log-message :debug "Attributes: ~A" task-attrs)
        (log-message :debug "Statuses available: ~A" (get-enum-vals :status task-attrs))
