@@ -644,7 +644,6 @@
           (tbnl:post-parameter "name"))
      (log-message :debug "Received a file-upload attempt.")
      (log-message :debug "Requested filename was ~A" (tbnl:post-parameter "name"))
-     ;(log-message :debug "Original filepath was ~A" (second (tbnl:post-parameter "file")))
      (log-message :debug "Original filepath was ~A" (tbnl:post-parameter "file"))
      (multiple-value-bind (response-body status-code)
        (rg-post-json
@@ -654,9 +653,10 @@
                     ;; It's already a pathname, so we just pass it on through:
                     ("file" . ,(first (tbnl:post-parameter "file"))))
          :api "files")
-       ;; Expected status code is 201
+       ;; Expected status code is 201; redirect accordingly.
        (if (equal 201 status-code)
-           (tbnl:redirect response-body)
+           (tbnl:redirect (concatenate 'string "/display/files/"
+                                       (car (last (cl-ppcre:split "/" response-body)))))
            (tbnl:redirect (format nil "/files?reason=~A" response-body)))))
     ;; Fail to upload a file
     ((equal (tbnl:request-method*) :POST)
