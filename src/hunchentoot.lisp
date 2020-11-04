@@ -169,11 +169,25 @@
 (defun image-gallery ()
   "Display the image gallery"
   (log-message :debug "Displaying image gallery")
-  (let ((images (rg-request-json (rg-server tbnl:*acceptor*) "/files?mimetype=image/.*"))
-        (layout-template-path (merge-pathnames "display_layout.tmpl" (template-path tbnl:*acceptor*)))
-        (gallery-template-path (merge-pathnames "display_gallery.tmpl" (template-path tbnl:*acceptor*)))
-        ;; Don't escape HTML tags in the nested content
-        (html-template:*string-modifier* #'cl:identity))
+  (let* ((layout-template-path (merge-pathnames "display_layout.tmpl" (template-path tbnl:*acceptor*)))
+         (gallery-template-path (merge-pathnames "display_gallery.tmpl" (template-path tbnl:*acceptor*)))
+         ;; Don't escape HTML tags in the nested content
+         (html-template:*string-modifier* #'cl:identity)
+         ;; Get available tags
+         (tags-available (sort (get-uids (rg-server tbnl:*acceptor*) "tags") #'string<))
+         ;; Get the requested tags
+         (tags-requested (remove-if #'null
+                                    (mapcar #'(lambda (par)
+                                                (when (equal (car par) "tags") (cdr par)))
+                                            (tbnl:get-parameters*))))
+         ;; Execute the search
+         (images (rg-request-json
+                   (rg-server tbnl:*acceptor*)
+                   (format nil "/files?mimetype=image/.*~A"
+                           ;; Tag-search criterion
+                           (if tags-requested
+                             (format nil "~{&outbound=/Tags/tags/~A~}" tags-requested)
+                             "")))))
     (log-message :debug "Fetched image data ~A" images)
     (log-message :debug "State of layout template ~A is ~A"
                  layout-template-path (probe-file layout-template-path))
@@ -186,7 +200,8 @@
               :javascripts nil
               :resourcetype "Images"
               :uid "All"
-              :stylesheets '((:sheet "display"))
+              :stylesheets '((:sheet "display")
+                             (:sheet "gallery"))
               :content (with-output-to-string (contstr)
                          (html-template:fill-and-print-template
                            gallery-template-path
@@ -198,9 +213,14 @@
                                                           (rg-server-port (rg-server tbnl:*acceptor*))
                                                           (cdr (assoc :UID img)))
                                              :link (format nil "/display/files/~A"
-                                                          (cdr (assoc :UID img)))
+                                                           (cdr (assoc :UID img)))
                                              :title (cdr (assoc :TITLE img))))
-                                   images))
+                                   images)
+                                 :tags (mapcar #'(lambda (tag)
+                                                   (list :tag tag
+                                                         :selected (when (member tag tags-requested :test #'equal)
+                                                                     "selected")))
+                                               tags-available))
                            :stream contstr)))
         :stream outstr))))
 

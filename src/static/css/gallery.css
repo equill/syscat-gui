@@ -1,0 +1,42 @@
+/* Search section */
+div#gallery-filter {
+  background-color: #dddddd;
+  padding: 5px;
+}
+
+div#filter-button {
+  margin: 5px;
+}
+/* End of search section */
+
+
+/* Image display */
+div#image-list {
+  column-count: 4;
+  column-gap: 5px;
+  column-rule-style: none;
+  column-fill: balance;
+}
+
+div.gallery-image {
+  column-span: 1;
+  break-inside: avoid;
+  margin: 5px;
+  border: 2px;
+  border-style: solid;
+  border-color: #dddddd;
+}
+
+img.gallery-image {
+  margin: 5px;
+  float: left;
+  max-width: 160px;
+}
+
+div.gallery-image-text {
+  text-align: center;
+  text-decoration: none;
+  max-width: 160px;
+  break-inside: avoid;
+}
+/* End of image display */
