@@ -84,16 +84,26 @@ a#taglink {
 
 
 /* Gallery page section */
+div#image-list {
+  column-count: 4;
+  column-gap: 5px;
+  column-rule-style: none;
+  column-fill: balance;
+}
+
 div.gallery-image {
-  float: left;
+  column-span: 1;
+  break-inside: avoid;
   margin: 5px;
+  border: 2px;
+  border-style: solid;
+  border-color: #dddddd;
 }
 
 img.gallery-image {
   margin: 5px;
   float: left;
   max-width: 160px;
-  object-fit: contain;
 }
 
 div.gallery-image-text {

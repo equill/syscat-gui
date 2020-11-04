@@ -1,8 +1,10 @@
     <div class="content-default">
-      <!-- TMPL_LOOP images -->
-      <div class="gallery-image">
-        <a href="<!-- TMPL_VAR link -->"><img class="gallery-image" src="<!-- TMPL_VAR url -->"></a>
-        <div class="gallery-image-text"><!-- TMPL_VAR title --></div>
+      <div id="image-list">
+        <!-- TMPL_LOOP images -->
+        <div class="gallery-image">
+          <a href="<!-- TMPL_VAR link -->"><img class="gallery-image" src="<!-- TMPL_VAR url -->"></a>
+          <div class="gallery-image-text"><!-- TMPL_VAR title --></div>
+        </div>
+        <!-- /TMPL_LOOP -->
       </div>
-      <!-- /TMPL_LOOP -->
     </div>
