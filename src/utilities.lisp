@@ -309,15 +309,18 @@ and any forward-slashes that sneaked through are also now underscores.
               (list tag atm))
           lst))
 
-(defun get-task-tags (db)
+(defun get-itemtype-tags (db item-type)
   "Return a list of tags applied to existing tasks"
-  (declare (type neo4cl:neo4j-rest-server db))
+  (declare (type neo4cl:neo4j-rest-server db)
+           (type string item-type))
   (mapcar #'car
           (neo4cl:extract-rows-from-get-request
             (neo4cl:neo4j-transaction
               db
-              '((:STATEMENTS
-                  ((:STATEMENT . "MATCH (t:tasks)-[:Tags]->(n:tags) RETURN DISTINCT n.uid ORDER BY n.uid"))))))))
+              `((:STATEMENTS
+                  ((:STATEMENT
+                     . ,(format nil "MATCH (t:~A)-[:Tags]->(n:tags) RETURN DISTINCT n.uid ORDER BY n.uid"
+                                item-type)))))))))
 
 (defun search-for-tasks (db tags &key statuses scale urgency importance)
   "Search for tasks using the requested parameters"

@@ -709,7 +709,7 @@
     ((equal (tbnl:request-method*) :GET)
      (let* ((task-attrs (get-attrs-with-keywords (rg-server tbnl:*acceptor*) "tasks"))
             (statuses-requested (filter-params "status" (tbnl:get-parameters*)))
-            (tags-available (get-task-tags (cl-webcat::neo4j-server cl-webcat::*cl-webcat-acceptor*)))
+            (tags-available (get-itemtype-tags (cl-webcat::neo4j-server cl-webcat::*cl-webcat-acceptor*) "tasks"))
             (tags-requested (filter-params "tags" (tbnl:get-parameters*)))
             (scale-requested (filter-params "scale" (tbnl:get-parameters*)))
             (urgency-requested (filter-params "urgency" (tbnl:get-parameters*)))
