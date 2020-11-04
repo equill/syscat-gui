@@ -173,8 +173,8 @@
          (gallery-template-path (merge-pathnames "display_gallery.tmpl" (template-path tbnl:*acceptor*)))
          ;; Don't escape HTML tags in the nested content
          (html-template:*string-modifier* #'cl:identity)
-         ;; Get available tags
-         (tags-available (sort (get-uids (rg-server tbnl:*acceptor*) "tags") #'string<))
+         ;; Get tags currently applied to image files
+         (tags-available (get-image-tags (neo4j-server tbnl:*acceptor*)))
          ;; Get the requested tags
          (tags-requested (remove-if #'null
                                     (mapcar #'(lambda (par)
@@ -186,8 +186,8 @@
                    (format nil "/files?mimetype=image/.*~A"
                            ;; Tag-search criterion
                            (if tags-requested
-                             (format nil "~{&outbound=/Tags/tags/~A~}" tags-requested)
-                             "")))))
+                               (format nil "~{&outbound=/Tags/tags/~A~}" tags-requested)
+                               "")))))
     (log-message :debug "Fetched image data ~A" images)
     (log-message :debug "State of layout template ~A is ~A"
                  layout-template-path (probe-file layout-template-path))

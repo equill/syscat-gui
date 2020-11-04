@@ -309,6 +309,19 @@ and any forward-slashes that sneaked through are also now underscores.
               (list tag atm))
           lst))
 
+;; This one's too specific to use get-itemtype-tags
+(defun get-image-tags (db)
+  "Get all tags applied to existing _image_ files."
+  (declare (type neo4cl:neo4j-rest-server db))
+  (sort (mapcar #'car
+                (neo4cl:extract-rows-from-get-request
+                  (neo4cl:neo4j-transaction
+                    db
+                    `((:STATEMENTS
+                        ((:STATEMENT
+                           . "MATCH (t:files)-[:Tags]->(n:tags) WHERE t.mimetype =~ \"image/.*\" RETURN DISTINCT n.uid ORDER BY n.uid")))))))
+        #'string<))
+
 (defun get-itemtype-tags (db item-type)
   "Return a list of tags applied to existing tasks"
   (declare (type neo4cl:neo4j-rest-server db)
