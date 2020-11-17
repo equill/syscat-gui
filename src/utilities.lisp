@@ -163,19 +163,20 @@
   - server = instance of rg-server struct
   - resourcetype = string
   Returns a list of schema-rtype-attrs structs."
-  (mapcar #'(lambda (attribute)
-              (make-schema-rtype-attrs
-                :name (cdr (assoc :name attribute))
-                :description (or (cdr (assoc :description attribute)) "")
-                :values (cl-ppcre:split "," (cdr (assoc :vals attribute)))
-                ;; Not yet implemented in RG.
-                ;:valuetype (cdr (assoc :valuetype attribute))
-                ))
-          (sort
-            (cdr (assoc :attributes
-                        (get-schema server resourcetype)))
-            #'string<
-            :key #'(lambda (attr) (cdr (assoc :name attr))))))
+  (declare (type rg-server)
+           (type string resourcetype))
+  (log-message :debug "Fetching attributes for resourcetype '~A'" resourcetype)
+  (let* ((rawdata (get-schema server resourcetype))
+         (attributes (sort (cdr (assoc :attributes rawdata))
+                           #'string<
+                           :key #'(lambda (attr) (cdr (assoc :name attr))))))
+    (log-message :debug "Retrieved attributes: ~A" attributes)
+    (mapcar #'(lambda (attribute)
+                (make-schema-rtype-attrs
+                  :name (cdr (assoc :name attribute))
+                  :description (or (cdr (assoc :description attribute)) "")
+                  :values (cdr (assoc :vals attribute))))
+            attributes)))
 
 (defun get-attrs-with-keywords (server resourcetype)
   "Return a sorted alist of the attribute definitions for a resourcetype.
