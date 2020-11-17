@@ -709,7 +709,8 @@
     ((equal (tbnl:request-method*) :GET)
      (let* ((task-attrs (get-attrs-with-keywords (rg-server tbnl:*acceptor*) "tasks"))
             (statuses-requested (filter-params "status" (tbnl:get-parameters*)))
-            (tags-available (get-itemtype-tags (cl-webcat::neo4j-server cl-webcat::*cl-webcat-acceptor*) "tasks"))
+            (tags-available (get-itemtype-tags (cl-webcat::neo4j-server cl-webcat::*cl-webcat-acceptor*)
+                                               "tasks"))
             (tags-requested (filter-params "tags" (tbnl:get-parameters*)))
             (scale-requested (filter-params "scale" (tbnl:get-parameters*)))
             (urgency-requested (filter-params "urgency" (tbnl:get-parameters*)))
@@ -747,17 +748,20 @@
                  :importance (mapcar
                                #'(lambda (imp)
                                    (list :name imp
-                                         :selected (when (equal imp (tbnl:get-parameter "importance")) "selected")))
+                                         :selected (when (equal imp (tbnl:get-parameter "importance"))
+                                                     "selected")))
                                (get-enum-vals :importance task-attrs))
                  :urgency (mapcar
                             #'(lambda (urge)
                                 (list :name urge
-                                      :selected (when (equal urge (tbnl:get-parameter "urgency")) "selected")))
+                                      :selected (when (equal urge (tbnl:get-parameter "urgency"))
+                                                  "selected")))
                             (get-enum-vals :urgency task-attrs))
                  :scale (mapcar
                           #'(lambda (scale)
                               (list :name scale
-                                    :selected (when (equal scale (tbnl:get-parameter "scale")) "selected")))
+                                    :selected (when (equal scale (tbnl:get-parameter "scale"))
+                                                "selected")))
                           (get-enum-vals :scale task-attrs))
                  :tags (mapcar #'(lambda (tag)
                                    (list :tag tag
