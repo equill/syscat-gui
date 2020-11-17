@@ -347,7 +347,9 @@ and any forward-slashes that sneaked through are also now underscores.
          (scale-clause (when scale (format nil "n.scale IN [~{\"~A\"~^, ~}]" scale)))
          (urgency-clause (when urgency (format nil "n.urgency IN [~{\"~A\"~^, ~}]" urgency)))
          (importance-clause (when importance (format nil "n.importance IN [~{\"~A\"~^, ~}]" importance)))
-         (regex-clause (when uid-regex (format nil "n.uid =~~ \"~A\""
+         (regex-clause (when (and uid-regex
+                                  (not (equal "" uid-regex)))
+                         (format nil "n.uid =~~ \"~A\""
                                                uid-regex)))
          (query (format nil "MATCH (n:tasks)~A RETURN DISTINCT n.uid, n.description, n.scale, n.importance, n.urgency, n.status ORDER BY n.uid"
                         ;; Construct the where-clause
