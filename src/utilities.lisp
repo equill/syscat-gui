@@ -351,7 +351,11 @@ and any forward-slashes that sneaked through are also now underscores.
                                   (not (equal "" uid-regex)))
                          (format nil "n.uid =~~ \"~A\""
                                                uid-regex)))
-         (query (format nil "MATCH (n:tasks)~A RETURN DISTINCT n.uid, n.description, n.scale, n.importance, n.urgency, n.status ORDER BY n.uid"
+         (query (format nil "MATCH ~A~A RETURN DISTINCT n.uid, n.description, n.scale, n.importance, n.urgency, n.status ORDER BY n.uid"
+                        ;; Construct the core MATCH statement
+                        (if tags
+                          "(n:tasks)-[Tags]->(t:tags)"
+                          "(n:tasks)")
                         ;; Construct the where-clause
                         (if (or tag-clause
                                 status-clause
