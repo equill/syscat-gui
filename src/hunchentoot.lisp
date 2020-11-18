@@ -75,7 +75,13 @@
                                 (make-pathname :defaults (template-path tbnl:*acceptor*)
                                                :type "tmpl"
                                                :name "display_task")
-                                (list :description (or (cdr (assoc :description content)) "(No description found)")
+                                (list :description (let ((description (cdr (assoc :description content))))
+                                                     (if description
+                                                       (with-output-to-string (mdstr)
+                                                         (3bmd:parse-string-and-print-to-stream
+                                                          description
+                                                          mdstr))
+                                                       "(No description found)"))
                                       :importance (or (cdr (assoc :importance content)) "(No importance found)")
                                       :urgency (or (cdr (assoc :urgency content)) "(No urgency found)")
                                       :scale (or (cdr (assoc :scale content)) "(No scale found)")
