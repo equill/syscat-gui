@@ -137,35 +137,46 @@
                                                 (list :attrname (schema-rtype-attrs-name (cdr attribute))
                                                       ; Ensure all values are strings, for the template.
                                                       :attrval (if attrval
-                                                                   ;; Render all descriptions as Markdown
-                                                                   (if (or (member attrname '(:description :text))
-                                                                           (equal "commonmark"
-                                                                                  (schema-rtype-attrs-valuetype
-                                                                                    (cdr attribute))))
-                                                                       (with-output-to-string (mdstr)
-                                                                         (3bmd:parse-string-and-print-to-stream attrval mdstr)
-                                                                         mdstr)
-                                                                       attrval)
-                                                                   ""))))
+                                                                 ;; Render all descriptions as Markdown
+                                                                 (if (or (member attrname '(:description :text))
+                                                                         (equal "commonmark"
+                                                                                (schema-rtype-attrs-valuetype
+                                                                                  (cdr attribute))))
+                                                                   (with-output-to-string (mdstr)
+                                                                     (3bmd:parse-string-and-print-to-stream attrval mdstr)
+                                                                     mdstr)
+                                                                   attrval)
+                                                                 ""))))
                                           attrdefs))
                                   :stream contstr))))
-                :tags (remove-if-not #'(lambda (link)
-                                         (equal (getf link :relationship) "Tags"))
-                                     outbound-links)
-                :groups (remove-if-not #'(lambda (link)
-                                           (and
-                                             (equal (getf link :resourcetype) "groups")
-                                             (equal (getf link :relationship) "Member")))
+                :tags (sort
+                        (remove-if-not
+                          #'(lambda (link)
+                              (equal (getf link :relationship) "Tags"))
+                          outbound-links)
+                        #'string<
+                        :key #'(lambda (item) (getf item :uid)))
+                :groups (sort
+                          (remove-if-not
+                            #'(lambda (link)
+                                (and
+                                  (equal (getf link :resourcetype) "groups")
+                                  (equal (getf link :relationship) "Member")))
+                            outbound-links)
+                          #'string<
+                          :key #'(lambda (item) (getf item :uid)))
+                :outbound (sort
+                            (remove-if #'(lambda (link)
+                                           (or
+                                             ;; Tags
+                                             (equal (getf link :relationship) "Tags")
+                                             ;; groups
+                                             (and
+                                               (equal (getf link :resourcetype) "groups")
+                                               (equal (getf link :relationship) "Member"))))
                                        outbound-links)
-                :outbound (remove-if #'(lambda (link)
-                                         (or
-                                           ;; Tags
-                                           (equal (getf link :relationship) "Tags")
-                                           ;; groups
-                                           (and
-                                             (equal (getf link :resourcetype) "groups")
-                                             (equal (getf link :relationship) "Member"))))
-                                     outbound-links))
+                            #'string<
+                            :key #'(lambda (item) (getf item :uid))))
               :stream outstr)))
         (progn
           (setf (tbnl:content-type*) "text/plain")
