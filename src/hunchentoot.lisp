@@ -357,7 +357,8 @@
                       (get-attrs (rg-server tbnl:*acceptor*) resourcetype)))
             (validated-attrs
               (mapcar #'(lambda (param)
-                          (log-message :debug "Validating parameter ~A" (car param))
+                          (log-message :debug "Validating parameter '~A' with value '~A'"
+                                       (car param) (cdr param))
                           (when (member (car param) valid-attrnames :test #'equal) param))
                       (tbnl:post-parameters*))))
        (log-message :debug (format nil "Processing edit request for ~A ~A" resourcetype uid))
