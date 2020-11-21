@@ -33,11 +33,12 @@
   "Parse the JSON returned as application/json into a CL structure"
   ;; Neo4j sends a stream of octets. Convert this into a string.
   (let ((json-string (flexi-streams:octets-to-string json :external-format :UTF-8)))
+    (log-message :debug "decode-json-response received string '~A'" json-string)
     ;; If an empty string was returned, pass an empty string back.
     (if (equal json-string "")
-        ""
-        ;; If we received actual content, on the other hand, decode it.
-        (cl-json:decode-json-from-string json-string))))
+      ""
+      ;; If we received actual content, on the other hand, decode it.
+      (cl-json:decode-json-from-string json-string))))
 
 (defun rg-request-json (server uri &key (api "raw"))
   "Make a GET request to a Restagraph backend that should return a JSON response.
