@@ -10,12 +10,16 @@
     <form action="/create" method="post" class="formgrid" id="createform">
       <!-- UID -->
       <div id="header-uid" class="header">UID/title:&nbsp;</div>
-      <input type="text" name="uid" id="input-uid"></input>
+      <input type="text" name="uid" id="input-uid" value="<!-- TMPL_VAR uid -->"></input>
       <!-- Resource types -->
       <div class="header" id="header-resourcetypes">Resource type</div>
       <select name="resourcetype" id="resourcetype" size="15">
         <!-- TMPL_LOOP schema -->
-        <option value="<!-- TMPL_VAR name -->"><!-- TMPL_VAR name --></option>
+          <!-- TMPL_IF selected -->
+          <option value="<!-- TMPL_VAR name -->" selected="selected"><!-- TMPL_VAR name --></option>
+          <!-- TMPL_ELSE -->
+          <option value="<!-- TMPL_VAR name -->"><!-- TMPL_VAR name --></option>
+          <!-- /TMPL_IF -->
         <!-- /TMPL_LOOP -->
       </select>
       <!-- End of resource types -->

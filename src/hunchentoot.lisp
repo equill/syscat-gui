@@ -36,7 +36,8 @@
          (attrdefs (get-attrs-with-keywords (rg-server tbnl:*acceptor*) resourcetype)))
     (log-message :debug "Content: ~A" content)
     (log-message :debug "Resource-type attributes: ~A" attrdefs)
-    (if content
+    (cond
+      (content
         ;; Selectively pre-render attribute values, according to their type.
         ;; Only used as the default option, if we didn't find a special-case for this resource-type
         (let ((layout-template-path (make-pathname :defaults (template-path tbnl:*acceptor*)
@@ -177,11 +178,18 @@
                                        outbound-links)
                             #'string<
                             :key #'(lambda (item) (getf item :uid))))
-              :stream outstr)))
+              :stream outstr))))
+      ;; No such resource, but we do have a resourcetype and UID.
+      ;; Redirect to the item-creation page.
+      ((and resourcetype
+            uid)
+       (tbnl:redirect (format nil "/create?resourcetype=~A&uid=~A" resourcetype uid)))
+      ;; No content, and not enough for constructing a new item: respond with a blank look.
+      (t
         (progn
           (setf (tbnl:content-type*) "text/plain")
           (setf (tbnl:return-code*) tbnl:+http-not-found+)
-          "No content"))))
+          "No content")))))
 
 (defun image-gallery ()
   "Display the image gallery"
@@ -798,7 +806,10 @@
     ((equal (tbnl:request-method*) :GET)
      (log-message :debug "Handling create GET request ~A" (tbnl:request-uri*))
      (let ((schema (mapcar #'(lambda (rtype)
-                               (list :name rtype :selected nil))
+                               (list :name rtype
+                                     :selected (when (equal rtype
+                                                            (tbnl:get-parameter "resourcetype"))
+                                                 t)))
                            (get-resourcetypes (rg-server tbnl:*acceptor*)))))
        (log-message :debug "Retrieved schema data.")
        (setf (tbnl:content-type*) "text/html")
@@ -808,10 +819,13 @@
            (make-pathname :defaults (template-path tbnl:*acceptor*)
                           :type "tmpl"
                           :name "display_createitem")
-           (list :title "Create item"
-                 :stylesheets '((:sheet "create"))
-                 :javascripts '((:script "search"))
-                 :schema schema)
+           `(:title "Create item"
+                    :stylesheets ((:sheet "create"))
+                    :javascripts ((:script "search"))
+                    :schema ,schema
+                    :uid ,(if (tbnl:get-parameter "uid")
+                            (tbnl:get-parameter "uid")
+                            ""))
            :stream outstr))))
     ((equal (tbnl:request-method*) :POST)
      (let ((uid (tbnl:post-parameter "uid"))
