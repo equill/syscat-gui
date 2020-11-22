@@ -25,4 +25,18 @@
     :template-path "/home/james/devel/syscat/cl-webcat/src/templates/"
     :static-path "/home/james/devel/syscat/cl-webcat/src/static/"))
 
+;; Declare this here because it needs to already have been compiled before any
+;; references are made to it in json.lisp.
+(defparameter +json-lisp-escaped-chars+
+  '((#\" . #\")
+    (#\\ . #\\)
+    (#\/ . #\/)
+    (#\b . #\Backspace)
+    (#\f . #\)
+    (#\n . #\Newline)
+    (#\r . #\Return)
+    (#\t . #\Tab)
+    (#\u . (4 . 16)))
+  "Mapping between JSON String escape sequences and Lisp chars.")
+
 (setf *loglevel* :debug)

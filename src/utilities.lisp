@@ -60,7 +60,7 @@
                          (rg-server-raw-base server)))
                      uri)))
     (log-message :debug "Using URL '~A'" url)
-    (decode-json-response (drakma:http-request url))))
+    (decode-json-response (drakma:http-request url :external-format-in :UTF-8))))
 
 (defun rg-delete (server uri &key payload schema-p)
   "Delete a resource from the Restagraph backend.
@@ -76,58 +76,73 @@
                      payload)))
     (log-message :info "DELETEing resource with URL ~A" url)
     (multiple-value-bind (body status-code)
-      (drakma:http-request url :method :DELETE)
+      (drakma:http-request url :method :DELETE :external-format-in :UTF-8)
       (values status-code body))))
+
+(defun post-encode-payload (payload)
+  "Transform a list of dotted pairs of strings into a POST-encoded string.
+   The intent is to provide Drakma with pre-encoded content,
+   instead of having it URL-encode the content of a PUT request.
+   This also bypasses the 1024-character limit that comes with URL-encoding."
+  (format nil "~{~A~^&~}"
+          (mapcar #'(lambda (pair)
+                      (format nil "~A=~A" (car pair) (cdr pair)))
+                  payload)))
 
 (defun rg-post-json (server uri &key payload put-p api)
   "Make a POST request to a Restagraph backend, and decode the JSON response if there was one.
-   Arguments:
-   - rg-server object
-   - URI
-   - :payload = Drakma-ready alist of values to POST
-   - :put-p = whether we're invoking the PUT method
-   - :api = whether to invoke the schema, files or raw (default) API.
-   Return the body as the primary value, and the status-code as a secondary value."
-  (log-message :debug "~Aing a request to URI ~A" (if put-p "PUT" "POST") uri)
-  (log-message :debug "Payload: ~A" payload)
-  (multiple-value-bind (body status-code headers)
-    (drakma:http-request
-      (format nil "http://~A:~D~A~A"
-              (rg-server-hostname server)
-              (rg-server-port server)
-              (cond
-                ((equal "schema" api)
-                 (rg-server-schema-base server))
-                ((equal "files" api)
-                 (rg-server-files-base server))
-                (t   ; default is "raw"
-                 (rg-server-raw-base server)))
-              uri)
-      :parameters payload
-      :form-data (equal "files" api)
-      :method (if put-p :PUT :POST)
-      :external-format-in :UTF-8)
-    ;; Now decide what to do with it.
-    ;; If it was successful, return it
-    (log-message :debug "Response status-code: ~A" status-code)
-    (log-message :debug "Response headers: ~A" headers)
-    (if (and (> status-code 199)
-             (< status-code 300))
+  Arguments:
+  - rg-server object
+  - URI
+  - :payload = Drakma-ready alist of values to POST
+  - :put-p = whether we're invoking the PUT method
+  - :api = whether to invoke the schema, files or raw (default) API.
+  Return the body as the primary value, and the status-code as a secondary value."
+  (log-message :debug "rg-post-json received payload: ~A" payload)
+  (let ((encoded-payload (post-encode-payload payload))
+        (method (if put-p :PUT :POST)))
+    (log-message :debug "~Aing a request to URI ~A" method uri)
+    (log-message :debug "Encoded payload: ~A" encoded-payload)
+    (multiple-value-bind (body status-code headers)
+      (drakma:http-request
+        (format nil "http://~A:~D~A~A"
+                (rg-server-hostname server)
+                (rg-server-port server)
+                (cond
+                  ((equal "schema" api)
+                   (rg-server-schema-base server))
+                  ((equal "files" api)
+                   (rg-server-files-base server))
+                  (t   ; default is "raw"
+                    (rg-server-raw-base server)))
+                uri)
+        ;:parameters payload
+        :content encoded-payload
+        :form-data (equal "files" api)
+        :method method
+        :external-format-in :UTF-8
+        :external-format-out :UTF-8)
+      ;; Now decide what to do with it.
+      ;; If it was successful, return it
+      (log-message :debug "Response status-code: ~A" status-code)
+      (log-message :debug "Response headers: ~A" headers)
+      (if (and (> status-code 199)
+               (< status-code 300))
         ;; Success!
         (progn
           (log-message :debug "Request succeeded.")
           (values
             (if (equal (cdr (assoc :content-type headers))
                        "application/json")
-                ;; If it's JSON, decode it
-                (decode-json-response body)
-                ;; If not JSON, just return the body
-                body)
+              ;; If it's JSON, decode it
+              (decode-json-response body)
+              ;; If not JSON, just return the body
+              body)
             status-code))
         ;; Failure!
         (progn
           (log-message :debug "Failure: ~A ~A" status-code body)
-          (values body status-code)))))
+          (values body status-code))))))
 
 (defun search-for-resources (server rtype &optional params)
   "Search in the backend for a thing.
