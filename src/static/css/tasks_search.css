@@ -100,9 +100,13 @@ div#submit-row {
   grid-column: 1 / span 2;
 }
 
-.results-list {
+ul.results-list {
   /* No dot-markers */
   list-style-type: none;
   /* Don't indent the list */
   padding: 0;
+}
+
+table.results-list {
+  border-spacing: 5px;
 }

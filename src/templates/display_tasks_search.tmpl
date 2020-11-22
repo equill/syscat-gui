@@ -107,11 +107,26 @@
   <div id="searchresults">
   <h2>Search results</h2>
 
-  <ul class="results-list">
+  <table class="results-list">
+    <tr>
+      <th>Status</th>
+      <th>Urgency</th>
+      <th>Importance</th>
+      <th>Scale</th>
+      <th>Title</th>
+      <th>Deadline</th>
+    </tr>
     <!-- TMPL_LOOP results -->
-    <li><a href="display/tasks/<!-- TMPL_VAR uid -->"><!-- TMPL_VAR title --></a></li>
+    <tr>
+      <td class="results-list"><!-- TMPL_VAR status --></td>
+      <td class="results-list"><!-- TMPL_VAR urgency --></td>
+      <td class="results-list"><!-- TMPL_VAR importance --></td>
+      <td class="results-list"><!-- TMPL_VAR scale --></td>
+      <td class="results-list"><a href="display/tasks/<!-- TMPL_VAR uid -->"><!-- TMPL_VAR title --></a></td>
+      <td class="results-list"><!-- TMPL_VAR deadline --></td>
+    </tr>
     <!-- /TMPL_LOOP -->
-  </ul>
+  </table>
   <!-- End search results -->
   </div>
 

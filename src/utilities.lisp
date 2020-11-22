@@ -337,11 +337,19 @@ and any forward-slashes that sneaked through are also now underscores.
                                 item-type)))))))))
 
 (defun search-for-tasks (db tags &key statuses scale urgency importance uid-regex)
-  "Search for tasks using the requested parameters"
+  "Search for tasks using the requested parameters.
+  Return an plist for passing directly to `html-template`:
+  :uid
+  :title
+  :scale
+  :importance
+  :urgency
+  :status"
   (declare (type neo4cl:neo4j-rest-server db)
            (type list tags)         ; List of strings
            (type list statuses))    ; List of strings
   (log-message :debug "Searching for tasks with tags ~{~A~^, ~} and statuses ~{~A~^, ~}" tags statuses)
+  ;; Construct the query, doing a bunch of pre-computing up front
   (let* ((tag-clause (when tags (format nil "t.uid IN [~{\"~A\"~^, ~}]" tags)))
          (status-clause (when statuses (format nil "n.status IN [~{\"~A\"~^, ~}]" statuses)))
          (scale-clause (when scale (format nil "n.scale IN [~{\"~A\"~^, ~}]" scale)))
@@ -350,8 +358,8 @@ and any forward-slashes that sneaked through are also now underscores.
          (regex-clause (when (and uid-regex
                                   (not (equal "" uid-regex)))
                          (format nil "n.uid =~~ \"~A\""
-                                               uid-regex)))
-         (query (format nil "MATCH ~A~A RETURN DISTINCT n.uid, n.description, n.scale, n.importance, n.urgency, n.status ORDER BY n.uid"
+                                 uid-regex)))
+         (query (format nil "MATCH ~A~A RETURN DISTINCT n.uid, n.scale, n.importance, n.urgency, n.status, n.deadline ORDER BY n.uid"
                         ;; Construct the core MATCH statement
                         (if tags
                           "(n:tasks)-[Tags]->(t:tags)"
@@ -372,13 +380,57 @@ and any forward-slashes that sneaked through are also now underscores.
                                                           regex-clause)))
                           ""))))
     (log-message :info "Using query string '~A'" query)
-    (mapcar #'(lambda (row)
-                `(:uid ,(first row) :title ,(uid-to-title (first row))))
-            (neo4cl:extract-rows-from-get-request
-              (neo4cl:neo4j-transaction
-                db
-                `((:STATEMENTS
-                    ((:STATEMENT . ,query)))))))))
+    ;; Transform the results into an alist
+    (let ((raw-results (mapcar
+                         #'(lambda (row)
+                             ;; Eliminate WTF sort-order by removing spurious characters
+                             ;; that are prone to creeping in, like leading/trailing spaces
+                             ;; and quote-marks.
+                             (let* ((uid (first row))
+                                   (title (uid-to-title uid))
+                                   (scale (string-trim "\" " (second row)))
+                                   (scale-numeric (cond ((equal "high" scale) 1)
+                                                        ((equal "medium" scale) 2)
+                                                        (t 3)))
+                                   (importance (string-trim "\" " (third row)))
+                                   (importance-numeric (cond ((equal "high" importance) 1)
+                                                             ((equal "medium" importance) 2)
+                                                             (t 3)))
+                                   (urgency (string-trim "\" " (fourth row)))
+                                   (urgency-numeric (cond ((equal "high" urgency) 1)
+                                                          ((equal "medium" urgency) 2)
+                                                          (t 3)))
+                                   (status (string-trim "\" " (fifth row)))
+                                   ;; Filter out deadlines that were recorded as an empty string
+                                   (deadline (when (and (sixth row)
+                                                        (stringp (sixth row))
+                                                        (not (equal "" (sixth row))))
+                                               (sixth row))))
+                               (list :uid uid
+                                     :title title
+                                     :scale scale
+                                     :scale-numeric scale-numeric 
+                                     :importance importance
+                                     :importance-numeric importance-numeric
+                                     :urgency urgency
+                                     :urgency-numeric urgency-numeric
+                                     :status status
+                                     :deadline deadline)))
+                         (neo4cl:extract-rows-from-get-request
+                           (neo4cl:neo4j-transaction
+                             db
+                             `((:STATEMENTS
+                                 ((:STATEMENT . ,query)))))))))
+      (log-message :debug "Raw results of task-search: ~A" raw-results)
+      ;; Sort the alist and return it.
+      ;; Note that `stable-sort` is required, to prevent each iteration from scrambling its predecessor's results
+      (stable-sort
+        (stable-sort
+          (stable-sort
+            (sort raw-results #'> :key #'(lambda (item) (getf item :scale-numeric)))
+            #'< :key #'(lambda (item) (getf item :importance-numeric)))
+          #'< :key #'(lambda (item) (getf item :urgency-numeric)))
+        #'string< :key (lambda (item) (getf item :deadline))))))
 
 (defun get-enum-vals (attr attrlist)
   "Extract the enum values for an attribute,
