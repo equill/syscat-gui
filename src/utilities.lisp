@@ -32,7 +32,7 @@
 (defun decode-json-response (json)
   "Parse the JSON returned as application/json into a CL structure"
   ;; Neo4j sends a stream of octets. Convert this into a string.
-  (let ((json-string (flexi-streams:octets-to-string json)))
+  (let ((json-string (flexi-streams:octets-to-string json :external-format :UTF-8)))
     ;; If an empty string was returned, pass an empty string back.
     (if (equal json-string "")
         ""
@@ -104,9 +104,12 @@
               uri)
       :parameters payload
       :form-data (equal "files" api)
-      :method (if put-p :PUT :POST))
+      :method (if put-p :PUT :POST)
+      :external-format-in :UTF-8)
     ;; Now decide what to do with it.
     ;; If it was successful, return it
+    (log-message :debug "Response status-code: ~A" status-code)
+    (log-message :debug "Response headers: ~A" headers)
     (if (and (> status-code 199)
              (< status-code 300))
         ;; Success!
