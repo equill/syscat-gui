@@ -91,6 +91,43 @@
                               (drakma:url-encode (cdr pair) :UTF-8)))
                   payload)))
 
+(defun rg-upload-file (server payload)
+  "Upload a file to a Restagraph backend."
+  (log-message :debug (format nil "Uploading a file"))
+  (multiple-value-bind (body status-code headers)
+    (drakma:http-request
+      (format nil "http://~A:~D~A~A"
+              (rg-server-hostname server)
+              (rg-server-port server)
+              (rg-server-files-base server)
+              "/files/v1")
+      :parameters payload
+      :form-data t
+      :method :POST
+      :external-format-in :UTF-8
+      :external-format-out :UTF-8)
+    ;; Now decide what to do with it.
+    ;; If it was successful, return it
+    (log-message :debug (format nil "Response status-code: ~A" status-code))
+    (log-message :debug (format nil "Response headers: ~A" headers))
+    (if (and (> status-code 199)
+             (< status-code 300))
+        ;; Success!
+        (progn
+          (log-message :debug "Request succeeded.")
+          (values
+            (if (equal (cdr (assoc :content-type headers))
+                       "application/json")
+                ;; If it's JSON, decode it
+                (decode-json-response body)
+                ;; If not JSON, just return the body
+                body)
+            status-code))
+        ;; Failure!
+        (progn
+          (log-message :debug (format nil "Failure: ~A ~A" status-code body))
+          (values body status-code)))))
+
 (defun rg-post-json (server uri &key payload put-p api)
   "Make a POST request to a Restagraph backend, and decode the JSON response if there was one.
   Arguments:
