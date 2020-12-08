@@ -79,6 +79,10 @@
       (drakma:http-request url :method :DELETE :external-format-in :UTF-8)
       (values status-code body))))
 
+(defun sanitise-payload-string (str)
+  "Safely escape any troublesome strings."
+  (cl-ppcre:regex-replace-all "%" str "%25"))
+
 (defun post-encode-payload (payload)
   "Transform a list of dotted pairs of strings into a POST-encoded string.
    The intent is to provide Drakma with pre-encoded content,
@@ -86,7 +90,9 @@
    This also bypasses the 1024-character limit that comes with URL-encoding."
   (format nil "~{~A~^&~}"
           (mapcar #'(lambda (pair)
-                      (format nil "~A=~A" (car pair) (cdr pair)))
+                      (format nil "~A=~A"
+                              (sanitise-payload-string (car pair))
+                              (sanitise-payload-string (cdr pair))))
                   payload)))
 
 (defun rg-post-json (server uri &key payload put-p api)
