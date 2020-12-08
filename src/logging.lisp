@@ -30,13 +30,13 @@
     (format nil "[~4,'0d-~2,'0d-~2,'0d ~2,'0d:~2,'0d:~2,'0d]"
     year month date hour minute sec)))
 
-(defun log-message (severity &rest args)
+(defun log-message (severity message)
   (when (>= (getf *loglevels* severity)
             (getf *loglevels* *loglevel*))
     (format *log-stream* "~&~A ~A ~A~%"
             (make-timestamp)
             severity
-            (apply #'format (append '(()) args)))))
+            message)))
 
 (defmethod tbnl:acceptor-log-message ((acceptor cl-webcat-acceptor)
                                       log-level

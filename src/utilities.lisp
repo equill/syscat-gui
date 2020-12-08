@@ -33,7 +33,7 @@
   "Parse the JSON returned as application/json into a CL structure"
   ;; Neo4j sends a stream of octets. Convert this into a string.
   (let ((json-string (flexi-streams:octets-to-string json :external-format :UTF-8)))
-    (log-message :debug "decode-json-response received string '~A'" json-string)
+    (log-message :debug (format nil "decode-json-response received string '~A'" json-string))
     ;; If an empty string was returned, pass an empty string back.
     (if (equal json-string "")
       ""
@@ -47,7 +47,7 @@
   - rg-server object
   - URI
   - :api = which API to invoke: schema, files or raw (default)."
-  (log-message :debug "Requesting URI '~A' from the ~A API" uri api)
+  (log-message :debug (format nil "Requesting URI '~A' from the ~A API" uri api))
   (let ((url (format nil "http://~A:~D~A~A"
                      (rg-server-hostname server)
                      (rg-server-port server)
@@ -59,7 +59,7 @@
                        (t   ; default is "raw"
                          (rg-server-raw-base server)))
                      uri)))
-    (log-message :debug "Using URL '~A'" url)
+    (log-message :debug (format nil "Using URL '~A'" url))
     (decode-json-response (drakma:http-request url :external-format-in :UTF-8))))
 
 (defun rg-delete (server uri &key payload schema-p)
@@ -74,7 +74,7 @@
                          (rg-server-raw-base server))
                      uri
                      payload)))
-    (log-message :info "DELETEing resource with URL ~A" url)
+    (log-message :info (format nil "DELETEing resource with URL ~A" url))
     (multiple-value-bind (body status-code)
       (drakma:http-request url :method :DELETE :external-format-in :UTF-8)
       (values status-code body))))
@@ -98,11 +98,11 @@
   - :put-p = whether we're invoking the PUT method
   - :api = whether to invoke the schema, files or raw (default) API.
   Return the body as the primary value, and the status-code as a secondary value."
-  (log-message :debug "rg-post-json received payload: ~A" payload)
+  (log-message :debug (format nil "rg-post-json received payload: ~A" payload))
   (let ((encoded-payload (post-encode-payload payload))
         (method (if put-p :PUT :POST)))
-    (log-message :debug "~Aing a request to URI ~A" method uri)
-    (log-message :debug "Encoded payload: ~A" encoded-payload)
+    (log-message :debug (format nil "~Aing a request to URI ~A" method uri))
+    (log-message :debug (format nil "Encoded payload: ~A" encoded-payload))
     (multiple-value-bind (body status-code headers)
       (drakma:http-request
         (format nil "http://~A:~D~A~A"
@@ -124,8 +124,8 @@
         :external-format-out :UTF-8)
       ;; Now decide what to do with it.
       ;; If it was successful, return it
-      (log-message :debug "Response status-code: ~A" status-code)
-      (log-message :debug "Response headers: ~A" headers)
+      (log-message :debug (format nil "Response status-code: ~A" status-code))
+      (log-message :debug (format nil "Response headers: ~A" headers))
       (if (and (> status-code 199)
                (< status-code 300))
         ;; Success!
@@ -141,18 +141,18 @@
             status-code))
         ;; Failure!
         (progn
-          (log-message :debug "Failure: ~A ~A" status-code body)
+          (log-message :debug (format nil "Failure: ~A ~A" status-code body))
           (values body status-code))))))
 
 (defun search-for-resources (server rtype &optional params)
   "Search in the backend for a thing.
   Expected to be called from the search page.
   params = optional list of strings."
-  (log-message :debug "Searching for ~A with parameters ~A" rtype params)
+  (log-message :debug (format nil "Searching for ~A with parameters ~A" rtype params))
   (let ((query-string (if params
                         (format nil "/~A?~{~A~^&~}" rtype params)
                         (format nil "/~A" rtype))))
-    (log-message :debug "search-for-resources using query string '~A'" query-string)
+    (log-message :debug (format nil "search-for-resources using query string '~A'" query-string))
     (let ((result (rg-request-json server query-string)))
       (if (equal result "")
         nil
@@ -164,7 +164,7 @@
   - server = instance of rg-server struct
   - resourcetype = string
   Returns a list of strings."
-  (log-message :debug "Retrieving UIDs for ~A" resourcetype)
+  (log-message :debug (format nil "Retrieving UIDs for ~A" resourcetype))
   (mapcar #'(lambda (item)
               (cdr (assoc :uid item)))
           (rg-request-json server (format nil "/~A" resourcetype))))
@@ -172,7 +172,7 @@
 (defun get-schema (server &optional (resourcetype ""))
   (if (equal resourcetype "")
     (log-message :debug "Retrieving the whole schema")
-    (log-message :debug "Retrieving the schema for resourcetype '~A'" resourcetype))
+    (log-message :debug (format nil "Retrieving the schema for resourcetype '~A'" resourcetype)))
   (rg-request-json server (format nil "/~A" resourcetype) :api "schema"))
 
 
@@ -184,12 +184,12 @@
   Returns a list of schema-rtype-attrs structs."
   (declare (type rg-server)
            (type string resourcetype))
-  (log-message :debug "Fetching attributes for resourcetype '~A'" resourcetype)
+  (log-message :debug (format nil "Fetching attributes for resourcetype '~A'" resourcetype))
   (let* ((rawdata (get-schema server resourcetype))
          (attributes (sort (cdr (assoc :attributes rawdata))
                            #'string<
                            :key #'(lambda (attr) (cdr (assoc :name attr))))))
-    (log-message :debug "Retrieved attributes: ~A" attributes)
+    (log-message :debug (format nil "Retrieved attributes: ~A" attributes))
     (mapcar #'(lambda (attribute)
                 (make-schema-rtype-attrs
                   :name (cdr (assoc :name attribute))
@@ -224,7 +224,7 @@
   Only pulls out the UID because that's the only attribute we can expect to get.
   We're currently searching specifically by resourcetype, so we already know that and
   it's not in the returned results anyway."
-  (log-message :debug "search-results-to-template formatting results ~A" res)
+  (log-message :debug (format nil "search-results-to-template formatting results ~A" res))
   (mapcar #'(lambda (result)
               `(:uid ,(cdr (assoc :uid result))
                      :title  ,(uid-to-title (cdr (assoc :uid result)))))
@@ -291,15 +291,15 @@ and any forward-slashes that sneaked through are also now underscores.
       (apply #'append
              (let* ((resourcetype (car (last uri-parts 2)))
                     (rels (get-outbound-rels server resourcetype)))
-               (log-message :debug "Outbound rels for resourcetype ~A: ~A"
-                            resourcetype rels)
+               (log-message :debug (format nil "Outbound rels for resourcetype ~A: ~A"
+                                           resourcetype rels))
                (remove-if #'null
                           (mapcar
                             #'(lambda (rel)
                                 (log-message
                                   :debug
-                                  "Getting ~A resources with relationship ~A to resource ~{/~A~}"
-                                  (getf rel :resourcetype) (getf rel :relationship) uri-parts)
+                                  (format nil "Getting ~A resources with relationship ~A to resource ~{/~A~}"
+                                          (getf rel :resourcetype) (getf rel :relationship) uri-parts))
                                 ;; Create plists of the query results for returning.
                                 ;; Don't bother turning them into structs or objects, because
                                 ;; html-template requires plists, so we'd only have to convert
@@ -319,7 +319,8 @@ and any forward-slashes that sneaked through are also now underscores.
                             rels))))
       ;; This can't be a resource
       (progn
-        (log-message :error "get-linked-resources failed: ~{/~A~} can't be a resource" uri-parts)
+        (log-message :error (format nil "get-linked-resources failed: ~{/~A~} can't be a resource"
+                                    uri-parts))
         ;; Return nil
         nil)))
 
@@ -367,7 +368,8 @@ and any forward-slashes that sneaked through are also now underscores.
   (declare (type neo4cl:neo4j-rest-server db)
            (type list tags)         ; List of strings
            (type list statuses))    ; List of strings
-  (log-message :debug "Searching for tasks with tags ~{~A~^, ~} and statuses ~{~A~^, ~}" tags statuses)
+  (log-message :debug (format nil "Searching for tasks with tags ~{~A~^, ~} and statuses ~{~A~^, ~}"
+                              tags statuses))
   ;; Construct the query, doing a bunch of pre-computing up front
   (let* ((tag-clause (when tags (format nil "t.uid IN [~{\"~A\"~^, ~}]" tags)))
          (status-clause (when statuses (format nil "n.status IN [~{\"~A\"~^, ~}]" statuses)))
@@ -398,7 +400,7 @@ and any forward-slashes that sneaked through are also now underscores.
                                                           importance-clause
                                                           regex-clause)))
                           ""))))
-    (log-message :info "Using query string '~A'" query)
+    (log-message :info (format nil "Using query string '~A'" query))
     ;; Transform the results into an alist
     (let ((raw-results (mapcar
                          #'(lambda (row)
@@ -440,7 +442,7 @@ and any forward-slashes that sneaked through are also now underscores.
                              db
                              `((:STATEMENTS
                                  ((:STATEMENT . ,query)))))))))
-      (log-message :debug "Raw results of task-search: ~A" raw-results)
+      (log-message :debug (format nil "Raw results of task-search: ~A" raw-results))
       ;; Sort the alist and return it.
       ;; Note that `stable-sort` is required, to prevent each iteration from scrambling its predecessor's results
       (stable-sort

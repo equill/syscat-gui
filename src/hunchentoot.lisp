@@ -26,7 +26,7 @@
 
 (defun display-item ()
   "Display an item"
-  (log-message :debug "Handling display request from URI ~A" (tbnl:request-uri*))
+  (log-message :debug (format nil "Handling display request from URI ~A" (tbnl:request-uri*)))
   (let* ((uri-parts (get-uri-parts (tbnl:request-uri*) tbnl:*acceptor*))
          (resourcetype (second uri-parts))
          (uid (third uri-parts))
@@ -34,8 +34,8 @@
                                    (format nil "/~A/~A" resourcetype uid)))
          ;; Get a hash-table of attribute definitions
          (attrdefs (get-attrs-with-keywords (rg-server tbnl:*acceptor*) resourcetype)))
-    (log-message :debug "Content: ~A" content)
-    (log-message :debug "Resource-type attributes: ~A" attrdefs)
+    (log-message :debug (format nil "Content: ~A" content))
+    (log-message :debug (format nil "Resource-type attributes: ~A" attrdefs))
     (cond
       (content
         ;; Selectively pre-render attribute values, according to their type.
@@ -47,8 +47,9 @@
               (html-template:*string-modifier* #'cl:identity)
               (outbound-links (get-linked-resources (rg-server tbnl:*acceptor*)
                                                     (cdr uri-parts))))
-          (log-message :debug "Path to layout template: ~A" layout-template-path)
-          (log-message :debug "State of layout template: ~A" (probe-file layout-template-path))
+          (log-message :debug (format nil "Path to layout template: ~A" layout-template-path))
+          (log-message :debug (format nil "State of layout template: ~A"
+                                      (probe-file layout-template-path)))
           (setf (tbnl:content-type*) "text/html")
           (setf (tbnl:return-code*) tbnl:+http-ok+)
           (with-output-to-string (outstr)
@@ -93,9 +94,10 @@
                             (let ((content-layout-path (make-pathname :defaults (template-path tbnl:*acceptor*)
                                                                       :type "tmpl"
                                                                       :name "display_wikipage")))
-                              (log-message :debug "Content layout path: ~A" content-layout-path)
-                              (log-message :debug "State of content layout template: ~A"
-                                           (probe-file content-layout-path))
+                              (log-message :debug (format nil "Content layout path: ~A"
+                                                          content-layout-path))
+                              (log-message :debug (format nil "State of content layout template: ~A"
+                                                          (probe-file content-layout-path)))
                               (with-output-to-string (contstr)
                                 (html-template:fill-and-print-template
                                   content-layout-path
@@ -131,7 +133,10 @@
                                         (mapcar
                                           #'(lambda (attribute)
                                               ;; Extract the value, using the keyworded version of the attribute-name
-                                              (log-message :debug "Extracting value for attribute '~A'" (car attribute))
+                                              (log-message
+                                                :debug
+                                                (format nil "Extracting value for attribute '~A'"
+                                                        (car attribute)))
                                               (let* ((attrname (car attribute))
                                                      (attrval (cdr (assoc attrname content))))
                                                 ;; Conditionally render the type
@@ -213,11 +218,11 @@
                            (if tags-requested
                                (format nil "~{&outbound=/Tags/tags/~A~}" tags-requested)
                                "")))))
-    (log-message :debug "Fetched image data ~A" images)
-    (log-message :debug "State of layout template ~A is ~A"
-                 layout-template-path (probe-file layout-template-path))
-    (log-message :debug "State of gallery template ~A is ~A"
-                 gallery-template-path (probe-file gallery-template-path))
+    (log-message :debug (format nil "Fetched image data ~A" images))
+    (log-message :debug (format nil "State of layout template ~A is ~A"
+                 layout-template-path (probe-file layout-template-path)))
+    (log-message :debug (format nil "State of gallery template ~A is ~A"
+                 gallery-template-path (probe-file gallery-template-path)))
     (with-output-to-string (outstr)
       (html-template:fill-and-print-template
         layout-template-path
@@ -251,7 +256,7 @@
 
 (defun edit-resource ()
   "Handle the edit-page for an item"
-  (log-message :debug "Attempting to edit an item with URI ~A" (tbnl:request-uri*))
+  (log-message :debug (format nil "Attempting to edit an item with URI ~A" (tbnl:request-uri*)))
   (cond
     ((equal (tbnl:request-method*) :GET)
      (let* ((uri-parts (get-uri-parts (tbnl:request-uri*) tbnl:*acceptor*))
@@ -259,15 +264,15 @@
             (uid (third uri-parts))
             (content (rg-request-json (rg-server tbnl:*acceptor*)
                                       (format nil "/~A/~A" resourcetype uid))))
-       (log-message :debug "Attempting to display the edit page for ~A ~A" resourcetype uid)
-       (log-message :debug "Resourcetype: ~A" resourcetype)
-       (log-message :debug "UID: ~A" uid)
-       (log-message :debug "Content: ~A" content)
+       (log-message :debug (format nil "Attempting to display the edit page for ~A ~A" resourcetype uid))
+       (log-message :debug (format nil "Resourcetype: ~A" resourcetype))
+       (log-message :debug (format nil "UID: ~A" uid))
+       (log-message :debug (format nil "Content: ~A" content))
        ;; Render the content according to resourcetype
        (if content
          (cond ((equal resourcetype "wikipages")
                 (progn
-                  (log-message :debug "Rendering wikipage ~A" uid)
+                  (log-message :debug (format nil "Rendering wikipage ~A" uid))
                   (setf (tbnl:content-type*) "text/html")
                   (setf (tbnl:return-code*) tbnl:+http-ok+)
                   (with-output-to-string (outstr)
@@ -286,7 +291,7 @@
                       :stream outstr))))
                (t
                  (progn
-                   (log-message :debug "Rendering ~A ~A" resourcetype uid)
+                   (log-message :debug (format nil "Rendering ~A ~A" resourcetype uid))
                    ;; Render the attributes for editing
                    (let ((attributes-to-display
                            (mapcar
@@ -303,7 +308,9 @@
                                                       (intern (string-upcase attrname) 'keyword)
                                                       content))
                                                   "")))
-                                        (log-message :debug "Extracting value for attribute '~A'" attrname)
+                                        (log-message
+                                          :debug
+                                          (format nil "Extracting value for attribute '~A'" attrname))
                                         (log-message :debug (format nil "Existing value of ~A: ~A"
                                                                     attrname existing-value))
                                         (list :attrname attrname
@@ -327,7 +334,7 @@
                                                                :test #'equal))))))
                              ;; Retrieve the attribute-definitions for this resourcetype
                              (get-attrs (rg-server tbnl:*acceptor*) resourcetype))))
-                     (log-message :debug "Attributes: ~A" attributes-to-display)
+                     (log-message :debug (format nil "Attributes: ~A" attributes-to-display))
                      (setf (tbnl:content-type*) "text/html")
                      (setf (tbnl:return-code*) tbnl:+http-ok+)
                      (with-output-to-string (outstr)
@@ -357,8 +364,8 @@
                       (get-attrs (rg-server tbnl:*acceptor*) resourcetype)))
             (validated-attrs
               (mapcar #'(lambda (param)
-                          (log-message :debug "Validating parameter '~A' with value '~A'"
-                                       (car param) (cdr param))
+                          (log-message :debug (format nil "Validating parameter '~A' with value '~A'"
+                                       (car param) (cdr param)))
                           (when (member (car param)
                                         valid-attrnames
                                         :test #'equal)
@@ -366,7 +373,7 @@
                             param))
                       (tbnl:post-parameters*))))
        (log-message :debug (format nil "Processing edit request for ~A ~A" resourcetype uid))
-       (log-message :debug "Validated attributes: ~A" validated-attrs)
+       (log-message :debug (format nil "Validated attributes: ~A" validated-attrs))
        ;; Send the update
        (multiple-value-bind (body status-code)
          (rg-post-json (rg-server tbnl:*acceptor*)
@@ -459,7 +466,7 @@
                    (cond
                      ;; Add a tag
                      ((equal (car param) "add-tags")
-                      (log-message :debug "Adding tag ~A" (cdr param))
+                      (log-message :debug (format nil "Adding tag ~A" (cdr param)))
                       (multiple-value-bind (body status-code)
                         (rg-post-json (rg-server tbnl:*acceptor*)
                                       (concatenate 'string
@@ -475,7 +482,7 @@
                                 update-errors))))
                      ;; Add it to a group
                      ((equal (car param) "add-groups")
-                      (log-message :debug "Adding to group ~A" (cdr param))
+                      (log-message :debug (format nil "Adding to group ~A" (cdr param)))
                       (multiple-value-bind (body status-code)
                         (rg-post-json (rg-server tbnl:*acceptor*)
                                       (concatenate 'string
@@ -493,7 +500,7 @@
                                 update-errors))))
                      ;; Remove a tag
                      ((equal (car param) "remove-tags")
-                      (log-message :debug "Removing tag ~A" (cdr param))
+                      (log-message :debug (format nil "Removing tag ~A" (cdr param)))
                       (multiple-value-bind (status-code body)
                         (rg-delete (rg-server tbnl:*acceptor*)
                                    (concatenate 'string
@@ -508,7 +515,7 @@
                                 update-errors))))
                      ;; Remove it from a group
                      ((equal (car param) "remove-groups")
-                      (log-message :debug "Removing from group ~A" (cdr param))
+                      (log-message :debug (format nil "Removing from group ~A" (cdr param)))
                       (multiple-value-bind (status-code body)
                         (rg-delete (rg-server tbnl:*acceptor*)
                                    (concatenate 'string
@@ -523,7 +530,7 @@
                                 update-errors))))
                      ;; Links to other resources
                      ((equal (car param) "resource_links")
-                      (log-message :debug "Linking to resources '~A'" (cdr param))
+                      (log-message :debug (format nil "Linking to resources '~A'" (cdr param)))
                       (mapcar #'(lambda (target)
                                   (let* ((target-parts
                                            (remove-if #'(lambda (x)
@@ -547,20 +554,25 @@
                                                 (> status-code 299))
                                         ;; If not, add the error to the error-list
                                         (progn
-                                          (log-message :debug "Failed to add link to '~A'. ~A: ~A"
-                                                       (cdr param) status-code body)
-                                          (push (list :attrname (format nil "Failed to add link to '~A'" (cdr param))
-                                                      :attrval (format nil "~A: ~A" status-code body))
+                                          (log-message
+                                            :debug
+                                            (format nil "Failed to add link to '~A'. ~A: ~A"
+                                                    (cdr param) status-code body))
+                                          (push (list
+                                                  :attrname (format nil "Failed to add link to '~A'"
+                                                                    (cdr param))
+                                                  :attrval (format nil "~A: ~A" status-code body))
                                                 update-errors))))))
                               ;; Split on any quantity of whitespace
                               (cl-ppcre:split "[ ]+" (cdr param))))
                      ;; Something else
-                     (t (log-message :debug "Other parameter supplied to edit-tags: ~A" param))))
+                     (t (log-message :debug (format nil "Other parameter supplied to edit-tags: ~A"
+                                                    param)))))
                (tbnl:post-parameters*))
        ;; At least one of those updates broke:
        (if update-errors
          (let ((html-template:*string-modifier* #'cl:identity))
-           (log-message :debug "Detected update errors: ~A" update-errors)
+           (log-message :debug (format nil "Detected update errors: ~A" update-errors))
            (setf (tbnl:content-type*) "text/html")
            (setf (tbnl:return-code*) tbnl:+http-bad-request+)
            (with-output-to-string (outstr)
@@ -625,20 +637,20 @@
                                                     (list (format nil "uid=~A"
                                                                   (tbnl:get-parameter "uid_regex")))))))
                     (progn
-                      (log-message :debug "Searching with criteria '~A'" search-criteria)
+                      (log-message :debug (format nil "Searching with criteria '~A'" search-criteria))
                       (search-for-resources (rg-server tbnl:*acceptor*)
                                             (tbnl:get-parameter "resourcetype")
                                             (append tags-requested-formatted search-criteria requested-attributes)))))
                 ;; If no resourcetype was specified, tbnl-formatted-results is NIL:
                 ())))
        ;; Debug logging for what we've obtained so far
-       (log-message :debug "Schema: ~A" schema)
-       (log-message :debug "Tags: ~A" tags-available)
-       (log-message :debug "Resourcetype supplied: ~A"
-                    (if
-                      (tbnl:get-parameter "resourcetype")
-                      (tbnl:get-parameter "resourcetype") "none"))
-       (log-message :debug "tbnl-formatted search results: ~A" tbnl-formatted-results)
+       (log-message :debug (format nil "Schema: ~A" schema))
+       (log-message :debug (format nil "Tags: ~A" tags-available))
+       (log-message :debug (format nil "Resourcetype supplied: ~A"
+                                   (if
+                                     (tbnl:get-parameter "resourcetype")
+                                     (tbnl:get-parameter "resourcetype") "none")))
+       (log-message :debug (format nil "tbnl-formatted search results: ~A" tbnl-formatted-results))
        (setf (tbnl:content-type*) "text/html")
        (setf (tbnl:return-code*) tbnl:+http-ok+)
        (with-output-to-string (outstr)
@@ -672,8 +684,8 @@
           (tbnl:post-parameter "file")
           (tbnl:post-parameter "name"))
      (log-message :debug "Received a file-upload attempt.")
-     (log-message :debug "Requested filename was ~A" (tbnl:post-parameter "name"))
-     (log-message :debug "Original filepath was ~A" (tbnl:post-parameter "file"))
+     (log-message :debug (format nil "Requested filename was ~A" (tbnl:post-parameter "name")))
+     (log-message :debug (format nil "Original filepath was ~A" (tbnl:post-parameter "file")))
      (multiple-value-bind (response-body status-code)
        (rg-post-json
          (rg-server tbnl:*acceptor*)
@@ -696,7 +708,7 @@
        (tbnl:get-parameter "reason"))
      (progn
        (log-message :debug "Displaying the failed-to-upload page")
-       (log-message :debug "Reason for failure: '~A'" (tbnl:get-parameter "reason"))
+       (log-message :debug (format nil "Reason for failure: '~A'" (tbnl:get-parameter "reason")))
        (setf (tbnl:content-type*) "text/html")
        (setf (tbnl:return-code*) tbnl:+http-ok+)
        (with-output-to-string (outstr)
@@ -754,10 +766,10 @@
                                 :uid-regex (when (tbnl:get-parameter "uid_regex")
                                              (tbnl:get-parameter "uid_regex")))))
        ;; Debug logging for what we've obtained so far
-       (log-message :debug "Attributes: ~A" task-attrs)
-       (log-message :debug "Statuses available: ~A" (get-enum-vals :status task-attrs))
-       (log-message :debug "Tags: ~A" tags-available)
-       (log-message :debug "tbnl-formatted search results: ~A" tbnl-formatted-results)
+       (log-message :debug (format nil "Attributes: ~A" task-attrs))
+       (log-message :debug (format nil "Statuses available: ~A" (get-enum-vals :status task-attrs)))
+       (log-message :debug (format nil "Tags: ~A" tags-available))
+       (log-message :debug (format nil "tbnl-formatted search results: ~A" tbnl-formatted-results))
        (setf (tbnl:content-type*) "text/html")
        (setf (tbnl:return-code*) tbnl:+http-ok+)
        (with-output-to-string (outstr)
@@ -808,7 +820,7 @@
   "Display the create-item page"
   (cond
     ((equal (tbnl:request-method*) :GET)
-     (log-message :debug "Handling create GET request ~A" (tbnl:request-uri*))
+     (log-message :debug (format nil "Handling create GET request ~A" (tbnl:request-uri*)))
      (let ((schema (mapcar #'(lambda (rtype)
                                (list :name rtype
                                      :selected (when (equal rtype
@@ -834,7 +846,7 @@
     ((equal (tbnl:request-method*) :POST)
      (let ((uid (tbnl:post-parameter "uid"))
            (resourcetype (tbnl:post-parameter "resourcetype")))
-       (log-message :debug "Handling create POST request ~A" (tbnl:request-uri*))
+       (log-message :debug (format nil "Handling create POST request ~A" (tbnl:request-uri*)))
        ;; Check for the UID and resourcetype; if we don't have those, give up now
        ;; Missing both of them
        (cond ((and (or (not uid)
@@ -865,13 +877,15 @@
                       (validated-attrs
                         (remove-if #'null
                                    (mapcar #'(lambda (param)
-                                               (log-message :debug "Validating parameter ~A" (car param))
+                                               (log-message
+                                                 :debug
+                                                 (format nil "Validating parameter ~A" (car param)))
                                                (when (and (not (or (null (cdr param))
                                                                    (equal "" (cdr param))))
                                                           (member (car param) valid-attrnames :test #'equal))
                                                  param))
                                            (tbnl:post-parameters*)))))
-                 (log-message :debug "Validated attributes: ~A" validated-attrs)
+                 (log-message :debug (format nil "Validated attributes: ~A" validated-attrs))
                  ;; Send the update
                  (multiple-value-bind (body status-code)
                    (rg-post-json (rg-server tbnl:*acceptor*)
@@ -937,8 +951,8 @@
     (let ((myacceptor (or acceptor (make-acceptor))))
       ;; Set the template path for html-template's includes
       (setf html-template:*default-template-pathname* (template-path myacceptor))
-      (log-message :debug "Value of html-template:*default-template-pathname*: ~A"
-                   html-template:*default-template-pathname*)
+      (log-message :debug (format nil "Value of html-template:*default-template-pathname*: ~A"
+                                  html-template:*default-template-pathname*))
       ;; Make it available as a dynamic variable, for shutdown to work on
       (defparameter *cl-webcat-acceptor* myacceptor)
       ;; Stop html-template raising a warning every time it compiles a template
