@@ -118,10 +118,7 @@
                                                :name "display_files")
                                 (list :title  (cdr (assoc :title content))
                                       :mimetype (cdr (assoc :mimetype content))
-                                      :image-url (format nil "http://~A:~D/files/v1/~A"
-                                                         (rg-server-hostname (rg-server tbnl:*acceptor*))
-                                                         (rg-server-port (rg-server tbnl:*acceptor*))
-                                                         uid))
+                                      :image-url (format nil "/files-api/v1/~A" uid))
                                 :stream conststr)))
                            ;; Default item display
                            (t (with-output-to-string (contstr)
@@ -238,10 +235,7 @@
                            (list :images
                                  (mapcar
                                    #'(lambda (img)
-                                       (list :url (format nil "http://~A:~A/files/v1/~A"
-                                                          (rg-server-hostname (rg-server tbnl:*acceptor*))
-                                                          (rg-server-port (rg-server tbnl:*acceptor*))
-                                                          (cdr (assoc :UID img)))
+                                       (list :url (format nil "/files-api/v1/~A" (cdr (assoc :UID img)))
                                              :link (format nil "/display/files/~A"
                                                            (cdr (assoc :UID img)))
                                              :title (cdr (assoc :TITLE img))))

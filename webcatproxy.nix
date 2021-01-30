@@ -28,6 +28,7 @@
                  ];
         locations."/schema/" = { proxyPass = "http://webcat.onfire.onice:4955/schema/"; };
         locations."/raw/" = { proxyPass = "http://webcat.onfire.onice:4955/raw/"; };
+        locations."/files-api/" = { proxyPass = "http://webcat.onfire.onice:4955/files/"; };
         # Dev port:
         #locations."/" = { proxyPass = "http://127.0.0.1:8080/"; };
         # Docker port:
