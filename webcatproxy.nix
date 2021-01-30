@@ -6,7 +6,7 @@
   ];
 
   networking.hosts = {
-     "127.0.0.1" = [ "narcisse.onfire.onice" ];
+     "127.0.0.1" = [ "webcat.onfire.onice" ];
    };
 
   services.nginx = {
@@ -14,20 +14,24 @@
     statusPage = true;
 
     virtualHosts = {
-      "narcisse" = {
+      "webcat" = {
         serverName = "localhost";
-        serverAliases = [ "narcisse" "narcisse.onfire.onice" ];
+        serverAliases = [ "webcat"
+                          "webcat.onfire.onice"
+                          "syscat"
+                          "syscat.onfire.onice"
+                        ];
         listen = [ { addr = "127.0.0.1";
                      port = 80;
                      ssl = false;
                    }
                  ];
-        locations."/schema/" = { proxyPass = "http://10.255.0.1:4955/schema/"; };
-        locations."/raw/" = { proxyPass = "http://10.255.0.1:4955/raw/"; };
+        locations."/schema/" = { proxyPass = "http://webcat.onfire.onice:4955/schema/"; };
+        locations."/raw/" = { proxyPass = "http://webcat.onfire.onice:4955/raw/"; };
         # Dev port:
         #locations."/" = { proxyPass = "http://127.0.0.1:8080/"; };
         # Docker port:
-        locations."/" = { proxyPass = "http://10.255.0.1:8080/"; };
+        locations."/" = { proxyPass = "http://webcat.onfire.onice:8080/"; };
       };
     };
   };
