@@ -84,6 +84,8 @@
                                                           description
                                                           mdstr))
                                                        "(No description found)"))
+                                      :currentstate (or (cdr (assoc :currentstate content)) "(No current-state found)")
+                                      :nextactions (or (cdr (assoc :nextactions content)) "(No next-actions found)")
                                       :importance (or (cdr (assoc :importance content)) "(No importance found)")
                                       :urgency (or (cdr (assoc :urgency content)) "(No urgency found)")
                                       :scale (or (cdr (assoc :scale content)) "(No scale found)")

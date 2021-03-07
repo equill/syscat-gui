@@ -1,57 +1,70 @@
-/* Description text */
-.task_description {
-  grid-row 1;
-  grid-column: 1 / span 2;
-  margin-bottom: 12pt;
-}
-
-
-/* Table of attributes */
-.taskattr_names {
+.taskattr_name {
   grid-column: 1;
   font-weight: bold;
   vertical-align: top;
 }
 
-.taskattr_values {
+.taskattr_value {
   grid-column: 2;
   vertical-align: top;
 }
 
 
+div#task_description {
+  grid-row 1;
+  grid-column: 1 / span 2;
+  margin-bottom: 12pt;
+}
+
+div#current-state-name {
+  grid-row 2;
+}
+
+div#current-state-value {
+  grid-row 2;
+}
+
+div#next-actions-name {
+  grid-row 3;
+}
+
+div#next-actions-value {
+  grid-row 3;
+}
+
 div#importance-name {
-  grid-row: 2;
+  grid-row: 4;
 }
 
 div#importance-value {
-  grid-row: 2;
+  grid-row: 4;
 }
 
 
 div#urgency-name {
-  grid-row: 3;
+  grid-row: 5;
 }
 
 div#urgency-value {
-  grid-row: 3;
+  grid-row: 5;
 }
 
 
 div#scale-name {
-  grid-row: 4;
+  grid-row: 6;
 }
 
 div#scale-value {
-  grid-row: 4;
+  grid-row: 6;
 }
 
 
 div#status-name {
-  grid-row: 5;
+  grid-row: 7;
 }
 
 div#status-value {
-  grid-row: 5;
+  grid-row: 7;
 }
 /* End of table of attributes */
 

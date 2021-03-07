@@ -13,7 +13,7 @@ let
     };
 
 
-    ld_path = stdenv.lib.makeLibraryPath [
+    ld_path = pkgs.lib.makeLibraryPath [
         pkgs.libressl
     ];
 
@@ -26,7 +26,7 @@ let
 in
 pkgs.dockerTools.buildImage {
     name = "equill/clwebcat";
-    tag = "0.0.5";
+    tag = "0.0.6";
     created = "now";
 
     contents = [

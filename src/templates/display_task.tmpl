@@ -1,5 +1,11 @@
   <div class="task-grid">
-    <div class="task_description"><!-- TMPL_VAR description --></div>
+    <div id="current-state-name" class="taskattr_name">Current state:</div>
+    <div id="current-state-value" class="taskattr_value"><!-- TMPL_VAR currentstate --></div>
+
+    <div id="next-actions-name" class="taskattr_name">Next actions:</div>
+    <div id="next-actions-value" class="taskattr_value"><!-- TMPL_VAR nextactions --></div>
+
+    <div id="task_description"><!-- TMPL_VAR description --></div>
 
     <div id="importance-name" class="taskattr_name">Importance:</div>
     <div id="importance-value" class="taskattr_value"><!-- TMPL_VAR importance --></div>
