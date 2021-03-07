@@ -14,7 +14,7 @@ stdenv.mkDerivation rec {
 
     env = buildEnv { name = name; paths = buildInputs; };
 
-    LD_LIBRARY_PATH = stdenv.lib.makeLibraryPath [
+    LD_LIBRARY_PATH = pkgs.lib.makeLibraryPath [
         pkgs.libressl
     ];
 
