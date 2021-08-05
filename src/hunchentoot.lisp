@@ -1,4 +1,4 @@
-;   Copyright 2019 James Fleming <james@electronic-quill.net>
+;   Copyright 2019-21 James Fleming <james@electronic-quill.net>
 ;
 ;   Licensed under the GNU General Public License
 ;   - for details, see LICENSE.txt in the top-level directory
@@ -157,7 +157,7 @@
                 :tags (sort
                         (remove-if-not
                           #'(lambda (link)
-                              (equal (getf link :relationship) "Tags"))
+                              (equal (getf link :relationship) "TAGS"))
                           outbound-links)
                         #'string<
                         :key #'(lambda (item) (getf item :uid)))
@@ -174,7 +174,7 @@
                             (remove-if #'(lambda (link)
                                            (or
                                              ;; Tags
-                                             (equal (getf link :relationship) "Tags")
+                                             (equal (getf link :relationship) "TAGS")
                                              ;; groups
                                              (and
                                                (equal (getf link :resourcetype) "groups")
@@ -215,7 +215,7 @@
                    (format nil "/files?mimetype=image/.*~A"
                            ;; Tag-search criterion
                            (if tags-requested
-                               (format nil "~{&outbound=/Tags/tags/~A~}" tags-requested)
+                               (format nil "~{&outbound=/TAGS/Tags/~A~}" tags-requested)
                                "")))))
     (log-message :debug (format nil "Fetched image data ~A" images))
     (log-message :debug (format nil "State of layout template ~A is ~A"
@@ -420,15 +420,15 @@
                           (cdr (assoc :uid tag)))
                       (rg-request-json
                         (rg-server tbnl:*acceptor*)
-                        (concatenate 'string resource "/Tags/tags"))))
+                        (concatenate 'string resource "/TAGS/Tags"))))
             (extant-groups
               (mapcar #'(lambda (group)
                           (cdr (assoc :uid group)))
                       (rg-request-json
                         (rg-server tbnl:*acceptor*)
                         (concatenate 'string resource "/Member/groups"))))
-            (all-tags (get-uids (rg-server tbnl:*acceptor*) "tags"))
-            (all-groups (get-uids (rg-server tbnl:*acceptor*) "groups")))
+            (all-tags (get-uids (rg-server tbnl:*acceptor*) "Tags"))
+            (all-groups (get-uids (rg-server tbnl:*acceptor*) "Groups")))
        (with-output-to-string (outstr)
          (html-template:fill-and-print-template
            (make-pathname :defaults (template-path tbnl:*acceptor*)
@@ -466,9 +466,9 @@
                       (multiple-value-bind (body status-code)
                         (rg-post-json (rg-server tbnl:*acceptor*)
                                       (concatenate 'string
-                                                   "/" resourcetype "/" uid "/Tags")
+                                                   "/" resourcetype "/" uid "/TAGS")
                                       :payload `(("target"
-                                                  . ,(concatenate 'string "/tags/" (cdr param)))))
+                                                  . ,(concatenate 'string "/Tags/" (cdr param)))))
                         ;; Did it work?
                         (if (or (< status-code 200)
                                 (> status-code 299))
@@ -500,8 +500,8 @@
                       (multiple-value-bind (status-code body)
                         (rg-delete (rg-server tbnl:*acceptor*)
                                    (concatenate 'string
-                                                "/" resourcetype "/" uid "/Tags")
-                                   :payload (list (concatenate 'string "resource=/tags/" (cdr param))))
+                                                "/" resourcetype "/" uid "/TAGS")
+                                   :payload (list (concatenate 'string "resource=/Tags/" (cdr param))))
                         ;; Did it work?
                         (if (or (< status-code 200)
                                 (> status-code 299))
@@ -606,7 +606,7 @@
                             (remove-if #'(lambda (name)
                                            (cl-ppcre:all-matches "^rg" name))
                                        (get-resourcetypes (rg-server tbnl:*acceptor*)))))
-            (tags-available (sort (get-uids (rg-server tbnl:*acceptor*) "tags") #'string<))
+            (tags-available (sort (get-uids (rg-server tbnl:*acceptor*) "Tags") #'string<))
             (tags-requested (remove-if #'null
                                        (mapcar #'(lambda (par)
                                                    (when (equal (car par) "tags") (cdr par)))
@@ -626,7 +626,7 @@
                          (tags-requested-formatted
                            (mapcar #'(lambda (par)
                                        (concatenate 'string
-                                                    "outbound=/Tags/tags/" par))
+                                                    "outbound=/TAGS/Tags/" par))
                                    tags-requested))
                          (search-criteria (append ()
                                                   (when (tbnl:get-parameter "uid_regex")
