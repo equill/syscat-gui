@@ -88,3 +88,16 @@
   (values nil :type list :read-only t)
   ;; The type of value. To be used for validation, and for rendering of the value.
   (valuetype "text" :type string :read-only t))
+
+
+(defclass outbound-rels ()
+  ((name :initarg :name
+                 :reader name
+                 :initform (error "Required argument."))
+   (target-type :initarg :target-type
+                 :reader target-type
+                 :initform (error "Required argument."))
+   (dependent-p :initarg :dependent-p
+                :reader dependent-p
+                :initform nil))
+  (:documentation "Representation of outbound relationships from a resource."))

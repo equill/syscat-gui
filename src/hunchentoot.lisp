@@ -24,6 +24,19 @@
   (setf (tbnl:return-code*) tbnl:+http-ok+)
   "OK")
 
+(defun listify-outbound-links (links filter)
+  "Render a list of linked-resource instances into an alist suitable for html-template's consumption.
+   Filter them using `remove-if-not` with the supplied function."
+  (mapcar #'(lambda (link)
+              (list :RELATIONSHIP (relationship link)
+                    :TARGET-TYPE (target-type link)
+                    :DEPENDENT-P (dependent-p link)
+                    :UID (uid link)))
+          (sort
+            (remove-if-not filter links)
+            #'string<
+            :key #'(lambda (item) (getf item :uid)))))
+
 (defun display-item ()
   "Display an item"
   (log-message :debug (format nil "Handling display request from URI ~A" (tbnl:request-uri*)))
@@ -79,11 +92,11 @@
                                                :name "display_task")
                                 (list :description (let ((description (cdr (assoc :description content))))
                                                      (if description
-                                                       (with-output-to-string (mdstr)
-                                                         (3bmd:parse-string-and-print-to-stream
-                                                          description
-                                                          mdstr))
-                                                       "(No description found)"))
+                                                         (with-output-to-string (mdstr)
+                                                           (3bmd:parse-string-and-print-to-stream
+                                                            description
+                                                            mdstr))
+                                                         "(No description found)"))
                                       :currentstate (or (cdr (assoc :currentstate content)) "(No current-state found)")
                                       :nextactions (or (cdr (assoc :nextactions content)) "(No next-actions found)")
                                       :importance (or (cdr (assoc :importance content)) "(No importance found)")
@@ -105,11 +118,11 @@
                                   content-layout-path
                                   (list :content
                                         (if (cdr (assoc :text content))
-                                          (with-output-to-string (mdstr)
-                                            (3bmd:parse-string-and-print-to-stream
-                                             (cdr (assoc :text content))
-                                             mdstr))
-                                          ""))
+                                            (with-output-to-string (mdstr)
+                                              (3bmd:parse-string-and-print-to-stream
+                                               (cdr (assoc :text content))
+                                               mdstr))
+                                            ""))
                                   :stream contstr))))
                            ;; Display a file
                            ((equal resourcetype "files")
@@ -142,46 +155,34 @@
                                                 (list :attrname (schema-rtype-attrs-name (cdr attribute))
                                                       ; Ensure all values are strings, for the template.
                                                       :attrval (if attrval
-                                                                 ;; Render all descriptions as Markdown
-                                                                 (if (or (member attrname '(:description :text))
-                                                                         (equal "commonmark"
-                                                                                (schema-rtype-attrs-valuetype
-                                                                                  (cdr attribute))))
-                                                                   (with-output-to-string (mdstr)
-                                                                     (3bmd:parse-string-and-print-to-stream attrval mdstr)
-                                                                     mdstr)
-                                                                   attrval)
-                                                                 ""))))
+                                                                   ;; Render all descriptions as Markdown
+                                                                   (if (or (member attrname '(:description :text))
+                                                                           (equal "commonmark"
+                                                                                  (schema-rtype-attrs-valuetype
+                                                                                    (cdr attribute))))
+                                                                       (with-output-to-string (mdstr)
+                                                                         (3bmd:parse-string-and-print-to-stream attrval mdstr)
+                                                                         mdstr)
+                                                                       attrval)
+                                                                   ""))))
                                           attrdefs))
                                   :stream contstr))))
-                :tags (sort
-                        (remove-if-not
-                          #'(lambda (link)
-                              (equal (getf link :relationship) "TAGS"))
-                          outbound-links)
-                        #'string<
-                        :key #'(lambda (item) (getf item :uid)))
-                :groups (sort
-                          (remove-if-not
-                            #'(lambda (link)
-                                (and
-                                  (equal (getf link :resourcetype) "groups")
-                                  (equal (getf link :relationship) "Member")))
-                            outbound-links)
-                          #'string<
-                          :key #'(lambda (item) (getf item :uid)))
-                :outbound (sort
-                            (remove-if #'(lambda (link)
-                                           (or
-                                             ;; Tags
-                                             (equal (getf link :relationship) "TAGS")
-                                             ;; groups
-                                             (and
-                                               (equal (getf link :resourcetype) "groups")
-                                               (equal (getf link :relationship) "Member"))))
-                                       outbound-links)
-                            #'string<
-                            :key #'(lambda (item) (getf item :uid))))
+                :tags (listify-outbound-links outbound-links
+                                              #'(lambda (link)
+                                                  (equal (relationship link) "TAGS")))
+                :groups (listify-outbound-links outbound-links
+                                                #'(lambda (link)
+                                                    (and
+                                                      (equal (target-type link) "Groups")
+                                                      (equal (relationship link) "MEMBER"))))
+                :outbound (listify-outbound-links outbound-links #'(lambda (link)
+                                                                     (or
+                                                                       ;; Tags
+                                                                       (equal (relationship link) "TAGS")
+                                                                       ;; groups
+                                                                       (and
+                                                                         (equal (target-type link) "Groups")
+                                                                         (equal (relationship link) "MEMBER"))))))
               :stream outstr))))
       ;; No such resource, but we do have a resourcetype and UID.
       ;; Redirect to the item-creation page.

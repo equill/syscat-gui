@@ -237,9 +237,10 @@
             attributes)))
 
 (defun get-attrs-with-keywords (server resourcetype)
-  "Return a sorted alist of the attribute definitions for a resourcetype.
+  "Return a sorted alist of the attribute definitions for a resourcetype,
+  for passing to html-template.
   Key = attribute name, interned into the keyword package.
-  Value = definition, including the name."
+  Value = schema-rtype-attrs struct."
   (mapcar #'(lambda (attribute)
               (cons (intern (string-upcase (schema-rtype-attrs-name attribute)) 'keyword)
                     attribute))
@@ -299,11 +300,12 @@ and any forward-slashes that sneaked through are also now underscores.
    - dependent-p
    - resourcetype"
   (mapcar #'(lambda (rel)
-              (list :relationship (cdr (assoc :relationship rel))
-                    :dependent-p (when (equal (cdr (assoc :dependent rel))
-                                              "true")
-                                   t)
-                    :resourcetype (first (cdr (assoc :resourcetype rel)))))
+              (make-instance 'outbound-rels
+                             :name (cdr (assoc :NAME rel))
+                             :dependent-p (when (equal (cdr (assoc :DEPENDENT rel))
+                                                       "true")
+                                            t)
+                             :target-type (cdr (assoc :TARGET-TYPE rel))))
           (append
             ;; ...both from this exact type...
             (cdr (assoc :relationships (get-schema server resourcetype)))
@@ -314,11 +316,7 @@ and any forward-slashes that sneaked through are also now underscores.
   "Retrieve a list of all resources linked from the given one.
    - server: an rg-server object
    - uri-parts: the output of get-uri-parts.
-   Return an alist:
-   - relationship
-   - dependent-p
-   - resourcetype
-   - uid"
+   Return a `linked-resource` instance."
   ;; Sanity check: is this plausibly a path to a resource?
   (if (= (mod (length uri-parts) 3) 2)
       ;; Yes: carry on.
@@ -330,32 +328,30 @@ and any forward-slashes that sneaked through are also now underscores.
       (apply #'append
              (let* ((resourcetype (car (last uri-parts 2)))
                     (rels (get-outbound-rels server resourcetype)))
-               (log-message :debug (format nil "Outbound rels for resourcetype ~A: ~A"
-                                           resourcetype rels))
-               (remove-if #'null
-                          (mapcar
-                            #'(lambda (rel)
-                                (log-message
-                                  :debug
-                                  (format nil "Getting ~A resources with relationship ~A to resource ~{/~A~}"
-                                          (getf rel :resourcetype) (getf rel :relationship) uri-parts))
-                                ;; Create plists of the query results for returning.
-                                ;; Don't bother turning them into structs or objects, because
-                                ;; html-template requires plists, so we'd only have to convert
-                                ;; them back again.
-                                (mapcar #'(lambda (res)
-                                            (list :relationship (getf rel :relationship)
-                                                  :dependent-p (getf rel :dependent-p)
-                                                  :resourcetype (getf rel :resourcetype)
-                                                  :uid (cdr (assoc :uid res))))
-                                        ;; Make the request
-                                        (rg-request-json
-                                          server
-                                          (format nil "~{/~A~}/~A/~A"
-                                                  uri-parts
-                                                  (getf rel :relationship)
-                                                  (getf rel :resourcetype)))))
-                            rels))))
+               (log-message :debug (format nil "Outbound rels for resourcetype ~A: ~{~A~^, ~}"
+                                           resourcetype
+                                           (mapcar #'(lambda (rel)
+                                                       (format nil "~A/~A (dependent: ~A)"
+                                                               (name rel)
+                                                               (target-type rel)
+                                                               (if (dependent-p rel) "yes" "no")))
+                                                   rels)))
+               (mapcar
+                 #'(lambda (rel)
+                     (log-message
+                       :debug
+                       (format nil "Getting ~A resources with relationship ~A from resource ~{/~A~}"
+                               (target-type rel) (name rel) uri-parts))
+                     (mapcar #'(lambda (res)
+                                 (make-instance 'linked-resource :relationship (name rel)
+                                                :dependent-p (dependent-p rel)
+                                                :target-type (target-type rel)
+                                                :uid (cdr (assoc :uid res))))
+                             ;; Make the request
+                             (rg-request-json
+                               server
+                               (format nil "~{/~A~}/~A/~A" uri-parts (name rel) (target-type rel)))))
+                 rels)))
       ;; This can't be a resource
       (progn
         (log-message :error (format nil "get-linked-resources failed: ~{/~A~} can't be a resource"
