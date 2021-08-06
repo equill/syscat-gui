@@ -1,4 +1,4 @@
-;   Copyright 2019 James Fleming <james@electronic-quill.net>
+;   Copyright 2019-21 James Fleming <james@electronic-quill.net>
 ;
 ;   Licensed under the GNU General Public License
 ;   - for details, see LICENSE.txt in the top-level directory
@@ -11,7 +11,7 @@
   `(:listen-address "localhost"
     :listen-port 8080
     :rg-hostname "10.255.0.1"
-    :rg-port 4955
+    :rg-port 4965
     ;:rg-hostname "localhost"
     ;:rg-port 4950
     :dbhostname "10.255.0.1"
@@ -22,8 +22,8 @@
     :api-uri-base "/raw/v1"
     :files-uri-base "/files/v1"
     :schema-uri-base "/schema/v1"
-    :template-path "/home/james/devel/syscat/cl-webcat/src/templates/"
-    :static-path "/home/james/devel/syscat/cl-webcat/src/static/"))
+    :template-path "/home/james/devel/restagraph/cl-webcat/src/templates/"
+    :static-path "/home/james/devel/restagraph/cl-webcat/src/static/"))
 
 ;; Declare this here because it needs to already have been compiled before any
 ;; references are made to it in json.lisp.
