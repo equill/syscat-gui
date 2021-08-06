@@ -6,8 +6,9 @@
   ];
 
   networking.hosts = {
-     "127.0.0.1" = [ "webcat.onfire.onice" ];
-   };
+    "127.0.0.1" = [ "webcat.onfire.onice" ];
+    "10.255.0.1" = [ "rgtest.onfire.onice" ];
+  };
 
   services.nginx = {
     enable = true;
@@ -26,13 +27,19 @@
                      ssl = false;
                    }
                  ];
-        locations."/schema/" = { proxyPass = "http://webcat.onfire.onice:4955/schema/"; };
-        locations."/raw/" = { proxyPass = "http://webcat.onfire.onice:4955/raw/"; };
-        locations."/files-api/" = { proxyPass = "http://webcat.onfire.onice:4955/files/"; };
-        # Dev port:
-        #locations."/" = { proxyPass = "http://127.0.0.1:8080/"; };
-        # Docker port:
-        locations."/" = { proxyPass = "http://webcat.onfire.onice:8080/"; };
+        locations = {
+          # Dev ports
+          "/" = { proxyPass = "http://127.0.0.1:8080/"; };
+          "/schema/" = { proxyPass = "http://webcat.onfire.onice:4965/schema/"; };
+          "/raw/" = { proxyPass = "http://webcat.onfire.onice:4965/raw/"; };
+          "/files-api/" = { proxyPass = "http://webcat.onfire.onice:4965/files/"; };
+          #
+          # Prod ports
+          #"/" = { proxyPass = "http://webcat.onfire.onice:8080/"; };
+          #"/schema/" = { proxyPass = "http://webcat.onfire.onice:4955/schema/"; };
+          #"/raw/" = { proxyPass = "http://webcat.onfire.onice:4955/raw/"; };
+          #"/files-api/" = { proxyPass = "http://webcat.onfire.onice:4955/files/"; };
+        };
       };
     };
   };
