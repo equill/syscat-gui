@@ -101,3 +101,18 @@
                 :reader dependent-p
                 :initform nil))
   (:documentation "Representation of outbound relationships from a resource."))
+
+(defclass linked-resource ()
+  ((relationship :initarg :relationship
+                 :reader relationship
+                 :initform (error "Required argument."))
+   (target-type :initarg :target-type
+                :reader target-type
+                :initform (error "Required argument."))
+   (dependent-p :initarg :dependent-p
+                :reader dependent-p
+                :initform nil)
+   (uid :initarg :uid
+        :reader uid
+        :initform (error "Required argument")))
+  (:documentation "Description of a resource linked from another resource"))

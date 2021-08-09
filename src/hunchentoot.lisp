@@ -35,7 +35,7 @@
           (sort
             (remove-if-not filter links)
             #'string<
-            :key #'(lambda (item) (getf item :uid)))))
+            :key #'(lambda (item) (uid item)))))
 
 (defun display-item ()
   "Display an item"
@@ -174,15 +174,16 @@
                                                 #'(lambda (link)
                                                     (and
                                                       (equal (target-type link) "Groups")
-                                                      (equal (relationship link) "MEMBER"))))
+                                                      (equal (relationship link) "GROUPS"))))
                 :outbound (listify-outbound-links outbound-links #'(lambda (link)
-                                                                     (or
-                                                                       ;; Tags
-                                                                       (equal (relationship link) "TAGS")
-                                                                       ;; groups
-                                                                       (and
-                                                                         (equal (target-type link) "Groups")
-                                                                         (equal (relationship link) "MEMBER"))))))
+                                                                     (not
+                                                                       (or
+                                                                         ;; Tags
+                                                                         (equal (relationship link) "TAGS")
+                                                                         ;; groups
+                                                                         (and
+                                                                           (equal (target-type link) "Groups")
+                                                                           (equal (relationship link) "GROUPS")))))))
               :stream outstr))))
       ;; No such resource, but we do have a resourcetype and UID.
       ;; Redirect to the item-creation page.
@@ -427,7 +428,7 @@
                           (cdr (assoc :uid group)))
                       (rg-request-json
                         (rg-server tbnl:*acceptor*)
-                        (concatenate 'string resource "/Member/groups"))))
+                        (concatenate 'string resource "/GROUPS/Groups"))))
             (all-tags (get-uids (rg-server tbnl:*acceptor*) "Tags"))
             (all-groups (get-uids (rg-server tbnl:*acceptor*) "Groups")))
        (with-output-to-string (outstr)
@@ -483,11 +484,11 @@
                       (multiple-value-bind (body status-code)
                         (rg-post-json (rg-server tbnl:*acceptor*)
                                       (concatenate 'string
-                                                   "/" resourcetype "/" uid "/Member/")
+                                                   "/" resourcetype "/" uid "/GROUPS/")
                                       :payload `(("target"
                                                   . ,(concatenate
                                                        'string
-                                                       "/groups/" (cdr param)))))
+                                                       "/Groups/" (cdr param)))))
                         ;; Did it work?
                         (if (or (< status-code 200)
                                 (> status-code 299))
@@ -516,8 +517,8 @@
                       (multiple-value-bind (status-code body)
                         (rg-delete (rg-server tbnl:*acceptor*)
                                    (concatenate 'string
-                                                "/" resourcetype "/" uid "/Member")
-                                   :payload (list (concatenate 'string "resource=/groups/" (cdr param))))
+                                                "/" resourcetype "/" uid "/GROUPS")
+                                   :payload (list (concatenate 'string "resource=/Groups/" (cdr param))))
                         ;; Did it work?
                         (if (or (< status-code 200)
                                 (> status-code 299))
