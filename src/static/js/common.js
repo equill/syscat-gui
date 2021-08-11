@@ -46,13 +46,13 @@ function update_attrs(resourcetype) {
         $('div#attrnames').append('<p class="attrname">' + attr.name + '</p>');
         // Present a text field or a dropdown according to whether it's an enum attribute.
         // Enums first:
-        if (attr.vals) {
+        if (attr.values) {
           // Construct and add the element
           $('div#attrvals').append('<p class="attrval"><select name="' + attr.name + '" id="' + attr.name + '">');
           // Provide a default
             $('select#' + attr.name).append('<option value="">Any</option>')
           // Add an <option> for each available value
-          $.each(attr.vals, function (i, val){
+          $.each(attr.values, function (i, val){
             // If a resourcetype was specified in the GET request AND
             // if it matches the selected resourcetype,
             // check for a GET parameter whose name matches the one we're looking at right now
