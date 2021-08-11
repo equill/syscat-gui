@@ -205,7 +205,10 @@
          ;; Don't escape HTML tags in the nested content
          (html-template:*string-modifier* #'cl:identity)
          ;; Get tags currently applied to image files
-         (tags-available (get-image-tags (neo4j-server tbnl:*acceptor*)))
+         ;(tags-available (get-image-tags (neo4j-server tbnl:*acceptor*)))
+         (tags-available (sort
+                           (get-uids (rg-server tbnl:*acceptor*) "Tags")
+                           #'string<))
          ;; Get the requested tags
          (tags-requested (remove-if #'null
                                     (mapcar #'(lambda (par)
@@ -214,7 +217,7 @@
          ;; Execute the search
          (images (rg-request-json
                    (rg-server tbnl:*acceptor*)
-                   (format nil "/files?mimetype=image/.*~A"
+                   (format nil "/Files?mimetype=image/.*~A"
                            ;; Tag-search criterion
                            (if tags-requested
                                (format nil "~{&outbound=/TAGS/Tags/~A~}" tags-requested)
@@ -693,9 +696,9 @@
            ("file" . ,(first (tbnl:post-parameter "file")))))
        ;; Expected status code is 201; redirect accordingly.
        (if (equal 201 status-code)
-         (tbnl:redirect (concatenate 'string "/display/files/"
+         (tbnl:redirect (concatenate 'string "/display/Files/"
                                      (car (last (cl-ppcre:split "/" response-body)))))
-         (tbnl:redirect (format nil "/files?reason=~A" response-body)))))
+         (tbnl:redirect (format nil "/Files?reason=~A" response-body)))))
     ;; Fail to upload a file
     ((equal (tbnl:request-method*) :POST)
      (tbnl:redirect "/files/?reason=~You didn't meet a single one of the requirements."))
@@ -745,10 +748,9 @@
   "Display the tasks page"
   (cond
     ((equal (tbnl:request-method*) :GET)
-     (let* ((task-attrs (get-attrs-with-keywords (rg-server tbnl:*acceptor*) "tasks"))
+     (let* ((task-attrs (get-attrs-with-keywords (rg-server tbnl:*acceptor*) "Tasks"))
             (statuses-requested (filter-params "status" (tbnl:get-parameters*)))
-            (tags-available (get-itemtype-tags (cl-webcat::neo4j-server cl-webcat::*cl-webcat-acceptor*)
-                                               "tasks"))
+            (tags-available (get-uids (rg-server *cl-webcat-acceptor*) "Tags"))
             (tags-requested (filter-params "tags" (tbnl:get-parameters*)))
             (scale-requested (filter-params "scale" (tbnl:get-parameters*)))
             (urgency-requested (filter-params "urgency" (tbnl:get-parameters*)))
