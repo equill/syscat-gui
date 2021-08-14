@@ -233,7 +233,7 @@
                 (make-schema-rtype-attrs
                   :name (cdr (assoc :name attribute))
                   :description (or (cdr (assoc :description attribute)) "")
-                  :values (cdr (assoc :vals attribute))))
+                  :values (cdr (assoc :values attribute))))
             attributes)))
 
 (defun get-attrs-with-keywords (server resourcetype)
