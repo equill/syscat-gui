@@ -391,77 +391,57 @@ and any forward-slashes that sneaked through are also now underscores.
                      . ,(format nil "MATCH (t:~A)-[:Tags]->(n:tags) RETURN DISTINCT n.uid ORDER BY n.uid"
                                 item-type)))))))))
 
-(defun search-for-tasks (db tags &key statuses scale urgency importance uid-regex)
+
+(defun search-for-tasks (server &key tags statuses scale urgency importance uid-regex)
   "Search for tasks using the requested parameters.
   Return an plist for passing directly to `html-template`:
   :uid
-  :title
   :scale
   :importance
   :urgency
   :status"
-  (declare (type neo4cl:neo4j-rest-server db)
+  (declare (type rg-server server)
            (type list tags)         ; List of strings
            (type list statuses))    ; List of strings
   (log-message :debug (format nil "Searching for tasks with tags ~{~A~^, ~} and statuses ~{~A~^, ~}"
-                              tags statuses))
-  ;; Construct the query, doing a bunch of pre-computing up front
-  (let* ((tag-clause (when tags (format nil "t.uid IN [~{\"~A\"~^, ~}]" tags)))
-         (status-clause (when statuses (format nil "n.status IN [~{\"~A\"~^, ~}]" statuses)))
-         (scale-clause (when scale (format nil "n.scale IN [~{\"~A\"~^, ~}]" scale)))
-         (urgency-clause (when urgency (format nil "n.urgency IN [~{\"~A\"~^, ~}]" urgency)))
-         (importance-clause (when importance (format nil "n.importance IN [~{\"~A\"~^, ~}]" importance)))
-         (regex-clause (when (and uid-regex
-                                  (not (equal "" uid-regex)))
-                         (format nil "n.uid =~~ \"~A\""
-                                 uid-regex)))
-         (query (format nil "MATCH ~A~A RETURN DISTINCT n.uid, n.scale, n.importance, n.urgency, n.status, n.deadline ORDER BY n.uid"
-                        ;; Construct the core MATCH statement
-                        (if tags
-                          "(n:tasks)-[Tags]->(t:tags)"
-                          "(n:tasks)")
-                        ;; Construct the where-clause
-                        (if (or tag-clause
-                                status-clause
-                                scale-clause
-                                urgency-clause
-                                importance-clause
-                                regex-clause)
-                          (format nil " WHERE ~{~A~^ AND ~}"
-                                  (remove-if #'null (list tag-clause
-                                                          status-clause
-                                                          scale-clause
-                                                          urgency-clause
-                                                          importance-clause
-                                                          regex-clause)))
-                          ""))))
-    (log-message :info (format nil "Using query string '~A'" query))
+                              (or tags '("<any>")) (or statuses '("<any>"))))
+  (let ((query-string
+          (format nil "/Tasks?~{~A~^&~}"
+                  (remove-if #'null
+                             (list (when tags (format nil "~{RGoutbound=/TAGS/Tags/~A~^&~}" tags))
+                                   (when statuses (format nil "status=~A&" statuses))
+                                   (when scale (format nil "scale=~A&" scale))
+                                   (when urgency (format nil "urgency=~A&" urgency))
+                                   (when importance (format nil "importance=~A&" importance))
+                                   (when uid-regex (format nil "uid=~A&" uid-regex)))))))
+    (log-message :debug (format nil "Using query URL '~A'" query-string))
     ;; Transform the results into an alist
     (let ((raw-results (mapcar
                          #'(lambda (row)
                              ;; Eliminate WTF sort-order by removing spurious characters
                              ;; that are prone to creeping in, like leading/trailing spaces
                              ;; and quote-marks.
-                             (let* ((uid (first row))
-                                   (title (uid-to-title uid))
-                                   (scale (string-trim "\" " (second row)))
-                                   (scale-numeric (cond ((equal "high" scale) 1)
-                                                        ((equal "medium" scale) 2)
-                                                        (t 3)))
-                                   (importance (string-trim "\" " (third row)))
-                                   (importance-numeric (cond ((equal "high" importance) 1)
-                                                             ((equal "medium" importance) 2)
-                                                             (t 3)))
-                                   (urgency (string-trim "\" " (fourth row)))
-                                   (urgency-numeric (cond ((equal "high" urgency) 1)
-                                                          ((equal "medium" urgency) 2)
-                                                          (t 3)))
-                                   (status (string-trim "\" " (fifth row)))
-                                   ;; Filter out deadlines that were recorded as an empty string
-                                   (deadline (when (and (sixth row)
-                                                        (stringp (sixth row))
-                                                        (not (equal "" (sixth row))))
-                                               (sixth row))))
+                             (let* ((uid (cdr (assoc :UID row)))
+                                    (title (uid-to-title uid))
+                                    (scale (cdr (assoc :SCALE row)))
+                                    (scale-numeric (cond ((equal "high" scale) 1)
+                                                         ((equal "medium" scale) 2)
+                                                         (t 3)))
+                                    (importance (cdr (assoc :IMPORTANCE row)))
+                                    (importance-numeric (cond ((equal "high" importance) 1)
+                                                              ((equal "medium" importance) 2)
+                                                              (t 3)))
+                                    (urgency (cdr (assoc :URGENCY row)))
+                                    (urgency-numeric (cond ((equal "high" urgency) 1)
+                                                           ((equal "medium" urgency) 2)
+                                                           (t 3)))
+                                    (status (cdr (assoc :STATUS row)))
+                                    ;; Filter out deadlines that were recorded as an empty string
+                                    (deadcandidate (cdr (assoc :DEADLINE row)))
+                                    (deadline (when (and deadcandidate
+                                                         (stringp deadcandidate)
+                                                         (not (equal "" deadcandidate)))
+                                                deadcandidate)))
                                (list :uid uid
                                      :title title
                                      :scale scale
@@ -472,11 +452,7 @@ and any forward-slashes that sneaked through are also now underscores.
                                      :urgency-numeric urgency-numeric
                                      :status status
                                      :deadline deadline)))
-                         (neo4cl:extract-rows-from-get-request
-                           (neo4cl:neo4j-transaction
-                             db
-                             `((:STATEMENTS
-                                 ((:STATEMENT . ,query)))))))))
+                         (rg-request-json server query-string))))
       (log-message :debug (format nil "Raw results of task-search: ~A" raw-results))
       ;; Sort the alist and return it.
       ;; Note that `stable-sort` is required, to prevent each iteration from scrambling its predecessor's results
@@ -487,6 +463,7 @@ and any forward-slashes that sneaked through are also now underscores.
             #'< :key #'(lambda (item) (getf item :importance-numeric)))
           #'< :key #'(lambda (item) (getf item :urgency-numeric)))
         #'string< :key (lambda (item) (getf item :deadline))))))
+
 
 (defun get-enum-vals (attr attrlist)
   "Extract the enum values for an attribute,

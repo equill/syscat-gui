@@ -756,8 +756,8 @@
             (urgency-requested (filter-params "urgency" (tbnl:get-parameters*)))
             (importance-requested (filter-params "importance" (tbnl:get-parameters*)))
             (tbnl-formatted-results
-              (search-for-tasks (cl-webcat::neo4j-server cl-webcat::*cl-webcat-acceptor*)
-                                tags-requested
+              (search-for-tasks (cl-webcat::rg-server cl-webcat::*cl-webcat-acceptor*)
+                                :tags tags-requested
                                 :statuses statuses-requested
                                 :scale scale-requested
                                 :urgency urgency-requested
