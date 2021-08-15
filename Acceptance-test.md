@@ -85,17 +85,30 @@ Note: the UIDs are not meaningful. It's just simpler to be specific than to repe
 - Now filter for `thatTag`; you should get the gallery page with _no_ images.
 
 
-# Tasks (known broken)
+# Tasks
 
 - Click on the `Tasks` link in the navigation bar at the top.
 - You _should_ see a search-page for tasks, with an empty results section.
+- Create a task. Tag it.
+- Go back to the Tasks page. Now you should see a single result.
+- Test each of the filters, individually and in combination:
+    - tags
+    - UID regex
+    - Importance
+    - Urgency
+    - Scale
+    - Status
+
+
+# Files
+
+- Upload a file
+- Confirm that you're redirected to a page of metadata for that file.
+- Load the gallery page, and confirm that this image is displayed there.
+- Check the link from the gallery.
+- Try to download the file. Confirm that it comes down intact.
 
 
 # Other things to check
 
-- Display wikipages
-- Display files
-- Upload files
-- Download files
-- Delete files
-- Tasks
+- Display wikipages (seems to be working)
