@@ -125,7 +125,7 @@
                                             ""))
                                   :stream contstr))))
                            ;; Display a file
-                           ((equal resourcetype "files")
+                           ((equal resourcetype "Files")
                             (with-output-to-string (conststr)
                               (html-template:fill-and-print-template
                                 (make-pathname :defaults (template-path tbnl:*acceptor*)
