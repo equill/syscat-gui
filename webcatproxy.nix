@@ -29,6 +29,12 @@
                  ];
         locations = {
           # Dev ports
+          #"/" = { proxyPass = "http://127.0.0.1:8080/"; };
+          #"/schema/" = { proxyPass = "http://webcat.onfire.onice:4950/schema/"; };
+          #"/raw/" = { proxyPass = "http://webcat.onfire.onice:4950/raw/"; };
+          #"/files-api/" = { proxyPass = "http://webcat.onfire.onice:4950/files/"; };
+          #
+          # cl-webcat dev ports
           "/" = { proxyPass = "http://127.0.0.1:8080/"; };
           "/schema/" = { proxyPass = "http://webcat.onfire.onice:4965/schema/"; };
           "/raw/" = { proxyPass = "http://webcat.onfire.onice:4965/raw/"; };
