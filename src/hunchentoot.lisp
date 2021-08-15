@@ -220,7 +220,7 @@
                    (format nil "/Files?mimetype=image/.*~A"
                            ;; Tag-search criterion
                            (if tags-requested
-                               (format nil "~{&outbound=/TAGS/Tags/~A~}" tags-requested)
+                               (format nil "~{&RGoutbound=/TAGS/Tags/~A~}" tags-requested)
                                "")))))
     (log-message :debug (format nil "Fetched image data ~A" images))
     (log-message :debug (format nil "State of layout template ~A is ~A"
@@ -631,7 +631,7 @@
                          (tags-requested-formatted
                            (mapcar #'(lambda (par)
                                        (concatenate 'string
-                                                    "outbound=/TAGS/Tags/" par))
+                                                    "RGoutbound=/TAGS/Tags/" par))
                                    tags-requested))
                          (search-criteria (append ()
                                                   (when (tbnl:get-parameter "uid_regex")
