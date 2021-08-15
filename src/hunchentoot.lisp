@@ -243,7 +243,7 @@
                                  (mapcar
                                    #'(lambda (img)
                                        (list :url (format nil "/files-api/v1/~A" (cdr (assoc :UID img)))
-                                             :link (format nil "/display/files/~A"
+                                             :link (format nil "/display/Files/~A"
                                                            (cdr (assoc :UID img)))
                                              :title (cdr (assoc :TITLE img))))
                                    images)
