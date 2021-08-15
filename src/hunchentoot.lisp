@@ -78,13 +78,13 @@
                 ;; Additional stylesheets for specific resource-types
                 :stylesheets (append
                                '((:sheet "display"))
-                               (when (equal "files" resourcetype)
+                               (when (equal "Files" resourcetype)
                                  '((:sheet "files_display")))
-                               (when (equal "tasks" resourcetype)
+                               (when (equal "Tasks" resourcetype)
                                  '((:sheet "tasks_display"))))
                 :content (cond
                            ;; Display a task
-                           ((equal resourcetype "tasks")
+                           ((equal resourcetype "Tasks")
                             (with-output-to-string (contstr)
                               (html-template:fill-and-print-template
                                 (make-pathname :defaults (template-path tbnl:*acceptor*)
@@ -976,7 +976,7 @@
               (tbnl:create-folder-dispatcher-and-handler "/static/js/"
                                                          (merge-pathnames "js/" (static-path myacceptor))
                                                          "text/javascript")
-              (tbnl:create-prefix-dispatcher "/tasks" 'tasks)
+              (tbnl:create-prefix-dispatcher "/Tasks" 'tasks)
               (tbnl:create-regex-dispatcher "/$" 'root)
               ;; Default fallback
               (tbnl:create-prefix-dispatcher "/" 'four-oh-four)))
