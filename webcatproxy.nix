@@ -6,7 +6,7 @@
   ];
 
   networking.hosts = {
-    "127.0.0.1" = [ "webcat.onfire.onice" ];
+    "127.0.0.1" = [ "narcisse" "localhost" "webcat.onfire.onice" ];
     "10.255.0.1" = [ "rgtest.onfire.onice" ];
   };
 
@@ -15,18 +15,14 @@
     statusPage = true;
 
     virtualHosts = {
-      "webcat" = {
+      localhost = {
         serverName = "localhost";
         serverAliases = [ "webcat"
                           "webcat.onfire.onice"
                           "syscat"
                           "syscat.onfire.onice"
                         ];
-        listen = [ { addr = "127.0.0.1";
-                     port = 80;
-                     ssl = false;
-                   }
-                 ];
+        #listen = [ { addr = "127.0.0.1"; port = 80; ssl = false; } ];
         locations = {
           # Dev ports
           #"/" = { proxyPass = "http://127.0.0.1:8080/"; };
