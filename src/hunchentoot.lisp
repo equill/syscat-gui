@@ -211,23 +211,20 @@
                            (get-uids (rg-server tbnl:*acceptor*) "/Tags?RGinbound=/Files/*/TAGS")
                            #'string<))
          ;; Get the requested tags
-         (tags-requested (remove-if #'null
-                                    (mapcar #'(lambda (par)
-                                                (when (equal (car par) "tags") (cdr par)))
-                                            (tbnl:get-parameters*))))
+         (tags-requested (filter-params "tags" (tbnl:get-parameters*)))
          ;; Execute the search
          (images (rg-request-json
                    (rg-server tbnl:*acceptor*)
                    (format nil "/Files?mimetype=image/.*~A"
                            ;; Tag-search criterion
                            (if tags-requested
-                               (format nil "~{&RGoutbound=/TAGS/Tags/~A~}" tags-requested)
-                               "")))))
+                             (format nil "~{&RGoutbound=/TAGS/Tags/~A~}" tags-requested)
+                             "")))))
     (log-message :debug (format nil "Fetched image data ~A" images))
     (log-message :debug (format nil "State of layout template ~A is ~A"
-                 layout-template-path (probe-file layout-template-path)))
+                                layout-template-path (probe-file layout-template-path)))
     (log-message :debug (format nil "State of gallery template ~A is ~A"
-                 gallery-template-path (probe-file gallery-template-path)))
+                                gallery-template-path (probe-file gallery-template-path)))
     (with-output-to-string (outstr)
       (html-template:fill-and-print-template
         layout-template-path
