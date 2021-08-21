@@ -7,7 +7,8 @@
 
   networking.hosts = {
     "127.0.0.1" = [ "narcisse" "localhost" "webcat.onfire.onice" ];
-    "10.255.0.1" = [ "rgtest.onfire.onice" ];
+    "127.0.0.2" = [ "webcat-ng.onfire.onice" ];
+    "10.255.0.1" = [ "rgtest.onfire.onice" "webcat-rg.onfire.onice" ];
   };
 
   services.nginx = {
@@ -41,6 +42,19 @@
           #"/schema/" = { proxyPass = "http://webcat.onfire.onice:4955/schema/"; };
           #"/raw/" = { proxyPass = "http://webcat.onfire.onice:4955/raw/"; };
           #"/files-api/" = { proxyPass = "http://webcat.onfire.onice:4955/files/"; };
+        };
+      };
+      "webcat-ng" = {
+        serverName = "webcat-ng";
+        serverAliases = [ "webcat-ng.onfire.onice" ];
+        listen = [ { addr = "webcat-ng.onfire.onice"; port = 80; ssl = false; } ];
+        locations = {
+          # Dev front-end listens on a loopback interface
+          "/" = { proxyPass = "http://webcat-ng.onfire.onice:8082/"; };
+          # Restagraph backend
+          "/schema/" = { proxyPass = "http://webcat-rg.onfire.onice:4965/schema/"; };
+          "/raw/" = { proxyPass = "http://webcat-rg.onfire.onice:4655/raw/"; };
+          "/files-api/" = { proxyPass = "http://webcat-rg.onfire.onice:4965/files/"; };
         };
       };
     };

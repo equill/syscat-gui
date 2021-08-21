@@ -204,10 +204,11 @@
          (gallery-template-path (merge-pathnames "display_gallery.tmpl" (template-path tbnl:*acceptor*)))
          ;; Don't escape HTML tags in the nested content
          (html-template:*string-modifier* #'cl:identity)
-         ;; Get tags currently applied to image files
-         ;(tags-available (get-image-tags (neo4j-server tbnl:*acceptor*)))
+         ;; Get tags currently applied to files.
+         ;; Unfortunately it's not feasible to filter specifically for *image* files
+         ;; without going directly to the database.
          (tags-available (sort
-                           (get-uids (rg-server tbnl:*acceptor*) "Tags")
+                           (get-uids (rg-server tbnl:*acceptor*) "/Tags?RGinbound=/Files/*/TAGS")
                            #'string<))
          ;; Get the requested tags
          (tags-requested (remove-if #'null
@@ -750,7 +751,7 @@
     ((equal (tbnl:request-method*) :GET)
      (let* ((task-attrs (get-attrs-with-keywords (rg-server tbnl:*acceptor*) "Tasks"))
             (statuses-requested (filter-params "status" (tbnl:get-parameters*)))
-            (tags-available (get-uids (rg-server *cl-webcat-acceptor*) "Tags"))
+            (tags-available (get-uids (rg-server *cl-webcat-acceptor*) "/Tags?RGinbound=/Tasks/*/TAGS"))
             (tags-requested (filter-params "tags" (tbnl:get-parameters*)))
             (scale-requested (filter-params "scale" (tbnl:get-parameters*)))
             (urgency-requested (filter-params "urgency" (tbnl:get-parameters*)))

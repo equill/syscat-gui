@@ -9,7 +9,7 @@
   <!-- TMPL_INCLUDE "navbar_top.html" -->
 
   <!-- Start of form -->
-  <form action="/tasks" method="get" class="formgrid" id="searchform">
+  <form action="/Tasks" method="get" class="formgrid" id="searchform">
 
     <!-- Header row -->
     <div id="tags-header">Available tags</div>
@@ -39,7 +39,7 @@
     <!-- Importance -->
     <div id="importance-name" class="criteria-name">Importance</div>
     <div id="importance-value" class="criteria-value">
-      <select name="importance" id="importance" size="1">
+      <select name="importance" id="importance" size="3" multiple="multiple">
         <option value="">Any</option>
         <!-- TMPL_LOOP importance -->
           <!-- TMPL_IF selected -->
@@ -54,7 +54,7 @@
     <!-- Urgency -->
     <div id="urgency-name" class="criteria-name">Urgency</div>
     <div id="urgency-value" class="criteria-value">
-      <select name="urgency" id="urgency" size="1">
+      <select name="urgency" id="urgency" size="3" multiple="multiple">
         <option value="">Any</option>
         <!-- TMPL_LOOP urgency -->
           <!-- TMPL_IF selected -->
@@ -69,7 +69,7 @@
     <!-- Scale -->
     <div id="scale-name" class="criteria-name">Scale</div>
     <div id="scale-value" class="criteria-value">
-      <select name="scale" id="scale" size="1">
+      <select name="scale" id="scale" size="3" multiple="multiple">
         <option value="">Any</option>
         <!-- TMPL_LOOP scale -->
           <!-- TMPL_IF selected -->

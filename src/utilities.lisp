@@ -197,16 +197,16 @@
         nil
         result))))
 
-(defun get-uids (server resourcetype)
+(defun get-uids (server query)
   "Retrieve a list of UIDs for a specified resourcetype.
   Arguments:
   - server = instance of rg-server struct
   - resourcetype = string
   Returns a list of strings."
-  (log-message :debug (format nil "Retrieving UIDs for ~A" resourcetype))
+  (log-message :debug (format nil "Retrieving UIDs for query '~A'" query))
   (mapcar #'(lambda (item)
               (cdr (assoc :uid item)))
-          (rg-request-json server (format nil "/~A" resourcetype))))
+          (rg-request-json server query)))
 
 (defun get-schema (server &optional (resourcetype ""))
   (if (equal resourcetype "")
@@ -365,33 +365,6 @@ and any forward-slashes that sneaked through are also now underscores.
               (list tag atm))
           lst))
 
-;; This one's too specific to use get-itemtype-tags
-(defun get-image-tags (db)
-  "Get all tags applied to existing _image_ files."
-  (declare (type neo4cl:neo4j-rest-server db))
-  (sort (mapcar #'car
-                (neo4cl:extract-rows-from-get-request
-                  (neo4cl:neo4j-transaction
-                    db
-                    `((:STATEMENTS
-                        ((:STATEMENT
-                           . "MATCH (t:files)-[:Tags]->(n:tags) WHERE t.mimetype =~ \"image/.*\" RETURN DISTINCT n.uid ORDER BY n.uid")))))))
-        #'string<))
-
-(defun get-itemtype-tags (db item-type)
-  "Return a list of tags applied to existing tasks"
-  (declare (type neo4cl:neo4j-rest-server db)
-           (type string item-type))
-  (mapcar #'car
-          (neo4cl:extract-rows-from-get-request
-            (neo4cl:neo4j-transaction
-              db
-              `((:STATEMENTS
-                  ((:STATEMENT
-                     . ,(format nil "MATCH (t:~A)-[:Tags]->(n:tags) RETURN DISTINCT n.uid ORDER BY n.uid"
-                                item-type)))))))))
-
-
 (defun search-for-tasks (server &key tags statuses scale urgency importance uid-regex)
   "Search for tasks using the requested parameters.
   Return an plist for passing directly to `html-template`:
@@ -401,19 +374,23 @@ and any forward-slashes that sneaked through are also now underscores.
   :urgency
   :status"
   (declare (type rg-server server)
-           (type list tags)         ; List of strings
-           (type list statuses))    ; List of strings
-  (log-message :debug (format nil "Searching for tasks with tags ~{~A~^, ~} and statuses ~{~A~^, ~}"
-                              (or tags '("<any>")) (or statuses '("<any>"))))
+           (type list tags statuses scale urgency importance)
+           (type string uid-regex))
+  (log-message :debug (format nil "Searching for tasks with tags ~{~A~^, ~}, importances ~{~A~^, ~}, urgencies ~{~A~^ ~} and statuses ~{~A~^, ~}"
+                              (or tags '("<any>"))
+                              (or importance '("<any>"))
+                              (or urgency '("<any>"))
+                              (or statuses '("<any>"))))
   (let ((query-string
           (format nil "/Tasks?~{~A~^&~}"
-                  (remove-if #'null
-                             (list (when tags (format nil "~{RGoutbound=/TAGS/Tags/~A~^&~}" tags))
-                                   (when statuses (format nil "status=~A&" statuses))
-                                   (when scale (format nil "scale=~A&" scale))
-                                   (when urgency (format nil "urgency=~A&" urgency))
-                                   (when importance (format nil "importance=~A&" importance))
-                                   (when uid-regex (format nil "uid=~A&" uid-regex)))))))
+                  (remove-if
+                    #'null
+                    (list (when tags (format nil "~{RGoutbound=/TAGS/Tags/~A~^&~}" tags))
+                          (when statuses (format nil "status=~{~A~^,~}" statuses))
+                          (when scale (format nil "scale=~{~A~^,~}" scale))
+                          (when urgency (format nil "urgency=~{~A~^,~}" urgency))
+                          (when importance (format nil "importance=~{~A~^,~}" importance))
+                          (when uid-regex (format nil "uid=~A" uid-regex)))))))
     (log-message :debug (format nil "Using query URL '~A'" query-string))
     ;; Transform the results into an alist
     (let ((raw-results (mapcar
