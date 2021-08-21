@@ -33,9 +33,9 @@
           #
           # cl-webcat dev ports
           "/" = { proxyPass = "http://127.0.0.1:8080/"; };
-          "/schema/" = { proxyPass = "http://webcat.onfire.onice:4965/schema/"; };
-          "/raw/" = { proxyPass = "http://webcat.onfire.onice:4965/raw/"; };
-          "/files-api/" = { proxyPass = "http://webcat.onfire.onice:4965/files/"; };
+          "/schema/" = { proxyPass = "http://webcat.onfire.onice:4955/schema/"; };
+          "/raw/" = { proxyPass = "http://webcat.onfire.onice:4955/raw/"; };
+          "/files-api/" = { proxyPass = "http://webcat.onfire.onice:4955/files/"; };
           #
           # Prod ports
           #"/" = { proxyPass = "http://webcat.onfire.onice:8080/"; };
