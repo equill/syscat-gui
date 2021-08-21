@@ -609,11 +609,8 @@
                             (remove-if #'(lambda (name)
                                            (cl-ppcre:all-matches "^rg" name))
                                        (get-resourcetypes (rg-server tbnl:*acceptor*)))))
-            (tags-available (sort (get-uids (rg-server tbnl:*acceptor*) "Tags") #'string<))
-            (tags-requested (remove-if #'null
-                                       (mapcar #'(lambda (par)
-                                                   (when (equal (car par) "tags") (cdr par)))
-                                               (tbnl:get-parameters*))))
+            (tags-available (sort (get-uids (rg-server tbnl:*acceptor*) "/Tags") #'string<))
+            (tags-requested (filter-params "tags" (tbnl:get-parameters*)))
             (tbnl-formatted-results
               (if (tbnl:get-parameter "resourcetype")
                 (search-results-to-template
