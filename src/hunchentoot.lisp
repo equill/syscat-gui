@@ -430,8 +430,8 @@
                       (rg-request-json
                         (rg-server tbnl:*acceptor*)
                         (concatenate 'string resource "/GROUPS/Groups"))))
-            (all-tags (get-uids (rg-server tbnl:*acceptor*) "Tags"))
-            (all-groups (get-uids (rg-server tbnl:*acceptor*) "Groups")))
+            (all-tags (get-uids (rg-server tbnl:*acceptor*) "/Tags"))
+            (all-groups (get-uids (rg-server tbnl:*acceptor*) "/Groups")))
        (with-output-to-string (outstr)
          (html-template:fill-and-print-template
            (make-pathname :defaults (template-path tbnl:*acceptor*)
