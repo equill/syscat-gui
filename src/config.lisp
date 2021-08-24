@@ -14,11 +14,6 @@
     :rg-port 4965
     ;:rg-hostname "localhost"
     ;:rg-port 4950
-    ;:dbhostname "10.255.0.1"
-    ;:dbport 7680
-    ;:dbname "graph.db"
-    ;:dbusername "neo4j"
-    ;:dbpasswd "wrong"
     :api-uri-base "/raw/v1"
     :files-uri-base "/files/v1"
     :schema-uri-base "/schema/v1"
