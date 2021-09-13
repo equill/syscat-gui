@@ -375,7 +375,7 @@ and any forward-slashes that sneaked through are also now underscores.
   :status"
   (declare (type rg-server server)
            (type list tags statuses scale urgency importance)
-           (type string uid-regex))
+           (type (or null string) uid-regex))
   (log-message :debug (format nil "Searching for tasks with tags ~{~A~^, ~}, importances ~{~A~^, ~}, urgencies ~{~A~^ ~} and statuses ~{~A~^, ~}"
                               (or tags '("<any>"))
                               (or importance '("<any>"))
