@@ -32,7 +32,7 @@
           #"/files-api/" = { proxyPass = "http://webcat.onfire.onice:4950/files/"; };
           #
           # cl-webcat dev ports
-          "/" = { proxyPass = "http://127.0.0.1:8080/"; };
+          "/" = { proxyPass = "http://webcat-rg.onfire.onice:8080/"; };
           "/schema/" = { proxyPass = "http://webcat.onfire.onice:4955/schema/"; };
           "/raw/" = { proxyPass = "http://webcat.onfire.onice:4955/raw/"; };
           "/files-api/" = { proxyPass = "http://webcat.onfire.onice:4955/files/"; };
@@ -50,7 +50,7 @@
         listen = [ { addr = "webcat-ng.onfire.onice"; port = 80; ssl = false; } ];
         locations = {
           # Dev front-end listens on a loopback interface
-          "/" = { proxyPass = "http://webcat-ng.onfire.onice:8082/"; };
+          "/" = { proxyPass = "http://webcat-rg.onfire.onice:8082/"; };
           # Restagraph backend
           "/schema/" = { proxyPass = "http://webcat-rg.onfire.onice:4965/schema/"; };
           "/raw/" = { proxyPass = "http://webcat-rg.onfire.onice:4655/raw/"; };
