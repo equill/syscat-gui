@@ -105,7 +105,7 @@
                                       :status (or (cdr (assoc :status content)) "(No status found)"))
                                 :stream contstr)))
                            ;; Display a wikipage
-                           ((equal resourcetype "wikipages")
+                           ((equal resourcetype "Wikipages")
                             (let ((content-layout-path (make-pathname :defaults (template-path tbnl:*acceptor*)
                                                                       :type "tmpl"
                                                                       :name "display_wikipage")))
