@@ -26,7 +26,7 @@ let
 in
 pkgs.dockerTools.buildImage {
     name = "equill/clwebcat";
-    tag = "0.0.8a3";
+    tag = "0.0.8a4";
     created = "now";
 
     contents = [
