@@ -318,50 +318,59 @@ and any forward-slashes that sneaked through are also now underscores.
 
 (defun get-linked-resources (server uri-parts)
   "Retrieve a list of all resources linked from the given one.
-   - server: an rg-server object
-   - uri-parts: the output of get-uri-parts.
-   Return a `linked-resource` instance."
+  - server: an rg-server object
+  - uri-parts: the output of get-uri-parts.
+  Return a `linked-resource` instance."
   ;; Sanity check: is this plausibly a path to a resource?
   (if (= (mod (length uri-parts) 3) 2)
-      ;; Yes: carry on.
-      ;; Get a list of the resources to which this resource has links.
-      ;; Do this by finding out what valid outgoing relationships it has,
-      ;; then asking what's at the end of each of those relationships.
-      ;;
-      ;; Get a list of the valid outgoing relationships from this type
-      (apply #'append
-             (let* ((resourcetype (car (last uri-parts 2)))
-                    (rels (get-outbound-rels server resourcetype)))
-               (log-message :debug (format nil "Outbound rels for resourcetype ~A: ~{~A~^, ~}"
-                                           resourcetype
-                                           (mapcar #'(lambda (rel)
-                                                       (format nil "~A/~A (dependent: ~A)"
-                                                               (name rel)
-                                                               (target-type rel)
-                                                               (if (dependent-p rel) "yes" "no")))
-                                                   rels)))
-               (mapcar
-                 #'(lambda (rel)
-                     (log-message
-                       :debug
-                       (format nil "Getting ~A resources with relationship ~A from resource ~{/~A~}"
-                               (target-type rel) (name rel) uri-parts))
-                     (mapcar #'(lambda (res)
-                                 (make-instance 'linked-resource :relationship (name rel)
-                                                :dependent-p (dependent-p rel)
-                                                :target-type (target-type rel)
-                                                :uid (cdr (assoc :uid res))))
-                             ;; Make the request
+    ;; Yes: carry on.
+    ;; Get a list of the resources to which this resource has links.
+    ;; Do this by finding out what valid outgoing relationships it has,
+    ;; then asking what's at the end of each of those relationships.
+    ;;
+    ;; Get a list of the valid outgoing relationships from this type
+    (apply #'append
+           (let* ((resourcetype (car (last uri-parts 2)))
+                  (rels (get-outbound-rels server resourcetype)))
+             (log-message :debug (format nil "Outbound rels for resourcetype ~A: ~{~A~^, ~}"
+                                         resourcetype
+                                         (mapcar #'(lambda (rel)
+                                                     (format nil "~A/~A (dependent: ~A)"
+                                                             (name rel)
+                                                             (target-type rel)
+                                                             (if (dependent-p rel) "yes" "no")))
+                                                 rels)))
+             (mapcar
+               #'(lambda (rel)
+                   (log-message
+                     :debug
+                     (format nil "Getting ~A resources with relationship ~A from resource ~{/~A~}"
+                             (target-type rel) (name rel) uri-parts))
+                   (mapcar #'(lambda (res)
+                               (make-instance 'linked-resource :relationship (name rel)
+                                              :dependent-p (dependent-p rel)
+                                              :target-type (if (equal "any" (target-type rel))
+                                                             (cdr (assoc :TYPE res))
+                                                             (target-type rel))
+                                              :uid (cdr (assoc :uid res))))
+                           ;; Make the request
+                           (handler-case
                              (rg-request-json
                                server
-                               (format nil "~{/~A~}/~A/~A" uri-parts (name rel) (target-type rel)))))
-                 rels)))
-      ;; This can't be a resource
-      (progn
-        (log-message :error (format nil "get-linked-resources failed: ~{/~A~} can't be a resource"
-                                    uri-parts))
-        ;; Return nil
-        nil)))
+                               (if (equal "any" (target-type rel))
+                                 ;; FIXME: this isn't right. We need to handle these as returning a list,
+                                 ;; complete with :resourcetype as a field in each object.
+                                 (format nil "~{/~A~}/~A" uri-parts (name rel))
+                                 (format nil "~{/~A~}/~A/~A" uri-parts (name rel) (target-type rel))))
+                             ;; Generic "something went boom
+                             (error () (log-message :error "get-linked-resources failed to fetch something")))))
+               rels)))
+    ;; This can't be a resource
+    (progn
+      (log-message :error (format nil "get-linked-resources failed: ~{/~A~} can't be a resource"
+                                  uri-parts))
+      ;; Return nil
+      nil)))
 
 (defun make-simple-alist (lst tag)
   "Turn a list of atoms into a list of '(,tag <atom>) lists"
