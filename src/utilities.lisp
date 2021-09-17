@@ -60,7 +60,11 @@
                          (rg-server-raw-base server)))
                      uri)))
     (log-message :debug (format nil "Using URL '~A'" url))
-    (decode-json-response (drakma:http-request url :external-format-in :UTF-8))))
+    (multiple-value-bind (body status-code)
+      (drakma:http-request url :external-format-in :UTF-8)
+      (if (equal 200 status-code)
+        (decode-json-response body)
+        (error "Non-200 status code received")))))
 
 (defun rg-delete (server uri &key payload schema-p)
   "Delete a resource from the Restagraph backend.
