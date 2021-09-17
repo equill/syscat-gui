@@ -24,18 +24,32 @@
   (setf (tbnl:return-code*) tbnl:+http-ok+)
   "OK")
 
+(defun sort-linked-resources (resources)
+  "Sort the list of resources returned by `get-linked-resources`"
+  (unless (every #'(lambda (obj) (typep obj 'linked-resource)) resources)
+    (error "This isn't a list of linked-resource instances!"))
+  (log-message :debug (format nil "Sorting resource-list ~{~A~^, ~}"
+                              (mapcar #'(lambda (res)
+                                          (format nil "/~A/~A/~A"
+                                                  (relationship res)
+                                                  (target-type res)
+                                                  (uid res)))
+                                      resources)))
+  (stable-sort
+    (stable-sort
+      (sort resources #'string< :key #'uid)
+      #'string< :key #'target-type)
+    #'string< :key #'relationship))
+
 (defun listify-outbound-links (links filter)
   "Render a list of linked-resource instances into an alist suitable for html-template's consumption.
-   Filter them using `remove-if-not` with the supplied function."
+  Filter them using `remove-if-not` with the supplied function."
   (mapcar #'(lambda (link)
               (list :RELATIONSHIP (relationship link)
                     :TARGET-TYPE (target-type link)
                     :DEPENDENT-P (dependent-p link)
                     :UID (uid link)))
-          (sort
-            (remove-if-not filter links)
-            #'string<
-            :key #'(lambda (item) (uid item)))))
+          (sort-linked-resources (remove-if-not filter links))))
 
 (defun display-item ()
   "Display an item"
@@ -58,8 +72,7 @@
                                                    :name "display_layout"))
               ;; Don't escape HTML tags in the nested content
               (html-template:*string-modifier* #'cl:identity)
-              (outbound-links (get-linked-resources (rg-server tbnl:*acceptor*)
-                                                    (cdr uri-parts))))
+              (outbound-links (get-linked-resources (rg-server tbnl:*acceptor*) (cdr uri-parts))))
           (log-message :debug (format nil "Path to layout template: ~A" layout-template-path))
           (log-message :debug (format nil "State of layout template: ~A"
                                       (probe-file layout-template-path)))

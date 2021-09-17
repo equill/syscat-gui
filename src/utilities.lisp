@@ -320,7 +320,7 @@ and any forward-slashes that sneaked through are also now underscores.
   "Retrieve a list of all resources linked from the given one.
   - server: an rg-server object
   - uri-parts: the output of get-uri-parts.
-  Return a `linked-resource` instance."
+  Return a list of `linked-resource` instances."
   ;; Sanity check: is this plausibly a path to a resource?
   (if (= (mod (length uri-parts) 3) 2)
     ;; Yes: carry on.
