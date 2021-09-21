@@ -9,7 +9,7 @@
 
 (defparameter *config-vars*
   `(:listen-address "webcat-ng.onfire.onice"
-    :listen-port 8082
+    :listen-port 8083
     :rg-hostname "webcat-rg.onfire.onice"
     :rg-port 4965
     ;:rg-hostname "localhost"
