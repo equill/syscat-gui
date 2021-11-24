@@ -6,8 +6,7 @@
   ];
 
   networking.hosts = {
-    "127.0.0.1" = [ "narcisse" "localhost" "webcat.onfire.onice" ];
-    "127.0.0.2" = [ "webcat-ng.onfire.onice" ];
+    #"127.0.0.2" = [ "webcat-ng.onfire.onice" ];
     "192.0.2.1" = [ "rgtest.onfire.onice" "webcat-rg.onfire.onice" ];
   };
 
