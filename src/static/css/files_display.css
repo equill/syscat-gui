@@ -23,6 +23,12 @@ div#files_image {
   width: 100%;
 }
 
+div#notes {
+  grid-row 4;
+  grid-column: 1 / span 2;
+  width: 100%;
+}
+
 img#files_image {
   margin: auto;
   align: center;

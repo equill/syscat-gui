@@ -146,6 +146,7 @@
                                                :name "display_files")
                                 (list :title  (cdr (assoc :title content))
                                       :mimetype (cdr (assoc :mimetype content))
+                                      :notes (cdr (assoc :notes content))
                                       :image-url (format nil "/files-api/v1/~A" uid))
                                 :stream conststr)))
                            ;; Default item display
