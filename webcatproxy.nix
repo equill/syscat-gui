@@ -61,6 +61,9 @@
           "/raw/" = { proxyPass = "http://webcat-rg.onfire.onice:4655/raw/"; };
           "/files-api/" = { proxyPass = "http://webcat-rg.onfire.onice:4965/files/"; };
         };
+        extraConfig = ''
+            rewrite ^/$ /display/Wikipages/Big_picture redirect;
+        '';
       };
     };
   };
