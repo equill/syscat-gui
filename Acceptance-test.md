@@ -7,7 +7,7 @@ Follow the steps in order, as these are not discrete unit tests; later steps ass
 
 # Upload the webcat schema
 
-- `curl -i --data-urlencode schema@/path/to/webcat.json -X POST http://10.255.0.1:4965/schema/v1/`
+- `curl -i --data-urlencode schema@/path/to/webcat.json -X POST http://192.0.2.1:4965/schema/v1/`
 
 
 # Create regular Resources
