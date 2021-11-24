@@ -56,7 +56,6 @@
         locations = {
           # Dev front-end listens on a loopback interface
           "/" = { proxyPass = "http://webcat-rg.onfire.onice:8082/"; };
-          #"/" = { proxyPass = "http://webcat-ng.onfire.onice:8083/"; };
           # Restagraph backend
           "/schema/" = { proxyPass = "http://webcat-rg.onfire.onice:4965/schema/"; };
           "/raw/" = { proxyPass = "http://webcat-rg.onfire.onice:4655/raw/"; };
