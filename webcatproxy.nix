@@ -45,8 +45,14 @@
       };
       "webcat-ng" = {
         serverName = "webcat-ng";
-        serverAliases = [ "webcat-ng.onfire.onice" ];
-        listen = [ { addr = "webcat-ng.onfire.onice"; port = 80; ssl = false; } ];
+        serverAliases = [ "webcat-ng.onfire.onice" "webcat.onfire.onice" ];
+        listen = [
+          {
+            addr = "webcat-ng.onfire.onice";
+            port = 80;
+            ssl = false;
+          }
+        ];
         locations = {
           # Dev front-end listens on a loopback interface
           "/" = { proxyPass = "http://webcat-rg.onfire.onice:8082/"; };
