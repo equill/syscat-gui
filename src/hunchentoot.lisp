@@ -517,7 +517,7 @@
                         (rg-delete (rg-server tbnl:*acceptor*)
                                    (concatenate 'string
                                                 "/" resourcetype "/" uid "/TAGS")
-                                   :payload (list (concatenate 'string "resource=/Tags/" (cdr param))))
+                                   :payload (list (concatenate 'string "target=/Tags/" (cdr param))))
                         ;; Did it work?
                         (if (or (< status-code 200)
                                 (> status-code 299))
@@ -532,7 +532,7 @@
                         (rg-delete (rg-server tbnl:*acceptor*)
                                    (concatenate 'string
                                                 "/" resourcetype "/" uid "/GROUPS")
-                                   :payload (list (concatenate 'string "resource=/Groups/" (cdr param))))
+                                   :payload (list (concatenate 'string "target=/Groups/" (cdr param))))
                         ;; Did it work?
                         (if (or (< status-code 200)
                                 (> status-code 299))
