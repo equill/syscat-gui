@@ -4,9 +4,6 @@ stdenv.mkDerivation rec {
     name = "cl-webcat";
 
     buildInputs = [
-        # Neo4j
-        #pkgs.neo4j
-        # Lisp env
         pkgs.sbcl
         # SSL
         pkgs.libressl
