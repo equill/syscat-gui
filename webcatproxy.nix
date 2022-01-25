@@ -6,8 +6,10 @@
   ];
 
   networking.hosts = {
-    #"127.0.0.2" = [ "webcat-ng.onfire.onice" ];
-    "192.0.2.1" = [ "rgtest.onfire.onice" "webcat-rg.onfire.onice" ];
+    "192.0.2.1" = [ "webcat-docker.onfire.onice" ];
+    # webcat-test is for running stuff in the REPL instead of in containers.
+    # To avoid conflicts with the default virtual server, it needs to run on a different lo addr.
+    "127.0.0.2" = [ "webcat-test" "webcat-test.onfire.onice" ];
   };
 
   services.nginx = {
@@ -15,52 +17,40 @@
     statusPage = true;
 
     virtualHosts = {
+      # Default local vserver
       localhost = {
         serverName = "localhost";
-        serverAliases = [ "webcat"
-                          "webcat.onfire.onice"
-                          "syscat"
-                          "syscat.onfire.onice"
-                        ];
+        # For running webcat-prod locally
+        serverAliases = [ "webcat" "webcat.onfire.onice" ];
         #listen = [ { addr = "127.0.0.1"; port = 80; ssl = false; } ];
         locations = {
-          # Dev ports
-          #"/" = { proxyPass = "http://127.0.0.1:8080/"; };
-          #"/schema/" = { proxyPass = "http://webcat.onfire.onice:4950/schema/"; };
-          #"/raw/" = { proxyPass = "http://webcat.onfire.onice:4950/raw/"; };
-          #"/files-api/" = { proxyPass = "http://webcat.onfire.onice:4950/files/"; };
-          #
-          # cl-webcat dev ports
-          "/" = { proxyPass = "http://webcat-ng.onfire.onice:8083/"; };
-          "/schema/" = { proxyPass = "http://webcat-rg.onfire.onice:4965/schema/"; };
-          "/raw/" = { proxyPass = "http://webcat-rg.onfire.onice:4965/raw/"; };
-          "/files-api/" = { proxyPass = "http://webcat-rg.onfire.onice:4965/files/"; };
-          #
-          # Prod ports
-          #"/" = { proxyPass = "http://webcat.onfire.onice:8080/"; };
-          #"/schema/" = { proxyPass = "http://webcat.onfire.onice:4955/schema/"; };
-          #"/raw/" = { proxyPass = "http://webcat.onfire.onice:4955/raw/"; };
-          #"/files-api/" = { proxyPass = "http://webcat.onfire.onice:4955/files/"; };
+          # In prod, everything runs in a container.
+          # On a development-only host, such as thing, these should fail to connect.
+          "/" = { proxyPass = "http://webcat-docker.onfire.onice:8082/"; };
+          "/schema/" = { proxyPass = "http://webcat-docker.onfire.onice:4965/schema/"; };
+          "/raw/" = { proxyPass = "http://webcat-docker.onfire.onice:4965/raw/"; };
+          "/files-api/" = { proxyPass = "http://webcat-docker.onfire.onice:4965/files/"; };
         };
       };
-      "webcat-ng" = {
-        serverName = "webcat-ng";
-        serverAliases = [ "webcat-ng.onfire.onice" "webcat.onfire.onice" ];
+      # Vserver for running webcat-test locally
+      "webcat-test" = {
+        serverName = "webcat-test";
+        # Listen on the _other_ loopback address.
+        serverAliases = [ "webcat-test.onfire.onice" ];
         listen = [
           {
-            addr = "webcat-ng.onfire.onice";
+            addr = "webcat-test.onfire.onice";
             port = 80;
             ssl = false;
           }
         ];
         locations = {
           # Dev front-end listens on a loopback interface
-          #"/" = { proxyPass = "http://webcat-rg.onfire.onice:8082/"; };
-          "/" = { proxyPass = "http://webcat-ng.onfire.onice:8083/"; };
+          "/" = { proxyPass = "http://localhost:8083/"; };
           # Restagraph backend
-          "/schema/" = { proxyPass = "http://webcat-rg.onfire.onice:4965/schema/"; };
-          "/raw/" = { proxyPass = "http://webcat-rg.onfire.onice:4655/raw/"; };
-          "/files-api/" = { proxyPass = "http://webcat-rg.onfire.onice:4965/files/"; };
+          "/schema/" = { proxyPass = "http://webcat-docker.onfire.onice:4965/schema/"; };
+          "/raw/" = { proxyPass = "http://webcat-docker.onfire.onice:4655/raw/"; };
+          "/files-api/" = { proxyPass = "http://webcat-docker.onfire.onice:4965/files/"; };
         };
         extraConfig = ''
             rewrite ^/$ /display/Wikipages/Big_picture redirect;
