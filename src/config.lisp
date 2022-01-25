@@ -8,9 +8,9 @@
 (in-package #:cl-webcat)
 
 (defparameter *config-vars*
-  `(:listen-address "webcat-ng.onfire.onice"
+  `(:listen-address "localhost"
     :listen-port 8083
-    :rg-hostname "webcat-rg.onfire.onice"
+    :rg-hostname "webcat-docker.onfire.onice"
     :rg-port 4965
     ;:rg-hostname "localhost"
     ;:rg-port 4950
