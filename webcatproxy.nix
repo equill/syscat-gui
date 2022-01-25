@@ -31,10 +31,10 @@
           #"/files-api/" = { proxyPass = "http://webcat.onfire.onice:4950/files/"; };
           #
           # cl-webcat dev ports
-          "/" = { proxyPass = "http://webcat-rg.onfire.onice:8080/"; };
-          "/schema/" = { proxyPass = "http://webcat.onfire.onice:4955/schema/"; };
-          "/raw/" = { proxyPass = "http://webcat.onfire.onice:4955/raw/"; };
-          "/files-api/" = { proxyPass = "http://webcat.onfire.onice:4955/files/"; };
+          "/" = { proxyPass = "http://webcat-ng.onfire.onice:8083/"; };
+          "/schema/" = { proxyPass = "http://webcat-rg.onfire.onice:4965/schema/"; };
+          "/raw/" = { proxyPass = "http://webcat-rg.onfire.onice:4965/raw/"; };
+          "/files-api/" = { proxyPass = "http://webcat-rg.onfire.onice:4965/files/"; };
           #
           # Prod ports
           #"/" = { proxyPass = "http://webcat.onfire.onice:8080/"; };
@@ -55,7 +55,8 @@
         ];
         locations = {
           # Dev front-end listens on a loopback interface
-          "/" = { proxyPass = "http://webcat-rg.onfire.onice:8082/"; };
+          #"/" = { proxyPass = "http://webcat-rg.onfire.onice:8082/"; };
+          "/" = { proxyPass = "http://webcat-ng.onfire.onice:8083/"; };
           # Restagraph backend
           "/schema/" = { proxyPass = "http://webcat-rg.onfire.onice:4965/schema/"; };
           "/raw/" = { proxyPass = "http://webcat-rg.onfire.onice:4655/raw/"; };
