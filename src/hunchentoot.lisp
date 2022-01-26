@@ -184,20 +184,8 @@
                 :tags (listify-outbound-links outbound-links
                                               #'(lambda (link)
                                                   (equal (relationship link) "TAGS")))
-                :groups (listify-outbound-links outbound-links
-                                                #'(lambda (link)
-                                                    (and
-                                                      (equal (target-type link) "Groups")
-                                                      (equal (relationship link) "GROUPS"))))
                 :outbound (listify-outbound-links outbound-links #'(lambda (link)
-                                                                     (not
-                                                                       (or
-                                                                         ;; Tags
-                                                                         (equal (relationship link) "TAGS")
-                                                                         ;; groups
-                                                                         (and
-                                                                           (equal (target-type link) "Groups")
-                                                                           (equal (relationship link) "GROUPS")))))))
+                                                                     (not (equal (relationship link) "TAGS")))))
               :stream outstr))))
       ;; No such resource, but we do have a resourcetype and UID.
       ;; Redirect to the item-creation page.
@@ -425,7 +413,7 @@
     (t (method-not-allowed))))
 
 (defun edit-links ()
-  "Edit a resource's links to tags, groups and other resources."
+  "Edit a resource's links to tags and other resources."
   (cond
     ((equal (tbnl:request-method*) :GET)
      (let* ((uri-parts (get-uri-parts (tbnl:request-uri*) tbnl:*acceptor*))
@@ -438,20 +426,13 @@
                       (rg-request-json
                         (rg-server tbnl:*acceptor*)
                         (concatenate 'string resource "/TAGS/Tags"))))
-            (extant-groups
-              (mapcar #'(lambda (group)
-                          (cdr (assoc :uid group)))
-                      (rg-request-json
-                        (rg-server tbnl:*acceptor*)
-                        (concatenate 'string resource "/GROUPS/Groups"))))
-            (all-tags (get-uids (rg-server tbnl:*acceptor*) "/Tags"))
-            (all-groups (get-uids (rg-server tbnl:*acceptor*) "/Groups")))
+            (all-tags (get-uids (rg-server tbnl:*acceptor*) "/Tags")))
        (with-output-to-string (outstr)
          (html-template:fill-and-print-template
            (make-pathname :defaults (template-path tbnl:*acceptor*)
                           :type "tmpl"
                           :name "edit_links")
-           (list :title (format nil "Edit tags, groups and links for ~A ~A"
+           (list :title (format nil "Edit tags and links for ~A ~A"
                                 resourcetype (uid-to-title resourcename))
                  :stylesheets '((:sheet "edit_links"))
                  :resource resource
@@ -460,13 +441,7 @@
                                (set-difference all-tags extant-tags :test #'equal)
                                #'string<)
                              :tag)
-                 :remove-tags (make-simple-alist (sort extant-tags #'string<) :tag)
-                 :add-groups (make-simple-alist
-                               (sort
-                                 (set-difference all-groups extant-groups :test #'equal)
-                                 #'string<)
-                               :group)
-                 :remove-groups (make-simple-alist (sort extant-groups #'string<) :group))
+                 :remove-tags (make-simple-alist (sort extant-tags #'string<) :tag))
            :stream outstr))))
     ((equal (tbnl:request-method*) :POST)
      (let* ((uri-parts (get-uri-parts (tbnl:request-uri*) tbnl:*acceptor*))
@@ -493,24 +468,6 @@
                                                              "Failed to add tag " (cdr param))
                                       :attrval (format nil "~A: ~A" status-code body))
                                 update-errors))))
-                     ;; Add it to a group
-                     ((equal (car param) "add-groups")
-                      (log-message :debug (format nil "Adding to group ~A" (cdr param)))
-                      (multiple-value-bind (body status-code)
-                        (rg-post-json (rg-server tbnl:*acceptor*)
-                                      (concatenate 'string
-                                                   "/" resourcetype "/" uid "/GROUPS/")
-                                      :payload `(("target"
-                                                  . ,(concatenate
-                                                       'string
-                                                       "/Groups/" (cdr param)))))
-                        ;; Did it work?
-                        (if (or (< status-code 200)
-                                (> status-code 299))
-                          (push (list :attrname (concatenate 'string
-                                                             "Failed to add group " (cdr param))
-                                      :attrval (format nil "~A: ~A" status-code body))
-                                update-errors))))
                      ;; Remove a tag
                      ((equal (car param) "remove-tags")
                       (log-message :debug (format nil "Removing tag ~A" (cdr param)))
@@ -524,21 +481,6 @@
                                 (> status-code 299))
                           (push (list :attrname (concatenate 'string
                                                              "Failed to remove tag " (cdr param))
-                                      :attrval (format nil "~A: ~A" status-code body))
-                                update-errors))))
-                     ;; Remove it from a group
-                     ((equal (car param) "remove-groups")
-                      (log-message :debug (format nil "Removing from group ~A" (cdr param)))
-                      (multiple-value-bind (status-code body)
-                        (rg-delete (rg-server tbnl:*acceptor*)
-                                   (concatenate 'string
-                                                "/" resourcetype "/" uid "/GROUPS")
-                                   :payload (list (concatenate 'string "target=/Groups/" (cdr param))))
-                        ;; Did it work?
-                        (if (or (< status-code 200)
-                                (> status-code 299))
-                          (push (list :attrname (concatenate 'string
-                                                             "Failed to remove group " (cdr param))
                                       :attrval (format nil "~A: ~A" status-code body))
                                 update-errors))))
                      ;; Links to other resources

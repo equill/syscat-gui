@@ -16,7 +16,7 @@
 /* End of attributes section */
 
 
-/* Tags, groups and outbound links section */
+/* Tags and outbound links section */
 
 .page-bottom-title {
   background-color: #dddddd;
@@ -44,19 +44,6 @@ ul#taglist {
 /* End tags */
 
 
-/* Groups */
-h2#groups_header {
-  grid-row: 4;
-  grid-column: 2;
-}
-
-ul#grouplist {
-  grid-row: 5;
-  grid-column: 2;
-}
-/* End groups */
-
-
 /* Outbound links */
 h2#outbound_links {
   grid-row: 6;
@@ -80,4 +67,4 @@ a#taglink {
   text-decoration: none;
 }
 
-/* End of tags, groups and outbound links section */
+/* End of tags and outbound links section */

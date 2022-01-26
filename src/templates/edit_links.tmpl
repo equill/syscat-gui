@@ -30,31 +30,13 @@
             </select>
           </div>
 
-          <div id="add_groups">
-            <h3>Add groups</h3>
-            <select multiple="multiple" name="add-groups" size="10">
-              <!-- TMPL_LOOP add-groups -->
-              <option name="<!-- TMPL_VAR group -->"><!-- TMPL_VAR group --></option>
-              <!-- /TMPL_LOOP -->
-            </select>
-          </div>
-
-          <div id="remove-groups">
-            <h3>Remove groups</h3>
-            <select multiple="multiple" name="remove-groups" size="10">
-              <!-- TMPL_LOOP remove-groups -->
-              <option name="<!-- TMPL_VAR group -->"><!-- TMPL_VAR group --></option>
-              <!-- /TMPL_LOOP -->
-            </select>
-          </div>
-
           <div id="link-resources">
             <h3>Link to other resources</h3>
             <p>Space-separated list of resource paths, leading with the relationship:</p>
             <input type="text" id="resource_links" name="resource_links" value="">
           </div>
 
-          <input type="submit" id="update_membership" value="Update tags and groups">
+          <input type="submit" id="update_membership" value="Update tags">
 
         </div>
       </form>
