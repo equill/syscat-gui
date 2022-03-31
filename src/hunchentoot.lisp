@@ -56,6 +56,7 @@
               (tbnl:create-regex-dispatcher "/create$" 'create-item)
               (tbnl:create-prefix-dispatcher "/display" 'display-item)
               (tbnl:create-prefix-dispatcher "/edit_links" 'edit-links)
+              (tbnl:create-prefix-dispatcher "/create_relationship" 'select-relationship )
               (tbnl:create-prefix-dispatcher "/editresource" 'edit-resource)
               (tbnl:create-prefix-dispatcher "/files" 'files)
               (tbnl:create-prefix-dispatcher "/image-gallery" 'image-gallery)

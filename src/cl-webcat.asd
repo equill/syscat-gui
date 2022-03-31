@@ -13,7 +13,8 @@
                #:cl-ppcre
                #:drakma
                #:flexi-streams
-               #:html-template
+               #:html-template ; Legacy; to be removed
+               #:spinneret    ; HTML-generation library du jour
                #:hunchentoot)
   :components ((:file "package")
                (:file "config")

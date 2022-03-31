@@ -81,6 +81,20 @@ div#navigation {
   align-content: start;
 }
 
+/* For when we need a second one */
+.formgrid2 {
+  /* Where within the parent grid */
+  grid-row: 4;
+  grid-column: 1 / span 2;
+  /* What goes inside it */
+  display: grid;
+  grid-template-columns: auto;
+  grid-row-gap: 5px;
+  grid-column-gap: 20px;
+  justify-content: start;
+  align-content: start;
+}
+
 .content-wikipage {
   /* Where within the parent grid */
   grid-row: 3;
