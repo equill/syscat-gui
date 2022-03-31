@@ -14,8 +14,7 @@
                #:drakma
                #:flexi-streams
                #:html-template
-               #:hunchentoot
-               #:neo4cl)
+               #:hunchentoot)
   :components ((:file "package")
                (:file "config")
                (:file "structures")

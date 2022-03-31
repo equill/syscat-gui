@@ -12,9 +12,6 @@
   ((rg-server :initarg :rg-server
               :reader rg-server
               :initform (make-acceptor))
-   (neo4j-server :initarg :neo4j-server
-                 :reader neo4j-server
-                 :initform (error "neo4j-server parameter is required"))
    (url-base :initarg :url-base
              :reader url-base
              :initform "localhost")
@@ -57,21 +54,7 @@
                               :files-base (or (sb-ext:posix-getenv "RG_FILES_BASE")
                                               (getf *config-vars* :files-uri-base))
                               :schema-base (or (sb-ext:posix-getenv "RG_SCHEMA_BASE")
-                                               (getf *config-vars* :schema-uri-base)))
-                 :neo4j-server (make-instance
-                                 'neo4cl:neo4j-rest-server
-                                 :hostname (or (sb-ext:posix-getenv "NEO4J_HOSTNAME")
-                                               (getf *config-vars* :dbhostname))
-                                 :port (or (when (sb-ext:posix-getenv "NEO4J_PORT")
-                                             (parse-integer (sb-ext:posix-getenv "NEO4J_PORT")))
-                                           (getf *config-vars* :dbport))
-                                 :dbname (or (when (sb-ext:posix-getenv "RG_DBNAME")
-                                               (sb-ext:posix-getenv "RG_DBNAME"))
-                                             (getf *config-vars* :dbname))
-                                 :dbuser (or (sb-ext:posix-getenv "NEO4J_USER")
-                                             (getf *config-vars* :dbusername))
-                                 :dbpasswd (or (sb-ext:posix-getenv "NEO4J_PASSWORD")
-                                               (getf *config-vars* :dbpasswd)))))
+                                               (getf *config-vars* :schema-uri-base)))))
 
 (defstruct rg-server
   "The details needed to connect to the backend Restagraph server."
