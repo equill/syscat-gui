@@ -11,7 +11,7 @@
   ;; Subclass attributes
   ((rg-server :initarg :rg-server
               :reader rg-server
-              :initform (make-acceptor))
+              :initform (error ":rg-server is a required parameter."))
    (url-base :initarg :url-base
              :reader url-base
              :initform "localhost")
