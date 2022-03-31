@@ -21,4 +21,5 @@
                (:file "logging")
                (:file "utilities")
                (:file "errors")
+               (:file "dispatchers")
                (:file "hunchentoot")))
