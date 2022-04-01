@@ -219,7 +219,7 @@
   (if (equal resourcetype "")
     (log-message :debug "Retrieving the whole schema")
     (log-message :debug (format nil "Retrieving the schema for resourcetype '~A'" resourcetype)))
-  (rg-request-json server (format nil "/~A" resourcetype) :api "schema"))
+  (rg-request-json server resourcetype :api "schema"))
 
 
 (defun get-attrs (server resourcetype)
