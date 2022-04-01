@@ -58,7 +58,10 @@
                         (rg-server-files-base server))
                        (t   ; default is "raw"
                          (rg-server-raw-base server)))
-                     uri)))
+                     ;; Auto-prepend a leading slash to the URI for a schema request
+                     (if (equal "schema" api)
+                       (format nil "/~A" uri)
+                       uri))))
     (log-message :debug (format nil "Using URL '~A'" url))
     (multiple-value-bind (body status-code)
       (drakma:http-request url :external-format-in :UTF-8)
