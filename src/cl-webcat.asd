@@ -23,4 +23,5 @@
                (:file "utilities")
                (:file "errors")
                (:file "dispatchers")
+               (:file "spinneret-dispatchers")
                (:file "hunchentoot")))
