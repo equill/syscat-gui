@@ -5,7 +5,7 @@
 
 ;;;; Configs for the server to use
 
-(in-package #:cl-webcat)
+(in-package #:webcat-gui)
 
 (defparameter *config-vars*
   `(:listen-address "localhost"
@@ -17,8 +17,8 @@
     :api-uri-base "/raw/v1"
     :files-uri-base "/files/v1"
     :schema-uri-base "/schema/v1"
-    :template-path "/home/james/devel/restagraph/cl-webcat/src/templates/"
-    :static-path "/home/james/devel/restagraph/cl-webcat/src/static/"))
+    :template-path "/home/james/devel/restagraph/webcat-gui/src/templates/"
+    :static-path "/home/james/devel/restagraph/webcat-gui/src/static/"))
 
 ;; Declare this here because it needs to already have been compiled before any
 ;; references are made to it in json.lisp.

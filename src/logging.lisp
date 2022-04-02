@@ -7,7 +7,7 @@
 ;;;; Logging infrastructure
 ;;; We only need something extremely simple
 
-(in-package #:cl-webcat)
+(in-package #:webcat-gui)
 
 (defvar *loglevels*
   '(:crit 4
@@ -38,7 +38,7 @@
             severity
             message)))
 
-(defmethod tbnl:acceptor-log-message ((acceptor cl-webcat-acceptor)
+(defmethod tbnl:acceptor-log-message ((acceptor webcat-gui-acceptor)
                                       log-level
                                       format-string
                                       &rest format-arguments)

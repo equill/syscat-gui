@@ -3,7 +3,7 @@
 ;   Licensed under the GNU General Public License
 ;   - for details, see LICENSE.txt in the top-level directory
 
-(in-package #:cl-webcat)
+(in-package #:webcat-gui)
 
 
 ;;; Utility functions

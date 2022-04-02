@@ -4,7 +4,7 @@
 ;   - for details, see LICENSE.txt in the top-level directory
 
 
-(defpackage cl-webcat
+(defpackage webcat-gui
   (:use #:cl)
   (:export
     startup

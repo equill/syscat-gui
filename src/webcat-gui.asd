@@ -1,9 +1,9 @@
-;   Copyright 2017 James Fleming <james@electronic-quill.net>
+;   Copyright 2017-22 James Fleming <james@electronic-quill.net>
 ;
 ;   Licensed under the GNU General Public License
 ;   - for details, see LICENSE.txt in the top-level directory
 
-(asdf:defsystem #:cl-webcat
+(asdf:defsystem #:webcat-gui
   :serial t
   :license "GPLv3"
   :author "James Fleming <james@electronic-quill.net>"

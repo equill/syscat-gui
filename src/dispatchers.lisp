@@ -3,7 +3,7 @@
 ;   Licensed under the GNU General Public License
 ;   - for details, see LICENSE.txt in the top-level directory
 
-(in-package #:cl-webcat)
+(in-package #:webcat-gui)
 
 (declaim (optimize (compilation-speed 0)
                    (speed 2)
@@ -563,13 +563,13 @@
     ((equal (tbnl:request-method*) :GET)
      (let* ((task-attrs (get-attrs-with-keywords (rg-server tbnl:*acceptor*) "Tasks"))
             (statuses-requested (filter-params "status" (tbnl:get-parameters*)))
-            (tags-available (get-uids (rg-server *cl-webcat-acceptor*) "/Tags?RGinbound=/Tasks/*/TAGS"))
+            (tags-available (get-uids (rg-server *webcat-gui-acceptor*) "/Tags?RGinbound=/Tasks/*/TAGS"))
             (tags-requested (filter-params "tags" (tbnl:get-parameters*)))
             (scale-requested (filter-params "scale" (tbnl:get-parameters*)))
             (urgency-requested (filter-params "urgency" (tbnl:get-parameters*)))
             (importance-requested (filter-params "importance" (tbnl:get-parameters*)))
             (tbnl-formatted-results
-              (search-for-tasks (cl-webcat::rg-server cl-webcat::*cl-webcat-acceptor*)
+              (search-for-tasks (webcat-gui::rg-server webcat-gui::*webcat-gui-acceptor*)
                                 :tags tags-requested
                                 :statuses statuses-requested
                                 :scale scale-requested

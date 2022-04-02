@@ -1,4 +1,4 @@
-# Acceptance tests for cl-webcat
+# Acceptance tests for webcat-gui
 
 Checklist for making sure it actually works.
 

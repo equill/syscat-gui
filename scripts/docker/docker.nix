@@ -1,15 +1,15 @@
 with import <nixpkgs> {};
 
 let
-    clwebcat_deriv = stdenv.mkDerivation rec {
-        name = "clwebcat";
+    webcatgui_deriv = stdenv.mkDerivation rec {
+        name = "webcatgui";
         builder = "${bash}/bin/bash";
         args = [ ./nix-builder.sh ];
         inherit coreutils libressl;
         system = builtins.currentSystem;
         templatepath = ../../src/templates;
         staticpath = ../../src/static;
-        clwebcatpath = ./clwebcat;
+        webcatguipath = ./webcatgui;
     };
 
 
@@ -25,12 +25,12 @@ let
 
 in
 pkgs.dockerTools.buildImage {
-    name = "equill/clwebcat";
-    tag = "0.0.9b1";
+    name = "equill/webcatgui";
+    tag = "0.0.9b3";
     created = "now";
 
     contents = [
-        clwebcat_deriv
+        webcatgui_deriv
         bash
         coreutils
         glibc
@@ -39,7 +39,7 @@ pkgs.dockerTools.buildImage {
     ];
 
     config = {
-        Cmd = [ "clwebcat" ];
+        Cmd = [ "webcatgui" ];
         Entrypoint = [ entrypoint ];
         ExposedPorts = {
             "8080/tcp" = {};

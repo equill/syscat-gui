@@ -1,4 +1,4 @@
-# cl-webcat
+# webcat-gui
 
 It's a basic web-GUI for [Webcat](https://github.com/equill/webcat), a knowledge-management system (yes, another one!) built on [Restagraph](https://equill.github.io/restagraph/).
 
@@ -7,4 +7,4 @@ If it looks like it was built by a back-end developer with a history in infrastr
 
 ## License
 
-Against the unlikely event that somebody else wants to use this code, `cl-webcat` is licensed under GPLv3.
+Against the unlikely event that somebody else wants to use this code, `webcat-gui` is licensed under GPLv3.

@@ -6,7 +6,7 @@
 
 ;;;; The REST API server application
 
-(in-package #:cl-webcat)
+(in-package #:webcat-gui)
 
 (declaim (optimize (compilation-speed 0)
                    (speed 2)
@@ -26,15 +26,15 @@
   i.e. return only after Hunchentoot shuts down, instead of immediately after it starts up."
   (declare (type (boolean) docker)
            ;; Specialising on acceptor doesn't allow for a null value
-           ;(type (or nil cl-webcat-acceptor) acceptor)
+           ;(type (or nil webcat-gui-acceptor) acceptor)
            )
-  (log-message :info "Attempting to start up the cl-webcat application server")
+  (log-message :info "Attempting to start up the webcat-gui application server")
   ;; Control the decoding of JSON identifiers
   (setf json:*json-identifier-name-to-lisp* 'common-lisp:string-upcase)
   ;; Sanity-check: is an acceptor already running?
   ;;; We can't directly check whether this acceptor is running,
   ;;; so we're using the existence of its special variable as a proxy.
-  (if (boundp '*cl-webcat-acceptor*)
+  (if (boundp '*webcat-gui-acceptor*)
     ;; There's an acceptor already in play; bail out.
     (log-message :critical "Acceptor already exists; refusing to create a new one.")
     ;; No existing acceptor; we're good to go.
@@ -44,7 +44,7 @@
       (log-message :debug (format nil "Value of html-template:*default-template-pathname*: ~A"
                                   html-template:*default-template-pathname*))
       ;; Make it available as a dynamic variable, for shutdown to work on
-      (defparameter *cl-webcat-acceptor* myacceptor)
+      (defparameter *webcat-gui-acceptor* myacceptor)
       ;; Stop html-template raising a warning every time it compiles a template
       (setf html-template:*warn-on-creation* nil)
       ;; Set the dispatch table
@@ -91,24 +91,24 @@
 (defun dockerstart ()
     (startup :docker t))
 
-(defun save-image (&optional (path "/tmp/cl-webcat"))
-  (sb-ext:save-lisp-and-die path :executable t :toplevel 'cl-webcat::dockerstart))
+(defun save-image (&optional (path "/tmp/webcat-gui"))
+  (sb-ext:save-lisp-and-die path :executable t :toplevel 'webcat-gui::dockerstart))
 
 (defun shutdown ()
   ;; Check whether there's something to shut down
   (if (and
-        (boundp '*cl-webcat-acceptor*)
-        *cl-webcat-acceptor*)
+        (boundp '*webcat-gui-acceptor*)
+        *webcat-gui-acceptor*)
       ;; There is; go ahead
       (progn
       ;; Check whether it's still present but shutdown
-      (if (tbnl::acceptor-shutdown-p *cl-webcat-acceptor*)
+      (if (tbnl::acceptor-shutdown-p *webcat-gui-acceptor*)
           (log-message :info "Acceptor was present but already shut down.")
           (progn
-            (log-message :info "Shutting down the cl-webcat application server")
+            (log-message :info "Shutting down the webcat-gui application server")
             (handler-case
               ;; Perform a soft shutdown: finish serving any requests in flight
-              (tbnl:stop *cl-webcat-acceptor* :soft t)
+              (tbnl:stop *webcat-gui-acceptor* :soft t)
               ;; Catch the case where it's already shut down
               (tbnl::unbound-slot
                 ()
@@ -119,6 +119,6 @@
                   :info
                   "Attempted to shut down Hunchentoot, but received an error. Assuming it wasn't running.")))))
         ;; Nuke the acceptor
-        (makunbound '*cl-webcat-acceptor*))
+        (makunbound '*webcat-gui-acceptor*))
       ;; No acceptor. Note the fact and do nothing.
       (log-message :warn "No acceptor present; nothing to shut down.")))

@@ -3,11 +3,11 @@
 ;   Licensed under the GNU General Public License
 ;   - for details, see LICENSE.txt in the top-level directory
 
-(in-package #:cl-webcat)
+(in-package #:webcat-gui)
 
 ;;; Customised Hunchentoot acceptor.
 ;;; Carries information about the datastore being used.
-(defclass cl-webcat-acceptor (tbnl:easy-acceptor)
+(defclass webcat-gui-acceptor (tbnl:easy-acceptor)
   ;; Subclass attributes
   ((rg-server :initarg :rg-server
               :reader rg-server
@@ -25,8 +25,8 @@
   (:documentation "vhost object, subclassed from tbnl:easy-acceptor"))
 
 (defun make-acceptor ()
-  "Return an instance of 'cl-webcat-acceptor, a subclass of tbnl:easy-acceptor."
-  (make-instance 'cl-webcat-acceptor
+  "Return an instance of 'webcat-gui-acceptor, a subclass of tbnl:easy-acceptor."
+  (make-instance 'webcat-gui-acceptor
                  :address (or (sb-ext:posix-getenv "LISTEN_ADDR")
                               (getf *config-vars* :listen-address))
                  :port (or (when (sb-ext:posix-getenv "LISTEN_PORT")

@@ -3,7 +3,7 @@
 ;   Licensed under the GNU General Public License
 ;   - for details, see LICENSE.txt in the top-level directory
 
-(in-package #:cl-webcat)
+(in-package #:webcat-gui)
 
 
 ;; Error response functions
@@ -12,7 +12,7 @@
   "Fallthrough handler, for anything we haven't already defined."
   (setf (tbnl:content-type*) "text/plain")
   (setf (tbnl:return-code*) tbnl:+http-not-found+)
-  "cl-webcat: this is not a valid URI")
+  "webcat-gui: this is not a valid URI")
 
 (defun method-not-allowed ()
   "Default response for a client making a request we don't support"
