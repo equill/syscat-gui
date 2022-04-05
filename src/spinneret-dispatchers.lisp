@@ -229,7 +229,7 @@
                                            :javascripts '("display")
                                            :content (display-default (list :p message))))))))
                  ;; Happy path: no errors
-                 (tbnl:redirect (concatenate 'string "/display/" source)))))
+                 (tbnl:redirect (concatenate 'string "/display" source)))))
          ;; We didn't get those parameters
          (progn
            (setf (tbnl:content-type*) "text/html")
