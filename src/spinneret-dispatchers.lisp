@@ -43,7 +43,7 @@
           '(:div :class "nav-item-2" "Edit"))
      (:a :class "nav-item-3" :href "/create" "Create a new item")
      (:a :class "nav-item-4" :href "/Tasks" "Tasks")
-     (:a :class "nav-item-5" :href "/files" "Files")
+     (:a :class "nav-item-5" :href "/files-upload" "Files")
      (:a :class "nav-item-6" :href="/image-gallery" "Image gallery")))
 
 (defun default-layout (&key (title "Page title goes here")

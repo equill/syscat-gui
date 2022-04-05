@@ -149,7 +149,7 @@
                                 (list :title  (cdr (assoc :title content))
                                       :mimetype (cdr (assoc :mimetype content))
                                       :notes (cdr (assoc :notes content))
-                                      :image-url (format nil "/files-api/v1/~A" uid))
+                                      :image-url (format nil "/files/v1/~A" uid))
                                 :stream conststr)))
                            ;; Default item display
                            (t (with-output-to-string (contstr)
@@ -244,7 +244,7 @@
                            (list :images
                                  (mapcar
                                    #'(lambda (img)
-                                       (list :url (format nil "/files-api/v1/~A" (cdr (assoc :UID img)))
+                                       (list :url (format nil "/files/v1/~A" (cdr (assoc :UID img)))
                                              :link (format nil "/display/Files/~A"
                                                            (cdr (assoc :UID img)))
                                              :title (cdr (assoc :TITLE img))))
@@ -514,7 +514,7 @@
          (tbnl:redirect (format nil "/Files?reason=~A" response-body)))))
     ;; Fail to upload a file
     ((equal (tbnl:request-method*) :POST)
-     (tbnl:redirect "/files/?reason=~You didn't meet a single one of the requirements."))
+     (tbnl:redirect "/files-upload/?reason=~You didn't meet a single one of the requirements."))
     ;; Display the failed-to-upload page
     ((and
        (equal (tbnl:request-method*) :GET)

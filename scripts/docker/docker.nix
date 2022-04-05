@@ -26,7 +26,7 @@ let
 in
 pkgs.dockerTools.buildImage {
     name = "equill/webcatgui";
-    tag = "0.0.9b3";
+    tag = "0.0.9b4";
     created = "now";
 
     contents = [

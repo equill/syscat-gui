@@ -58,7 +58,7 @@
               (tbnl:create-prefix-dispatcher "/edit_links" 'edit-links)
               (tbnl:create-prefix-dispatcher "/create_relationship" 'select-relationship )
               (tbnl:create-prefix-dispatcher "/editresource" 'edit-resource)
-              (tbnl:create-prefix-dispatcher "/files" 'files)
+              (tbnl:create-prefix-dispatcher "/files-upload" 'files)
               (tbnl:create-prefix-dispatcher "/image-gallery" 'image-gallery)
               (tbnl:create-prefix-dispatcher "/healthcheck" 'healthcheck)
               (tbnl:create-prefix-dispatcher "/search" 'searchpage)
