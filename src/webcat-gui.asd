@@ -9,6 +9,10 @@
   :author "James Fleming <james@electronic-quill.net>"
   :description "Generates a REST API from a shema defined in Neo4J"
   :depends-on (#:3bmd
+               #:3bmd-ext-code-blocks
+               #:3bmd-ext-definition-lists
+               #:3bmd-ext-tables
+               ;#:3bmd-ext-math
                #:cl-json
                #:cl-ppcre
                #:drakma

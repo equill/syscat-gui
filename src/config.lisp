@@ -35,3 +35,9 @@
   "Mapping between JSON String escape sequences and Lisp chars.")
 
 (setf *loglevel* :debug)
+
+;; Enable extra markdown options
+(setf 3bmd-code-blocks:*code-blocks* t)
+(setf 3bmd-definition-lists:*definition-lists* t)
+(setf 3bmd-tables:*tables* t)
+;(setf 3bmd-ext-math:*math* t)
