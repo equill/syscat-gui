@@ -563,7 +563,7 @@
     ((equal (tbnl:request-method*) :GET)
      (let* ((task-attrs (get-attrs-with-keywords (rg-server tbnl:*acceptor*) "Tasks"))
             (statuses-requested (filter-params "status" (tbnl:get-parameters*)))
-            (tags-available (get-uids (rg-server *webcat-gui-acceptor*) "/Tags?RGinbound=/Tasks/*/TAGS"))
+            (tags-available (sort (get-uids (rg-server *webcat-gui-acceptor*) "/Tags?RGinbound=/Tasks/*/TAGS") #'string<))
             (tags-requested (filter-params "tags" (tbnl:get-parameters*)))
             (scale-requested (filter-params "scale" (tbnl:get-parameters*)))
             (urgency-requested (filter-params "urgency" (tbnl:get-parameters*)))
