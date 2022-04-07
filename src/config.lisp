@@ -17,7 +17,6 @@
     :api-uri-base "/raw/v1"
     :files-uri-base "/files/v1"
     :schema-uri-base "/schema/v1"
-    :template-path "/home/james/devel/restagraph/webcat-gui/src/templates/"
     :static-path "/home/james/devel/restagraph/webcat-gui/src/static/"))
 
 ;; Declare this here because it needs to already have been compiled before any

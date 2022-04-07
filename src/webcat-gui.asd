@@ -15,10 +15,9 @@
                ;#:3bmd-ext-math
                #:cl-json
                #:cl-ppcre
+               #:cl-who
                #:drakma
                #:flexi-streams
-               #:html-template ; Legacy; to be removed
-               #:spinneret    ; HTML-generation library du jour
                #:hunchentoot)
   :components ((:file "package")
                (:file "config")
@@ -27,5 +26,5 @@
                (:file "utilities")
                (:file "errors")
                (:file "dispatchers")
-               (:file "spinneret-dispatchers")
+               (:file "dispatchers-cl-who")
                (:file "hunchentoot")))

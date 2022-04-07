@@ -15,8 +15,6 @@
    (url-base :initarg :url-base
              :reader url-base
              :initform "localhost")
-   (template-path :initarg :template-path
-                  :reader template-path)
    (static-path :initarg :static-path
                 :reader static-path))
   ;; Superclass defaults
@@ -33,9 +31,6 @@
                              (parse-integer (sb-ext:posix-getenv "LISTEN_PORT")))
                            (getf *config-vars* :listen-port))
                  :url-base (or (getf *config-vars* ::url-base) "")
-                 :template-path (make-pathname :defaults
-                                               (or (sb-ext:posix-getenv "TEMPLATE_PATH")
-                                                   (getf *config-vars* :template-path)))
                  :static-path (make-pathname :defaults
                                              (or (sb-ext:posix-getenv "STATIC_PATH")
                                                  (getf *config-vars* :static-path)))

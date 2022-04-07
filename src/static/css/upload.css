@@ -1,31 +1,20 @@
 .uploadform {
+  grid-area: content;
   display: grid;
+  grid-template-columns: auto, 1fr;
+  grid-template-areas:
+    "filename-title filename"
+    "file-title     file"
+    "submit         submit";
   justify-content: start;
   grid-column-gap: 50px;
   grid-row-gap: 50px;
 }
 
-#filename-title {
-  grid-column: 1;
-  grid-row: 1;
-}
+div#filename-title { grid-area: filename-title; }
+input#filename { grid-area: filename; }
 
-#filename {
-  grid-column: 2;
-  grid-row: 1;
-}
+div#filetitle {grid-area: file-title; }
+input#file { grid-area: file; }
 
-#file-title {
-  grid-column: 1;
-  grid-row: 2;
-}
-
-#file{
-  grid-column: 2;
-  grid-row: 2;
-}
-
-#submit{
-  grid-column: 1 / span 2;
-  grid-row: 3;
-}
+div#submit { grid-area: submit; }

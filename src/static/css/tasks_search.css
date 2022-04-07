@@ -1,103 +1,71 @@
-/* Search-criteria form */
+div#searchbox {
+  grid-area: content;
+  display: grid;
+  grid-template-areas:
+  "searchform"
+  "results";
+}
 
-/* Headers for the form */
-div#tags-header {
-  grid-row: 1;
-  grid-column: 1;
-  margin-right: 12pt;
+form.formgrid-tasks {
+  grid-area: searchform;
+  display: grid;
+  grid-template-columns: auto auto auto 1fr;
+  grid-template-rows: auto 1fr;
+  row-gap: 6px;
+  column-gap: 12px;
+  grid-template-areas:
+  "tags-title   refine-title    refine-title      blank"
+  "tags         regex-name      regex-value       blank"
+  "tags         importance-name importance-value  blank"
+  "tags         urgency-name    urgency-value     blank"
+  "tags         scale-name      scale-value       blank"
+  "tags         status-name     status-value      blank"
+  "submit       submit          submit            blank"
+}
+
+div#tags-title {
+  grid-area: tags-title;
   font-weight: bold;
 }
 
-div#criteria-header {
-  grid-row 1;
-  grid-column: 2 / span 2;
-  margin-left: 12pt;
-  font-weight: bold;
-}
-
-/* List of available tags */
 div#tags-list {
-  grid-row: 2 / span 5;
-  grid-column: 1;
-  margin-right: 12pt;
+  grid-area: tags;
 }
 
+div#refine-title {
+  grid-area: refine-title;
+  font-weight: bold;
+}
+
+div#uid-regex-name { grid-area: regex-name; }
+div#uid-regex-value { grid-area: regex-value; }
+div#importance-name { grid-area: importance-name; }
+select#importance-value { grid-area: importance-value; }
+div#urgency-name { grid-area: urgency-name; }
+select#urgency-value { grid-area: urgency-value; }
+div#scale-name { grid-area: scale-name; }
+select#scale-value { grid-area: scale-value; }
+div#status-name { grid-area: status-name; }
+select#status-value { grid-area: status-value; }
+div#submit-row { grid-area: submit; }
 
 /* Table of search criteria */
 div.criteria-name {
   vertical-align: top;
-  grid-column: 2;
-  margin-left: 12pt;
 }
 
-div.criteria-value {
+.criteria-value {
   vertical-align: top;
-  grid-column: 3;
 }
 
+div#uid-regex-value { width: 100%; }
 
-div#uid-regex-name {
-  grid-row: 2;
-}
-
-div#uid-regex-value {
-  grid-row: 2;
-  width: 100%;
-}
-
-div#importance-name {
-  grid-row: 3;
-}
-
-div#importance-value {
-  grid-row: 3;
-}
-
-div#urgency-name {
-  grid-row: 4;
-}
-
-div#urgency-value {
-  grid-row: 4;
-}
-
-div#scale-name {
-  grid-row: 5;
-}
-
-div#scale-value {
-  grid-row: 5;
-}
-
-div#status-name {
-  grid-row: 6;
-}
-
-div#status-value {
-  grid-row: 6;
-}
 /* End of table of search criteria */
-
-/* Submit-button layout */
-div#submit-row {
-  grid-row: 7;
-  grid-column: 1 / span 5;
-  width: 100%
-}
 
 #searchbutton {
   margin: auto;
   align: center;
   width: 100%;
-}
-
-/* End of search-criteria form */
-
-
-/* List of search results */
-#searchresults {
-  grid-row: 4;
-  grid-column: 1 / span 2;
 }
 
 ul.results-list {

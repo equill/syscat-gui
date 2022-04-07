@@ -1,0 +1,16 @@
+.formgrid-select-relationship {
+  /* Where it goes */
+  grid-area: content;
+  /* How its own contents are laid out */
+  display: grid;
+  grid-template-areas:
+    "source-resource"
+    "available-rels"
+    "submit-rels";
+}
+
+div#source-resource { grid-area: source-resource; }
+
+div#available-rels { grid-area: available-rels; }
+
+div#rels-submit { grid-area: submit-rels; }

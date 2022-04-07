@@ -7,7 +7,6 @@ let
         args = [ ./nix-builder.sh ];
         inherit coreutils libressl;
         system = builtins.currentSystem;
-        templatepath = ../../src/templates;
         staticpath = ../../src/static;
         webcatguipath = ./webcatgui;
     };

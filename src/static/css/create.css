@@ -1,46 +1,32 @@
-/* UID input */
-#header-uid {
-  grid-row: 1;
-  grid-column: 1 / span 3;
+form.formgrid-create {
+  grid-area: content;
+  display: grid;
+  gap: 6px;
+  grid-template-columns: auto auto auto 1fr;
+  grid-template-areas:
+  "uid-title    uid-input   uid-input   blank"
+  "rtype-title  attrs-title attrs-title blank"
+  "rtype-select attrnames   attrvals    blank"
+  "submit       submit      submit      blank";
 }
 
-#input-uid {
-  grid-row: 1;
-  grid-column: 2 / span 2;
-}
-/* End UID input */
+div#header-uid { grid-area: uid-title; }
 
-/* Resource-type input */
-.header-resourcetypes {
-  grid-row: 2;
-  grid-column: 1;
-}
+input#input-uid { grid-area: uid-input; }
 
-#resourcetype {
-  grid-row: 3;
-  grid-column: 1;
-}
-/* End resource-type input */
+div#header-resourcetypes { grid-area: rtype-title; }
+
+select#resourcetype { grid-area: rtype-select; }
 
 /* Attributes */
-#header-attributes {
-  grid-row: 2;
-  grid-column: 2 / span 2;
-}
+div#header-attributes { grid-area: attrs-title; }
 
-.attrnames {
-  grid-row: 3;
-  grid-column: 2;
+div#attrnames {
+  grid-area: attrnames;
   font-weight: bold;
 }
 
-.attrvals {
-  grid-row: 3;
-  grid-column: 3;
-}
+div#attrvals { grid-area: attrvals; }
 /* End of attributes section */
 
-#createbutton {
-  grid-row: 4;
-  grid-column: 1 / span 3;
-}
+#createbutton { grid-area: submit; }

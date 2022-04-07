@@ -1,4 +1,12 @@
-/* Edit-membership form */
+/* Tags form */
+.formgrid-edit-tags {
+  display: grid;
+  grid-template-areas:
+    "title-add   title-remove"
+    "tags-add    tags-remove"
+    "tags-submit tags-submit";
+}
+
 div#edit-membership {
   grid-row: 4;
   grid-column: 1;
@@ -8,22 +16,39 @@ div#edit-membership {
   grid-column-gap: 50px;
 }
 
-div#add_tags {
-  grid-row: 1;
-  grid-column: 1;
+div#title-add { grid-area: title-add }
+
+select#tags-add { grid-area: tags-add; }
+
+div#title-remove { grid-area: tags-remove; }
+
+select#tags-remove { grid-area: tags-remove; }
+
+div#tags-submit { grid-area: tags-submit; }
+
+.submit-button {
+  align: center;
+}
+/* End tags form */
+
+
+/* Relationships form */
+
+.formgrid-add-relationship {
+  display: grid;
+  grid-template-areas:
+    "title-add-rel"
+    "rel-input"
+    "rel-submit";
 }
 
-div#remove_tags {
-  grid-row: 1;
-  grid-column: 2;
-}
+div#title-add-rel { grid-area: title-add-rel; }
 
-input#update_membership {
-  grid-row: 4;
-  grid-column: 1 / span 2;
-  margin: 50px
-}
-/* End edit-membership form */
+div#rel-input { grid-area: rel-input; }
+
+input.rels-submit { grid-area: rel-submit; }
+
+/* End relationships form */
 
 div#link-resources {
   grid-row 3;

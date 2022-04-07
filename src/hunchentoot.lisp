@@ -39,14 +39,8 @@
     (log-message :critical "Acceptor already exists; refusing to create a new one.")
     ;; No existing acceptor; we're good to go.
     (let ((myacceptor (or acceptor (make-acceptor))))
-      ;; Set the template path for html-template's includes
-      (setf html-template:*default-template-pathname* (template-path myacceptor))
-      (log-message :debug (format nil "Value of html-template:*default-template-pathname*: ~A"
-                                  html-template:*default-template-pathname*))
       ;; Make it available as a dynamic variable, for shutdown to work on
       (defparameter *webcat-gui-acceptor* myacceptor)
-      ;; Stop html-template raising a warning every time it compiles a template
-      (setf html-template:*warn-on-creation* nil)
       ;; Set the dispatch table
       (log-message :info "Configuring the dispatch table")
       (setf tbnl:*dispatch-table*

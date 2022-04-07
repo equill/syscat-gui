@@ -4,12 +4,17 @@ body {
   margin-right: 3%;
 }
 
-#pagegrid {
+.default-grid {
   display: grid;
-  grid-template-columns: auto auto;
+  grid-template-columns: 1fr 1fr;
+  grid-template-areas:
+    "title     title"
+    "navbar    navbar"
+    "content   content"
+    "tags      outbound-links"
+    "edit-tags edit-tags";
   justify-content: start;
-  grid-column-gap: 6pt;
-  grid-row-gap: 6pt;
+  gap: 6pt;
   width: 100%;
 }
 
@@ -17,14 +22,14 @@ body {
     font-weight: bold;
 }
 
+
 /* Nav-bar */
-div#navigation {
-  /* Where within the parent grid */
-  grid-row: 2;
-  grid-column: 1 / span 2;
+
+.navbar {
+  grid-area: navbar;
   /* What goes inside it */
   display: grid;
-  grid-template-columns: auto auto auto auto auto;
+  grid-template-columns: repeat(6, 1fr);
   grid-column-gap: 50px;
   justify-content: start;
   background-color: #888888;
@@ -68,51 +73,39 @@ div#navigation {
 }
 /* End of nav-bar section */
 
-.formgrid {
+.content-relforms {
   /* Where within the parent grid */
-  grid-row: 3;
-  grid-column: 1 / span 2;
+  grid-area: content;
   /* What goes inside it */
   display: grid;
-  grid-template-columns: auto;
+  grid-template-columns: 1fr;
+  grid-template-rows: auto auto;
   grid-row-gap: 5px;
   grid-column-gap: 20px;
   justify-content: start;
   align-content: start;
 }
 
-/* For when we need a second one */
-.formgrid2 {
+.content {
   /* Where within the parent grid */
-  grid-row: 4;
-  grid-column: 1 / span 2;
-  /* What goes inside it */
-  display: grid;
-  grid-template-columns: auto;
-  grid-row-gap: 5px;
-  grid-column-gap: 20px;
-  justify-content: start;
-  align-content: start;
+  grid-area: content;
 }
 
 .content-wikipage {
   /* Where within the parent grid */
-  grid-row: 3;
-  grid-column: 1 / span 2;
+  grid-area: content;
 }
 
 .content-default {
   /* Where within the parent grid */
-  grid-row: 3;
-  grid-column: 1 / span 2;
+  grid-area: content;
   /* What goes inside it */
   justify-content: start;
 }
 
 div.task-grid {
   /* Where within the parent grid */
-  grid-row: 3;
-  grid-column: 1 / span 2;
+  grid-area: content;
   /* What goes inside it */
   display: grid;
   grid-template-columns: auto auto;

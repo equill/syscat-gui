@@ -383,7 +383,7 @@ and any forward-slashes that sneaked through are also now underscores.
 
 (defun search-for-tasks (server &key tags statuses scale urgency importance uid-regex)
   "Search for tasks using the requested parameters.
-  Return an plist for passing directly to `html-template`:
+  Return a plist:
   :uid
   :scale
   :importance
@@ -460,7 +460,8 @@ and any forward-slashes that sneaked through are also now underscores.
 
 (defun get-enum-vals (attr attrlist)
   "Extract the enum values for an attribute,
-  from the alist of schema-rtype-attr structs returned by get-attrs-with-keywords"
+  from the alist of schema-rtype-attr structs returned by get-attrs-with-keywords.
+  It's possible it returns a list of strings."
   (log-message :debug (format nil "Extracting values for '~A' from attribute-list ~A" attr attrlist))
   (schema-rtype-attrs-values (cdr (assoc attr attrlist))))
 
