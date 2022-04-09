@@ -1194,7 +1194,7 @@
                (:div :id "uid-regex-value"
                 :class "criteria-value"
                 (:input :type "text"
-                 :name "uid-regex"
+                 :name "uid_regex"
                  :value (or (tbnl:get-parameter "uid_regex") "")))
                ;; Importance
                (:div :id "importance-name" :class "criteria-name" "Importance")
