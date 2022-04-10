@@ -348,55 +348,55 @@
                              :prologue nil
                              :indent t)
              (:div :class "content-relforms"
-              ;; Form for updating tags
-              (:form :id "tagform"
-               :class "formgrid-edit-tags"
-               :method "post"
-               :action (format nil "/edit_links~A" resource)
-               (:div :id "title-add"
-                (:h3 "Add tags"))
-               (:select :name "add-tags"
-                :multiple "multiple"
-                :size 10
-                :id "tags-add"
-                ;; List of tags available to be added,
-                ;; excluding those already associated
-                (loop for tag in (sort
-                                   (set-difference all-tags extant-tags :test #'equal)
-                                   #'string<)
-                      do (cl-who:htm (:option :value tag (princ tag content-string)))))
-               (:div :id "tags-remove"
-                (:h3 "Remove tags"))
-               (:select :name "remove-tags"
-                :multiple "multiple"
-                :size 10
-                :class "tags-remove"
-                (loop for tag in (sort extant-tags #'string<)
-                      do (cl-who:htm (:option :value tag
-                                      (princ tag content-string)))))
-               (:div :id "tags-submit"
-                (:input :type "submit"
-                 :class "submit-button"
-                 :value "Update tags")))
-              ;; Form for adding a relationship
-              (:form :id "relationshipform"
-               :class "formgrid-add-relationship"
-               :method "get"
-               :action (format nil "/create_relationship")
-               (:div :id "title-add-rel"
-                (:h3 "Link to other resources"))
-               (:div :id "rel-input"
-                "URI of target resource:"
-                (:input :id "resource_links"
-                 :name "target"
-                 :type "text"
-                 :value ""))
-               (:input :name "source"
-                :type "hidden"
-                :value (format nil "~{/~A~}" (cdr uri-parts)))
-               (:input :type "submit"
-                :class "rels-submit"
-                :value "Select relationship"))))))))
+                   ;; Form for updating tags
+                   (:form :id "tagform"
+                          :class "formgrid-edit-tags"
+                          :method "post"
+                          :action (format nil "/edit_links~A" resource)
+                          (:div :id "title-add"
+                                (:h3 "Add tags"))
+                          (:select :name "add-tags"
+                                   :multiple "multiple"
+                                   :size 10
+                                   :id "tags-add"
+                                   ;; List of tags available to be added,
+                                   ;; excluding those already associated
+                                   (loop for tag in (sort
+                                                      (set-difference all-tags extant-tags :test #'equal)
+                                                      #'string<)
+                                         do (cl-who:htm (:option :value tag (princ tag content-string)))))
+                          (:div :id "tags-remove"
+                                (:h3 "Remove tags"))
+                          (:select :name "remove-tags"
+                                   :multiple "multiple"
+                                   :size 10
+                                   :class "tags-remove"
+                                   (loop for tag in (sort extant-tags #'string<)
+                                         do (cl-who:htm (:option :value tag
+                                                                 (princ tag content-string)))))
+                          (:div :id "tags-submit"
+                                (:input :type "submit"
+                                        :class "submit-button"
+                                        :value "Update tags")))
+                   ;; Form for adding a relationship
+                   (:form :id "relationshipform"
+                          :class "formgrid-add-relationship"
+                          :method "get"
+                          :action (format nil "/create_relationship")
+                          (:div :id "title-add-rel"
+                                (:h3 "Link to other resources"))
+                          (:div :id "rel-input"
+                                "URI of target resource:"
+                                (:input :id "resource_links"
+                                        :name "target"
+                                        :type "text"
+                                        :value ""))
+                          (:input :name "source"
+                                  :type "hidden"
+                                  :value (format nil "~{/~A~}" (cdr uri-parts)))
+                          (:input :type "submit"
+                                  :class "rels-submit"
+                                  :value "Select relationship"))))))))
     ((equal (tbnl:request-method*) :POST)
      (let* ((uri-parts (get-uri-parts (tbnl:request-uri*) tbnl:*acceptor*))
             (resourcetype (second uri-parts))
@@ -418,10 +418,10 @@
                         ;; Did it work?
                         (if (or (< status-code 200)
                                 (> status-code 299))
-                            (push (list :attrname (concatenate 'string
-                                                               "Failed to add tag " (cdr param))
-                                        :attrval (format nil "~A: ~A" status-code body))
-                                  update-errors))))
+                          (push (list :attrname (concatenate 'string
+                                                             "Failed to add tag " (cdr param))
+                                      :attrval (format nil "~A: ~A" status-code body))
+                                update-errors))))
                      ;; Remove a tag
                      ((equal (car param) "remove-tags")
                       (log-message :debug (format nil "Removing tag ~A" (cdr param)))
@@ -433,10 +433,10 @@
                         ;; Did it work?
                         (if (or (< status-code 200)
                                 (> status-code 299))
-                            (push (list :attrname (concatenate 'string
-                                                               "Failed to remove tag " (cdr param))
-                                        :attrval (format nil "~A: ~A" status-code body))
-                                  update-errors))))
+                          (push (list :attrname (concatenate 'string
+                                                             "Failed to remove tag " (cdr param))
+                                      :attrval (format nil "~A: ~A" status-code body))
+                                update-errors))))
                      ;; FIXME: turn this into a single-target link to /create_relationship
                      ;; Links to other resources
                      ((equal (car param) "resource_links")
@@ -481,19 +481,19 @@
                (tbnl:post-parameters*))
        ;; At least one of those updates broke:
        (if update-errors
-           (progn
-             (log-message :debug (format nil "Detected update errors: ~A" update-errors))
-             (setf (tbnl:content-type*) "text/html")
-             (setf (tbnl:return-code*) tbnl:+http-bad-request+)
-             (with-output-to-string (outstr)
-               (default-clwho-layout
-                 outstr
-                 :title (format nil "Failed to create ~A" uid)
-                 :resourcetype resourcetype
-                 :uid uid
-                 :stylesheets '("display")
-                 :javascripts '("display")
-                 :content (display-default outstr update-errors)))))
+         (progn
+           (log-message :debug (format nil "Detected update errors: ~A" update-errors))
+           (setf (tbnl:content-type*) "text/html")
+           (setf (tbnl:return-code*) tbnl:+http-bad-request+)
+           (with-output-to-string (outstr)
+             (default-clwho-layout
+               outstr
+               :title (format nil "Failed to create ~A" uid)
+               :resourcetype resourcetype
+               :uid uid
+               :stylesheets '("display")
+               :javascripts '("display")
+               :content (display-default outstr update-errors)))))
        ;; Happy path: no errors
        (tbnl:redirect (concatenate 'string "/display/" resourcetype "/" uid ))))
     (t (method-not-allowed))))
@@ -743,761 +743,761 @@
       (method-not-allowed))))
 
 
-  (defun image-gallery ()
-    "Display the image gallery"
-    (log-message :debug "Displaying image gallery")
-    (let* (;; Get tags currently applied to files.
-           ;; Unfortunately it's not feasible to filter specifically for *image* files
-           ;; without going directly to the database.
-           (tags-available (sort
-                             (get-uids (rg-server tbnl:*acceptor*) "/Tags?RGinbound=/Files/*/TAGS")
-                             #'string<))
-           ;; Get the requested tags
-           (tags-requested (filter-params "tags" (tbnl:get-parameters*)))
-           ;; Execute the search
-           (images (rg-request-json
-                     (rg-server tbnl:*acceptor*)
-                     (format nil "/Files?mimetype=image/.*~A"
-                             ;; Tag-search criterion
-                             (if tags-requested
-                               (format nil "~{&RGoutbound=/TAGS/Tags/~A~}" tags-requested)
-                               "")))))
-      (log-message :debug (format nil "Fetched image data ~A" images))
-      (with-output-to-string (outstr)
-        (default-clwho-layout
-          outstr
-          :title "Gallery"
-          :resourcetype "Images"
-          :uid "All"
-          :stylesheets '("display" "gallery")
-          :javascripts '()
-          :content (cl-who:with-html-output-to-string
-                     (content-string nil
-                                     :prologue nil
-                                     :indent t)
-                     (:div :class "content"
-                           (:div :id "image-list"
-                                 ;; Search criteria
-                                 (:div :id "gallery-filter")
-                                 (:form :action "/image-gallery"
-                                        :method "get"
-                                        ;; Filter by tags
-                                        (:div :class "header" "Tags")
-                                        (:select :name "tags"
-                                                 :size 5
-                                                 :multiple "multiple"
-                                                 (loop for tag in tags-available
-                                                       do (if (member tag tags-requested :test #'equal)
-                                                            (cl-who:htm (:option :value tag
-                                                                                 :selected "selected"
-                                                                                 (princ tag content-string)))
-                                                            (cl-who:htm (:option :value tag (princ tag content-string)))
-                                                            )))
-                                        (:div :id "filter-button"
-                                              (:input :type "submit" :value "Filter images")))
-                                 ;; Search results - the actual gallery
-                                 (loop for img in images
-                                       do (cl-who:htm
-                                            (:div :class "gallery-image"
-                                                  (:a :href (format nil "/display/Files/~A" (cdr (assoc :UID img)))
-                                                      (:img :class "gallery-image"
-                                                            :src (format nil "/files/v1/~A" (cdr (assoc :UID img)))))
-                                                  (:div :class "gallery-image-text"
-                                                        (princ (cdr (assoc :TITLE img)) content-string))))))))))))
+(defun image-gallery ()
+  "Display the image gallery"
+  (log-message :debug "Displaying image gallery")
+  (let* (;; Get tags currently applied to files.
+         ;; Unfortunately it's not feasible to filter specifically for *image* files
+         ;; without going directly to the database.
+         (tags-available (sort
+                           (get-uids (rg-server tbnl:*acceptor*) "/Tags?RGinbound=/Files/*/TAGS")
+                           #'string<))
+         ;; Get the requested tags
+         (tags-requested (filter-params "tags" (tbnl:get-parameters*)))
+         ;; Execute the search
+         (images (rg-request-json
+                   (rg-server tbnl:*acceptor*)
+                   (format nil "/Files?mimetype=image/.*~A"
+                           ;; Tag-search criterion
+                           (if tags-requested
+                             (format nil "~{&RGoutbound=/TAGS/Tags/~A~}" tags-requested)
+                             "")))))
+    (log-message :debug (format nil "Fetched image data ~A" images))
+    (with-output-to-string (outstr)
+      (default-clwho-layout
+        outstr
+        :title "Gallery"
+        :resourcetype "Images"
+        :uid "All"
+        :stylesheets '("display" "gallery")
+        :javascripts '()
+        :content (cl-who:with-html-output-to-string
+                   (content-string nil
+                                   :prologue nil
+                                   :indent t)
+                   (:div :class "content"
+                         (:div :id "image-list"
+                               ;; Search criteria
+                               (:div :id "gallery-filter")
+                               (:form :action "/image-gallery"
+                                      :method "get"
+                                      ;; Filter by tags
+                                      (:div :class "header" "Tags")
+                                      (:select :name "tags"
+                                               :size 5
+                                               :multiple "multiple"
+                                               (loop for tag in tags-available
+                                                     do (if (member tag tags-requested :test #'equal)
+                                                          (cl-who:htm (:option :value tag
+                                                                               :selected "selected"
+                                                                               (princ tag content-string)))
+                                                          (cl-who:htm (:option :value tag (princ tag content-string)))
+                                                          )))
+                                      (:div :id "filter-button"
+                                            (:input :type "submit" :value "Filter images")))
+                               ;; Search results - the actual gallery
+                               (loop for img in images
+                                     do (cl-who:htm
+                                          (:div :class "gallery-image"
+                                                (:a :href (format nil "/display/Files/~A" (cdr (assoc :UID img)))
+                                                    (:img :class "gallery-image"
+                                                          :src (format nil "/files/v1/~A" (cdr (assoc :UID img)))))
+                                                (:div :class "gallery-image-text"
+                                                      (princ (cdr (assoc :TITLE img)) content-string))))))))))))
 
-  (defun edit-resource ()
-    "Handle the edit-page for an item"
-    (log-message :debug (format nil "Attempting to edit an item with URI ~A" (tbnl:request-uri*)))
-    (cond
-      ((equal (tbnl:request-method*) :GET)
-       (let* ((uri-parts (get-uri-parts (tbnl:request-uri*) tbnl:*acceptor*))
-              (resourcetype (second uri-parts))
-              (uid (third uri-parts))
-              (content (rg-request-json (rg-server tbnl:*acceptor*)
-                                        (format nil "/~A/~A" resourcetype uid))))
-         (log-message :debug (format nil "Attempting to display the edit page for ~A ~A" resourcetype uid))
-         (log-message :debug (format nil "Resourcetype: ~A" resourcetype))
-         (log-message :debug (format nil "UID: ~A" uid))
-         (log-message :debug (format nil "Content: ~A" content))
-         ;; Render the content according to resourcetype
-         (if content
-           (cond ((equal resourcetype "Wikipages")
-                  (progn
-                    (log-message :debug (format nil "Rendering wikipage ~A" uid))
-                    (setf (tbnl:content-type*) "text/html")
-                    (setf (tbnl:return-code*) tbnl:+http-ok+)
-                    (with-output-to-string (outstr)
-                      (default-clwho-layout
-                        outstr
-                        :title (if (and
-                                     (assoc :title content)
-                                     (not (equal (cdr (assoc :title content)) "")))
-                                 (cdr (assoc :title content))
-                                 (uid-to-title uid))
-                        :stylesheets '("edit" "display")
-                        :resourcetype "Wikipages"
-                        :uid uid
-                        :content
-                        (cl-who:with-html-output-to-string
-                          (content-string nil
-                                          :prologue nil
-                                          :indent t)
-                          (:form :class "formgrid-wikipage"
-                                 :action (format nil "/editresource/Wikipages/~A" uid)
-                                 :method "post"
-                                 ;; Title
-                                 (:div :class "wikititle-title" "Title:")
-                                 (:input :class "wikititle-value"
-                                         :name "title"
-                                         :value (when (cdr (assoc :title content))
-                                                  (cdr (assoc :title content))))
-                                 ;; Content
-                                 (:textarea :id "wikipage-content"
-                                            :name "text"
-                                            :cols 100
-                                            :rows 40
-                                            (princ (cdr (assoc :text content)) content-string))
-                                 ;; Submit button
-                                 (:div :id "submit-row"
-                                       (:input :id "wikipage-submit"
-                                               :type "submit"
-                                               :value "Update"))))))))
-                 (t
-                   (progn
-                     (log-message :debug (format nil "Rendering ~A ~A" resourcetype uid))
-                     ;; Render the attributes for editing
-                     (let ((attributes-to-display
-                             (mapcar
-                               #'(lambda (attribute)
-                                   ;; Memoise this to simplify the following code
-                                   (let ((attrname (schema-rtype-attrs-name attribute)))
-                                     ;; Handle differently according to attribute type
-                                     (cond
-                                       ;; If the `values` attribute is non-null:
-                                       ((not (null (schema-rtype-attrs-values attribute)))
-                                        (let ((existing-value
-                                                (or (cdr
-                                                      (assoc
-                                                        (intern (string-upcase attrname) 'keyword)
-                                                        content))
-                                                    "")))
-                                          (log-message
-                                            :debug
-                                            (format nil "Extracting value for attribute '~A'" attrname))
-                                          (log-message :debug (format nil "Existing value of ~A: ~A"
-                                                                      attrname existing-value))
-                                          (list :attrname attrname
-                                                :attrvals
-                                                (when (schema-rtype-attrs-values attribute)
-                                                  (mapcar
-                                                    #'(lambda (val)
-                                                        (list :val val
-                                                              :selected (when (equal existing-value val) t)))
-                                                    (schema-rtype-attrs-values attribute)))
-                                                :textarea nil)))
-                                       ;; Default style
-                                       (t
-                                         (list :attrname attrname
-                                               :attrval (or (cdr (assoc
-                                                                   (intern (string-upcase attrname) 'keyword)
-                                                                   content))
-                                                            "")
-                                               :attrvals nil
-                                               :textarea (member attrname '("description" "text")
-                                                                 :test #'equal))))))
-                               ;; Retrieve the attribute-definitions for this resourcetype
-                               (get-attrs (rg-server tbnl:*acceptor*) resourcetype))))
-                       (log-message :debug (format nil "Attributes: ~A" attributes-to-display))
-                       (setf (tbnl:content-type*) "text/html")
-                       (setf (tbnl:return-code*) tbnl:+http-ok+)
-                       (with-output-to-string (outstr)
-                         (default-clwho-layout
-                           outstr
-                           :title (format nil "Edit ~A: ~A" resourcetype (uid-to-title uid))
-                           :resourcetype resourcetype
-                           :uid uid
-                           :stylesheets '("edit" "display")
-                           :content
-                           (cl-who:with-html-output-to-string
-                             (content-string nil
-                                             :prologue nil
-                                             :indent t)
-                             (:form :class "formgrid-edititem"
-                                    :action (format nil "/editresource/~A/~A" resourcetype uid)
-                                    :method "post"
-                                    (:h2 :id "title-attributes" "Edit attributes")
-                                    (:table :class "attributes"
-                                            (loop for attr in attributes-to-display
-                                                  do (let ((attrname (getf attr :attrname))
-                                                           (attrval (getf attr :attrval))
-                                                           (attrvals (getf attr :attrvals))
-                                                           (textarea (getf attr :textarea)))
-                                                       (cl-who:htm
-                                                         (:tr
-                                                           ;; Attribute name
-                                                           (:td :class "attrnames"
-                                                                (princ attrname content-string))
-                                                           (:td
-                                                             ;; There's either a textarea or a list of acceptable values.
-                                                             ;; Or a single value.
-                                                             (cond
-                                                               (textarea
-                                                                 (cl-who:htm
-                                                                   (:textarea :class "attrvals"
-                                                                              :name attrname
-                                                                              (princ attrval content-string))))
-                                                               (attrvals
-                                                                 (cl-who:htm
-                                                                   (:select :class "attrvals"
-                                                                            :name attrname
-                                                                            (loop for val in attrvals
-                                                                                  do (if (getf val :selected)
-                                                                                       (cl-who:htm
-                                                                                         (:option :name (getf val :val)
-                                                                                                  :selected "true"
-                                                                                                  (princ (getf val :val)
-                                                                                                         content-string)))
-                                                                                       (cl-who:htm
-                                                                                         (:option :name (getf val :val)
-                                                                                                  (princ (getf val :val)
-                                                                                                         content-string))))))))
-                                                               ;; Default to single value
-                                                               (t
-                                                                 (cl-who:htm
-                                                                   (:input :class "attrvals"
-                                                                           :name attrname
-                                                                           :value attrval))))))))))
-                                    (:div :id "submit-row"
-                                          (:input :id "wikipage-submit"
-                                                  :type "submit"
-                                                  :value "Update"))))))))))
-           ;; Content not retrieved
-           (progn
-             (setf (tbnl:content-type*) "text/plain")
-             (setf (tbnl:return-code*) tbnl:+http-not-found+)
-             "No content"))))
-      ;;; POST request: update the resource
-      ((equal (tbnl:request-method*) :POST)
-       (let* ((uri-parts (get-uri-parts (tbnl:request-uri*) tbnl:*acceptor*))
-              (resourcetype (second uri-parts))
-              (uid (third uri-parts))
-              ;; Extract attributes relevant to this resourcetype
-              (valid-attrnames
-                (mapcar #'schema-rtype-attrs-name
-                        (get-attrs (rg-server tbnl:*acceptor*) resourcetype)))
-              (validated-attrs
-                (mapcar #'(lambda (param)
-                            (log-message :debug (format nil "Validating parameter '~A' with value '~A'"
-                                                        (car param) (cdr param)))
-                            (when (member (car param)
-                                          valid-attrnames
-                                          :test #'equal)
-                              ;(cons (car param) (write-json-string (cdr param)))
-                              param))
-                        (tbnl:post-parameters*))))
-         (log-message :debug (format nil "Processing edit request for ~A ~A" resourcetype uid))
-         (log-message :debug (format nil "Validated attributes: ~A" validated-attrs))
-         ;; Send the update
-         (multiple-value-bind (body status-code)
-           (rg-post-json (rg-server tbnl:*acceptor*)
-                         (concatenate 'string "/" resourcetype "/" uid)
-                         :payload validated-attrs
-                         :put-p t)
-           ;; Did it work?
-           (if (and (> status-code 199)
-                    (< status-code 300))
-             ;; Happy path
-             (tbnl:redirect (concatenate 'string "/display/" resourcetype "/" uid ))
-             ;; Less-happy path
-             (with-output-to-string (outstr)
-               (setf (tbnl:content-type*) "text/html")
-               (setf (tbnl:return-code*) tbnl:+http-bad-request+)
-               (default-clwho-layout
-                 outstr
-                 :title (format nil "Failed to create ~A '~A'" resourcetype uid)
-                 :resourcetype resourcetype
-                 :uid uid
-                 :stylesheets '("display")
-                 :javascripts '("display")
-                 :content (with-output-to-string (content-string)
-                            (display-default
-                              content-string
-                              `(("Server message" . ,body))))))))))
-      ;; Fallback: not by this method
-      (t (method-not-allowed))))
-
-  (defun searchpage ()
-    "Display the search-page"
-    (cond
-      ((equal (tbnl:request-method*) :GET)
-       (log-message :debug "Displaying the search page.")
-       (let* ((schema (mapcar #'(lambda (rtype)
-                                  (list :name rtype
-                                        :selected (when (equal rtype
-                                                               (tbnl:get-parameter "resourcetype"))
-                                                    "selected")))
-                              (remove-if #'(lambda (name)
-                                             (cl-ppcre:all-matches "^rg" name))
-                                         (get-resourcetypes (rg-server tbnl:*acceptor*)))))
-              (tags-available (sort (get-uids (rg-server tbnl:*acceptor*) "/Tags") #'string<))
-              (tags-requested (filter-params "tags" (tbnl:get-parameters*)))
-              (tbnl-formatted-results
-                (if (tbnl:get-parameter "resourcetype")
-                  (search-results-to-template
-                    (let* ((requested-attributes
-                             (remove-if #'null
-                                        (mapcar #'(lambda (attr)
-                                                    (let ((val (tbnl:get-parameter attr)))
-                                                      (when val (format nil "~A=~A"
-                                                                        attr val))))
-                                                (mapcar #'schema-rtype-attrs-name
-                                                        (get-attrs (rg-server tbnl:*acceptor*)
-                                                                   (tbnl:get-parameter "resourcetype"))))))
-                           (tags-requested-formatted
-                             (mapcar #'(lambda (par)
-                                         (concatenate 'string
-                                                      "RGoutbound=/TAGS/Tags/" par))
-                                     tags-requested))
-                           (search-criteria (append ()
-                                                    (when (tbnl:get-parameter "uid_regex")
-                                                      (list (format nil "uid=~A"
-                                                                    (tbnl:get-parameter "uid_regex")))))))
-                      (progn
-                        (log-message :debug (format nil "Searching with criteria '~A'" search-criteria))
-                        (search-for-resources (rg-server tbnl:*acceptor*)
-                                              (tbnl:get-parameter "resourcetype")
-                                              (append tags-requested-formatted
-                                                      search-criteria
-                                                      requested-attributes)))))
-                  ;; If no resourcetype was specified, tbnl-formatted-results is NIL:
-                  ())))
-         ;; Debug logging for what we've obtained so far
-         (log-message :debug (format nil "Schema: ~A" schema))
-         (log-message :debug (format nil "Tags: ~A" tags-available))
-         (log-message :debug (format nil "Resourcetype supplied: ~A"
-                                     (if
-                                       (tbnl:get-parameter "resourcetype")
-                                       (tbnl:get-parameter "resourcetype") "none")))
-         (log-message :debug (format nil "tbnl-formatted search results: ~A" tbnl-formatted-results))
-         (setf (tbnl:content-type*) "text/html")
-         (setf (tbnl:return-code*) tbnl:+http-ok+)
-         (with-output-to-string (outstr)
-           (default-clwho-layout
-             outstr
-             :title "Webcat search page"
-             :resourcetype "Search"
-             :uid ""
-             :stylesheets '("search" "display")
-             :javascripts '("search")
-             :content
-             (cl-who:with-html-output-to-string
-               (content-string nil
-                               :prologue nil
-                               :indent t)
-               (:div :id "searchbox"
-                     (:form ;:id "searchform"
-                       :class "formgrid-search"
-                       :method "get"
-                       :action "/search"
-                       ;; Resource types
-                       (:div :id "resourcetypes"
-                             (:h3 "Resource types")
-                             (:select :name "resourcetype" :id "resourcetype" :size 15
-                                      (loop for rtype in schema
-                                            do (if (getf rtype :selected)
-                                                 (cl-who:htm (:option :value (getf rtype :name)
-                                                                      :selected "selected"
-                                                                      (princ (getf rtype :name) content-string)))
-                                                 (cl-who:htm (:option :value (getf rtype :name)
-                                                                      (princ (getf rtype :name) content-string)))))))
-                       ;; Tags
-                       (:div :id "tags"
-                             (:h3 "Available tags")
-                             (:select :name "tags" :id "tags" :multiple "multiple" :size 15
-                                      (loop for tag in tags-available
-                                            ;; Check on the fly whether this tag is pre-selected
-                                            do (if (member tag tags-requested :test #'equal)
-                                                 (cl-who:htm (:option :value tag
-                                                                      :selected "selected"
-                                                                      (princ tag content-string)))
-                                                 (cl-who:htm (:option :value tag (princ tag content-string)))))))
-                       ;; Javascript-updated search refinement
-                       (:div :id "refine-title"
-                             (:h3 "Refine your search"))
-                       (:div :id "attrnames" :class "attrnames"
-                             (:div :id "refinesearch" "UID regex"))
-                       (:div :id "attrvals" :class "attrvals"
-                             (:input :type "text"
-                                     :name "uid_regex"
-                                     :id "refinesearch-input"
-                                     :value (or (tbnl:get-parameter "uid_regex") "")))
-                       ;; Submit button
-                       (:div :id "submit"
-                             (:input :type "submit" :id "searchbutton" :value "Update search")))
-                     ;; Search results
-                     (:div :id "searchresults"
-                           (:h2 "Search results")
-                           (:ul :class "results-list"
-                                (loop for result in tbnl-formatted-results
-                                      do (cl-who:htm
-                                           (:li (:a :href (format nil "display/~A/~A"
-                                                                  (tbnl:get-parameter "resourcetype")
-                                                                  (getf result :uid))
-                                                    (format content-string "/~A/~A"
-                                                            (tbnl:get-parameter "resourcetype")
-                                                            (getf result :uid))))))))))))))
-      ;; Fallback: not by this method
-      (t (method-not-allowed))))
-
-  (defun files ()
-    "GUI for uploading files.
-    Does not provide for fetching an existing one; for that, use RG's /files API."
-    (cond
-      ;; Upload a file
-      ;; On success, redirect to the item-view page.
-      ((and (equal (tbnl:request-method*) :POST)
-            (tbnl:post-parameter "file")
-            (tbnl:post-parameter "name"))
-       (log-message :debug "Received a file-upload attempt.")
-       (log-message :debug (format nil "Requested filename was ~A" (tbnl:post-parameter "name")))
-       (log-message :debug (format nil "Original filepath was ~A"
-                                   (second (tbnl:post-parameter "file"))))
-       (multiple-value-bind (response-body status-code)
-         (rg-upload-file
-           (rg-server tbnl:*acceptor*)
-           `(("name" . ,(tbnl:post-parameter "name"))
-             ;; It's already a pathname, so we just pass it on through:
-             ("file" . ,(first (tbnl:post-parameter "file")))))
-         ;; Expected status code is 201; redirect accordingly.
-         (if (equal 201 status-code)
-           (tbnl:redirect (concatenate 'string "/display/Files/"
-                                       (car (last (cl-ppcre:split "/" response-body)))))
-           (tbnl:redirect (format nil "/Files?reason=~A" response-body)))))
-      ;; Fail to upload a file
-      ((equal (tbnl:request-method*) :POST)
-       (tbnl:redirect "/files-upload/?reason=~You didn't meet a single one of the requirements."))
-      ;; Display the failed-to-upload page
-      ((and
-         (equal (tbnl:request-method*) :GET)
-         (tbnl:get-parameter "reason"))
-       (progn
-         (log-message :debug "Displaying the failed-to-upload page")
-         (log-message :debug (format nil "Reason for failure: '~A'" (tbnl:get-parameter "reason")))
-         (setf (tbnl:content-type*) "text/html")
-         (setf (tbnl:return-code*) tbnl:+http-ok+)
-         (with-output-to-string (outstr)
-           (default-clwho-layout
-             outstr
-             :title "File upload failed"
-             :stylesheets '("upload")
-             :resourcetype nil
-             :uid nil
-             :content (cl-who:with-html-output-to-string
+(defun edit-resource ()
+  "Handle the edit-page for an item"
+  (log-message :debug (format nil "Attempting to edit an item with URI ~A" (tbnl:request-uri*)))
+  (cond
+    ((equal (tbnl:request-method*) :GET)
+     (let* ((uri-parts (get-uri-parts (tbnl:request-uri*) tbnl:*acceptor*))
+            (resourcetype (second uri-parts))
+            (uid (third uri-parts))
+            (content (rg-request-json (rg-server tbnl:*acceptor*)
+                                      (format nil "/~A/~A" resourcetype uid))))
+       (log-message :debug (format nil "Attempting to display the edit page for ~A ~A" resourcetype uid))
+       (log-message :debug (format nil "Resourcetype: ~A" resourcetype))
+       (log-message :debug (format nil "UID: ~A" uid))
+       (log-message :debug (format nil "Content: ~A" content))
+       ;; Render the content according to resourcetype
+       (if content
+         (cond ((equal resourcetype "Wikipages")
+                (progn
+                  (log-message :debug (format nil "Rendering wikipage ~A" uid))
+                  (setf (tbnl:content-type*) "text/html")
+                  (setf (tbnl:return-code*) tbnl:+http-ok+)
+                  (with-output-to-string (outstr)
+                    (default-clwho-layout
+                      outstr
+                      :title (if (and
+                                   (assoc :title content)
+                                   (not (equal (cdr (assoc :title content)) "")))
+                               (cdr (assoc :title content))
+                               (uid-to-title uid))
+                      :stylesheets '("edit" "display")
+                      :resourcetype "Wikipages"
+                      :uid uid
+                      :content
+                      (cl-who:with-html-output-to-string
                         (content-string nil
                                         :prologue nil
                                         :indent t)
-                        (:div :class "content"
-                              (:p "Sorry, but there was a problem with uploading the file.")
-                              (:p "Reason: " (princ (tbnl:get-parameter "reason") content-string))))))))
-      ;; Display the file-upload form
-      ((equal (tbnl:request-method*) :GET)
+                        (:form :class "formgrid-wikipage"
+                               :action (format nil "/editresource/Wikipages/~A" uid)
+                               :method "post"
+                               ;; Title
+                               (:div :class "wikititle-title" "Title:")
+                               (:input :class "wikititle-value"
+                                       :name "title"
+                                       :value (when (cdr (assoc :title content))
+                                                (cdr (assoc :title content))))
+                               ;; Content
+                               (:textarea :id "wikipage-content"
+                                          :name "text"
+                                          :cols 100
+                                          :rows 40
+                                          (princ (cdr (assoc :text content)) content-string))
+                               ;; Submit button
+                               (:div :id "submit-row"
+                                     (:input :id "wikipage-submit"
+                                             :type "submit"
+                                             :value "Update"))))))))
+               (t
+                 (progn
+                   (log-message :debug (format nil "Rendering ~A ~A" resourcetype uid))
+                   ;; Render the attributes for editing
+                   (let ((attributes-to-display
+                           (mapcar
+                             #'(lambda (attribute)
+                                 ;; Memoise this to simplify the following code
+                                 (let ((attrname (schema-rtype-attrs-name attribute)))
+                                   ;; Handle differently according to attribute type
+                                   (cond
+                                     ;; If the `values` attribute is non-null:
+                                     ((not (null (schema-rtype-attrs-values attribute)))
+                                      (let ((existing-value
+                                              (or (cdr
+                                                    (assoc
+                                                      (intern (string-upcase attrname) 'keyword)
+                                                      content))
+                                                  "")))
+                                        (log-message
+                                          :debug
+                                          (format nil "Extracting value for attribute '~A'" attrname))
+                                        (log-message :debug (format nil "Existing value of ~A: ~A"
+                                                                    attrname existing-value))
+                                        (list :attrname attrname
+                                              :attrvals
+                                              (when (schema-rtype-attrs-values attribute)
+                                                (mapcar
+                                                  #'(lambda (val)
+                                                      (list :val val
+                                                            :selected (when (equal existing-value val) t)))
+                                                  (schema-rtype-attrs-values attribute)))
+                                              :textarea nil)))
+                                     ;; Default style
+                                     (t
+                                       (list :attrname attrname
+                                             :attrval (or (cdr (assoc
+                                                                 (intern (string-upcase attrname) 'keyword)
+                                                                 content))
+                                                          "")
+                                             :attrvals nil
+                                             :textarea (member attrname '("description" "text")
+                                                               :test #'equal))))))
+                             ;; Retrieve the attribute-definitions for this resourcetype
+                             (get-attrs (rg-server tbnl:*acceptor*) resourcetype))))
+                     (log-message :debug (format nil "Attributes: ~A" attributes-to-display))
+                     (setf (tbnl:content-type*) "text/html")
+                     (setf (tbnl:return-code*) tbnl:+http-ok+)
+                     (with-output-to-string (outstr)
+                       (default-clwho-layout
+                         outstr
+                         :title (format nil "Edit ~A: ~A" resourcetype (uid-to-title uid))
+                         :resourcetype resourcetype
+                         :uid uid
+                         :stylesheets '("edit" "display")
+                         :content
+                         (cl-who:with-html-output-to-string
+                           (content-string nil
+                                           :prologue nil
+                                           :indent t)
+                           (:form :class "formgrid-edititem"
+                                  :action (format nil "/editresource/~A/~A" resourcetype uid)
+                                  :method "post"
+                                  (:h2 :id "title-attributes" "Edit attributes")
+                                  (:table :class "attributes"
+                                          (loop for attr in attributes-to-display
+                                                do (let ((attrname (getf attr :attrname))
+                                                         (attrval (getf attr :attrval))
+                                                         (attrvals (getf attr :attrvals))
+                                                         (textarea (getf attr :textarea)))
+                                                     (cl-who:htm
+                                                       (:tr
+                                                         ;; Attribute name
+                                                         (:td :class "attrnames"
+                                                              (princ attrname content-string))
+                                                         (:td
+                                                           ;; There's either a textarea or a list of acceptable values.
+                                                           ;; Or a single value.
+                                                           (cond
+                                                             (textarea
+                                                               (cl-who:htm
+                                                                 (:textarea :class "attrvals"
+                                                                            :name attrname
+                                                                            (princ attrval content-string))))
+                                                             (attrvals
+                                                               (cl-who:htm
+                                                                 (:select :class "attrvals"
+                                                                          :name attrname
+                                                                          (loop for val in attrvals
+                                                                                do (if (getf val :selected)
+                                                                                     (cl-who:htm
+                                                                                       (:option :name (getf val :val)
+                                                                                                :selected "true"
+                                                                                                (princ (getf val :val)
+                                                                                                       content-string)))
+                                                                                     (cl-who:htm
+                                                                                       (:option :name (getf val :val)
+                                                                                                (princ (getf val :val)
+                                                                                                       content-string))))))))
+                                                             ;; Default to single value
+                                                             (t
+                                                               (cl-who:htm
+                                                                 (:input :class "attrvals"
+                                                                         :name attrname
+                                                                         :value attrval))))))))))
+                                  (:div :id "submit-row"
+                                        (:input :id "wikipage-submit"
+                                                :type "submit"
+                                                :value "Update"))))))))))
+         ;; Content not retrieved
+         (progn
+           (setf (tbnl:content-type*) "text/plain")
+           (setf (tbnl:return-code*) tbnl:+http-not-found+)
+           "No content"))))
+    ;;; POST request: update the resource
+    ((equal (tbnl:request-method*) :POST)
+     (let* ((uri-parts (get-uri-parts (tbnl:request-uri*) tbnl:*acceptor*))
+            (resourcetype (second uri-parts))
+            (uid (third uri-parts))
+            ;; Extract attributes relevant to this resourcetype
+            (valid-attrnames
+              (mapcar #'schema-rtype-attrs-name
+                      (get-attrs (rg-server tbnl:*acceptor*) resourcetype)))
+            (validated-attrs
+              (mapcar #'(lambda (param)
+                          (log-message :debug (format nil "Validating parameter '~A' with value '~A'"
+                                                      (car param) (cdr param)))
+                          (when (member (car param)
+                                        valid-attrnames
+                                        :test #'equal)
+                            ;(cons (car param) (write-json-string (cdr param)))
+                            param))
+                      (tbnl:post-parameters*))))
+       (log-message :debug (format nil "Processing edit request for ~A ~A" resourcetype uid))
+       (log-message :debug (format nil "Validated attributes: ~A" validated-attrs))
+       ;; Send the update
+       (multiple-value-bind (body status-code)
+         (rg-post-json (rg-server tbnl:*acceptor*)
+                       (concatenate 'string "/" resourcetype "/" uid)
+                       :payload validated-attrs
+                       :put-p t)
+         ;; Did it work?
+         (if (and (> status-code 199)
+                  (< status-code 300))
+           ;; Happy path
+           (tbnl:redirect (concatenate 'string "/display/" resourcetype "/" uid ))
+           ;; Less-happy path
+           (with-output-to-string (outstr)
+             (setf (tbnl:content-type*) "text/html")
+             (setf (tbnl:return-code*) tbnl:+http-bad-request+)
+             (default-clwho-layout
+               outstr
+               :title (format nil "Failed to create ~A '~A'" resourcetype uid)
+               :resourcetype resourcetype
+               :uid uid
+               :stylesheets '("display")
+               :javascripts '("display")
+               :content (with-output-to-string (content-string)
+                          (display-default
+                            content-string
+                            `(("Server message" . ,body))))))))))
+    ;; Fallback: not by this method
+    (t (method-not-allowed))))
+
+(defun searchpage ()
+  "Display the search-page"
+  (cond
+    ((equal (tbnl:request-method*) :GET)
+     (log-message :debug "Displaying the search page.")
+     (let* ((schema (mapcar #'(lambda (rtype)
+                                (list :name rtype
+                                      :selected (when (equal rtype
+                                                             (tbnl:get-parameter "resourcetype"))
+                                                  "selected")))
+                            (remove-if #'(lambda (name)
+                                           (cl-ppcre:all-matches "^rg" name))
+                                       (get-resourcetypes (rg-server tbnl:*acceptor*)))))
+            (tags-available (sort (get-uids (rg-server tbnl:*acceptor*) "/Tags") #'string<))
+            (tags-requested (filter-params "tags" (tbnl:get-parameters*)))
+            (tbnl-formatted-results
+              (if (tbnl:get-parameter "resourcetype")
+                (search-results-to-template
+                  (let* ((requested-attributes
+                           (remove-if #'null
+                                      (mapcar #'(lambda (attr)
+                                                  (let ((val (tbnl:get-parameter attr)))
+                                                    (when val (format nil "~A=~A"
+                                                                      attr val))))
+                                              (mapcar #'schema-rtype-attrs-name
+                                                      (get-attrs (rg-server tbnl:*acceptor*)
+                                                                 (tbnl:get-parameter "resourcetype"))))))
+                         (tags-requested-formatted
+                           (mapcar #'(lambda (par)
+                                       (concatenate 'string
+                                                    "RGoutbound=/TAGS/Tags/" par))
+                                   tags-requested))
+                         (search-criteria (append ()
+                                                  (when (tbnl:get-parameter "uid_regex")
+                                                    (list (format nil "uid=~A"
+                                                                  (tbnl:get-parameter "uid_regex")))))))
+                    (progn
+                      (log-message :debug (format nil "Searching with criteria '~A'" search-criteria))
+                      (search-for-resources (rg-server tbnl:*acceptor*)
+                                            (tbnl:get-parameter "resourcetype")
+                                            (append tags-requested-formatted
+                                                    search-criteria
+                                                    requested-attributes)))))
+                ;; If no resourcetype was specified, tbnl-formatted-results is NIL:
+                ())))
+       ;; Debug logging for what we've obtained so far
+       (log-message :debug (format nil "Schema: ~A" schema))
+       (log-message :debug (format nil "Tags: ~A" tags-available))
+       (log-message :debug (format nil "Resourcetype supplied: ~A"
+                                   (if
+                                     (tbnl:get-parameter "resourcetype")
+                                     (tbnl:get-parameter "resourcetype") "none")))
+       (log-message :debug (format nil "tbnl-formatted search results: ~A" tbnl-formatted-results))
        (setf (tbnl:content-type*) "text/html")
        (setf (tbnl:return-code*) tbnl:+http-ok+)
        (with-output-to-string (outstr)
          (default-clwho-layout
            outstr
-           :title "File upload"
-           :stylesheets '("upload" "display")
-           :javascripts '("display")
-           :resourcetype "Files"
-           :uid "Upload"
+           :title "Webcat search page"
+           :resourcetype "Search"
+           :uid ""
+           :stylesheets '("search" "display")
+           :javascripts '("search")
+           :content
+           (cl-who:with-html-output-to-string
+             (content-string nil
+                             :prologue nil
+                             :indent t)
+             (:div :id "searchbox"
+                   (:form ;:id "searchform"
+                     :class "formgrid-search"
+                     :method "get"
+                     :action "/search"
+                     ;; Resource types
+                     (:div :id "resourcetypes"
+                           (:h3 "Resource types")
+                           (:select :name "resourcetype" :id "resourcetype" :size 15
+                                    (loop for rtype in schema
+                                          do (if (getf rtype :selected)
+                                               (cl-who:htm (:option :value (getf rtype :name)
+                                                                    :selected "selected"
+                                                                    (princ (getf rtype :name) content-string)))
+                                               (cl-who:htm (:option :value (getf rtype :name)
+                                                                    (princ (getf rtype :name) content-string)))))))
+                     ;; Tags
+                     (:div :id "tags"
+                           (:h3 "Available tags")
+                           (:select :name "tags" :id "tags" :multiple "multiple" :size 15
+                                    (loop for tag in tags-available
+                                          ;; Check on the fly whether this tag is pre-selected
+                                          do (if (member tag tags-requested :test #'equal)
+                                               (cl-who:htm (:option :value tag
+                                                                    :selected "selected"
+                                                                    (princ tag content-string)))
+                                               (cl-who:htm (:option :value tag (princ tag content-string)))))))
+                     ;; Javascript-updated search refinement
+                     (:div :id "refine-title"
+                           (:h3 "Refine your search"))
+                     (:div :id "attrnames" :class "attrnames"
+                           (:div :id "refinesearch" "UID regex"))
+                     (:div :id "attrvals" :class "attrvals"
+                           (:input :type "text"
+                                   :name "uid_regex"
+                                   :id "refinesearch-input"
+                                   :value (or (tbnl:get-parameter "uid_regex") "")))
+                     ;; Submit button
+                     (:div :id "submit"
+                           (:input :type "submit" :id "searchbutton" :value "Update search")))
+                   ;; Search results
+                   (:div :id "searchresults"
+                         (:h2 "Search results")
+                         (:ul :class "results-list"
+                              (loop for result in tbnl-formatted-results
+                                    do (cl-who:htm
+                                         (:li (:a :href (format nil "display/~A/~A"
+                                                                (tbnl:get-parameter "resourcetype")
+                                                                (getf result :uid))
+                                                  (format content-string "/~A/~A"
+                                                          (tbnl:get-parameter "resourcetype")
+                                                          (getf result :uid))))))))))))))
+    ;; Fallback: not by this method
+    (t (method-not-allowed))))
+
+(defun files ()
+  "GUI for uploading files.
+  Does not provide for fetching an existing one; for that, use RG's /files API."
+  (cond
+    ;; Upload a file
+    ;; On success, redirect to the item-view page.
+    ((and (equal (tbnl:request-method*) :POST)
+          (tbnl:post-parameter "file")
+          (tbnl:post-parameter "name"))
+     (log-message :debug "Received a file-upload attempt.")
+     (log-message :debug (format nil "Requested filename was ~A" (tbnl:post-parameter "name")))
+     (log-message :debug (format nil "Original filepath was ~A"
+                                 (second (tbnl:post-parameter "file"))))
+     (multiple-value-bind (response-body status-code)
+       (rg-upload-file
+         (rg-server tbnl:*acceptor*)
+         `(("name" . ,(tbnl:post-parameter "name"))
+           ;; It's already a pathname, so we just pass it on through:
+           ("file" . ,(first (tbnl:post-parameter "file")))))
+       ;; Expected status code is 201; redirect accordingly.
+       (if (equal 201 status-code)
+         (tbnl:redirect (concatenate 'string "/display/Files/"
+                                     (car (last (cl-ppcre:split "/" response-body)))))
+         (tbnl:redirect (format nil "/Files?reason=~A" response-body)))))
+    ;; Fail to upload a file
+    ((equal (tbnl:request-method*) :POST)
+     (tbnl:redirect "/files-upload/?reason=~You didn't meet a single one of the requirements."))
+    ;; Display the failed-to-upload page
+    ((and
+       (equal (tbnl:request-method*) :GET)
+       (tbnl:get-parameter "reason"))
+     (progn
+       (log-message :debug "Displaying the failed-to-upload page")
+       (log-message :debug (format nil "Reason for failure: '~A'" (tbnl:get-parameter "reason")))
+       (setf (tbnl:content-type*) "text/html")
+       (setf (tbnl:return-code*) tbnl:+http-ok+)
+       (with-output-to-string (outstr)
+         (default-clwho-layout
+           outstr
+           :title "File upload failed"
+           :stylesheets '("upload")
+           :resourcetype nil
+           :uid nil
            :content (cl-who:with-html-output-to-string
                       (content-string nil
                                       :prologue nil
                                       :indent t)
-                      (:form :class "uploadform"
-                             :action "/files-upload"
-                             :method "post"
-                             :enctype "multipart/form-data"
-                             (:div :id "filename-title" "File name:")
-                             (:input :type "text" :name "name" :size 128 :id "filename")
-                             (:div :id "filetitle" "File:")
-                             (:input :type "file" :name "file" :id "file")
-                             (:div :id "submit"
-                                   (:input :type "submit" :name "Upload" :value "Upload" :width "100%")))))))
-      ;; Delete a file
-      ((equal (tbnl:request-method*) :DELETE)
-       ())
-      ;; Fallback: not by this method
-      (t (method-not-allowed))))
+                      (:div :class "content"
+                            (:p "Sorry, but there was a problem with uploading the file.")
+                            (:p "Reason: " (princ (tbnl:get-parameter "reason") content-string))))))))
+    ;; Display the file-upload form
+    ((equal (tbnl:request-method*) :GET)
+     (setf (tbnl:content-type*) "text/html")
+     (setf (tbnl:return-code*) tbnl:+http-ok+)
+     (with-output-to-string (outstr)
+       (default-clwho-layout
+         outstr
+         :title "File upload"
+         :stylesheets '("upload" "display")
+         :javascripts '("display")
+         :resourcetype "Files"
+         :uid "Upload"
+         :content (cl-who:with-html-output-to-string
+                    (content-string nil
+                                    :prologue nil
+                                    :indent t)
+                    (:form :class "uploadform"
+                           :action "/files-upload"
+                           :method "post"
+                           :enctype "multipart/form-data"
+                           (:div :id "filename-title" "File name:")
+                           (:input :type "text" :name "name" :size 128 :id "filename")
+                           (:div :id "filetitle" "File:")
+                           (:input :type "file" :name "file" :id "file")
+                           (:div :id "submit"
+                                 (:input :type "submit" :name "Upload" :value "Upload" :width "100%")))))))
+    ;; Delete a file
+    ((equal (tbnl:request-method*) :DELETE)
+     ())
+    ;; Fallback: not by this method
+    (t (method-not-allowed))))
 
-    (defun tasks ()
-      "Display the tasks page"
-      (cond
-        ((equal (tbnl:request-method*) :GET)
-         (let* ((task-attrs (get-attrs-with-keywords (rg-server tbnl:*acceptor*) "Tasks"))
-                (statuses-requested (filter-params "status" (tbnl:get-parameters*)))
-                (tags-available (sort (get-uids (rg-server *webcat-gui-acceptor*) "/Tags?RGinbound=/Tasks/*/TAGS") #'string<))
-                (tags-requested (filter-params "tags" (tbnl:get-parameters*)))
-                (scale-requested (filter-params "scale" (tbnl:get-parameters*)))
-                (urgency-requested (filter-params "urgency" (tbnl:get-parameters*)))
-                (importance-requested (filter-params "importance" (tbnl:get-parameters*)))
-                (tbnl-formatted-results
-                  (search-for-tasks (webcat-gui::rg-server webcat-gui::*webcat-gui-acceptor*)
-                                    :tags tags-requested
-                                    :statuses statuses-requested
-                                    :scale scale-requested
-                                    :urgency urgency-requested
-                                    :importance importance-requested
-                                    :uid-regex (when (tbnl:get-parameter "uid_regex")
-                                                 (tbnl:get-parameter "uid_regex")))))
-           ;; Debug logging for what we've obtained so far
-           (log-message :debug (format nil "Attributes: ~A" task-attrs))
-           (log-message :debug (format nil "Statuses available: ~A" (get-enum-vals :status task-attrs)))
-           (log-message :debug (format nil "Tags: ~A" tags-available))
-           (log-message :debug (format nil "tbnl-formatted search results: ~A" tbnl-formatted-results))
-           (setf (tbnl:content-type*) "text/html")
-           (setf (tbnl:return-code*) tbnl:+http-ok+)
-           (with-output-to-string (outstr)
-             (default-clwho-layout
-               outstr
-               :title "Webcat tasks search"
-               :stylesheets '("tasks_search")
-               :javascripts '("search")
-               :resourcetype "Tasks"
-               :uid "Search"
-               :content
-               (cl-who:with-html-output-to-string
-                 (content-string nil
-                                 :prologue nil
-                                 :indent t)
-                 (:div :id "searchbox"
-                       (:form :action "/Tasks"
-                              :method "get"
-                              :class "formgrid-tasks"
-                              :id "searchform"
-                              ;; Tags
-                              (:div :id "tags-title" "Available tags")
-                              (:div :id "tags-list"
-                                    (:select :name "tags" :multiple "multiple" :size 16
-                                             (loop for tag in tags-available
-                                                   do (if (member tag tags-requested :test #'equal)
-                                                        (cl-who:htm (:option :value tag
-                                                                             :selected "selected"
-                                                                             (princ tag content-string)))
-                                                        (cl-who:htm (:option :value tag
-                                                                             (princ tag content-string)))))))
-                              ;; Other criteria
-                              (:div :id "refine-title" "Refine your search")
-                              (:div :id "uid-regex-name" :class "criteria-name" "UID regex")
-                              (:div :id "uid-regex-value"
-                                    :class "criteria-value"
-                                    (:input :type "text"
-                                            :name "uid_regex"
-                                            :value (or (tbnl:get-parameter "uid_regex") "")))
-                              ;; Importance
-                              (:div :id "importance-name" :class "criteria-name" "Importance")
-                              (:select :id "importance-value"
-                                       :name "importance"
-                                       :class "criteria-value"
-                                       :multiple "multiple"
-                                       :size 3
-                                       (:option :value "" "Any")
-                                       (loop for imp in (get-enum-vals :importance task-attrs)
-                                             do (if (equal imp (tbnl:get-parameter "importance"))
-                                                  (cl-who:htm (:option :value imp
-                                                                       :selected "selected"
-                                                                       (princ imp content-string)))
-                                                  (cl-who:htm (:option :value imp
-                                                                       (princ imp content-string))))))
-                              ;; Urgency
-                              (:div :id "urgency-name" :class "criteria-name" "Urgency")
-                              (:select :id "urgency-value"
-                                       :name "urgency"
-                                       :class "criteria-value"
-                                       :multiple "multiple"
-                                       :size 3
-                                       (:option :value "" "Any")
-                                       (loop for urge in (get-enum-vals :urgency task-attrs)
-                                             do (if (equal urge (tbnl:get-parameter "urgency"))
-                                                  (cl-who:htm (:option :value urge
-                                                                       :selected "selected"
-                                                                       (princ urge content-string)))
-                                                  (cl-who:htm (:option :value urge
-                                                                       (princ urge content-string))))))
-                              ;; Scale
-                              (:div :id "scale-name" :class "criteria-name" "Scale")
-                              (:select :id "scale-value"
-                                       :name "scale"
-                                       :class "criteria-value"
-                                       :multiple "multiple"
-                                       :size 3
-                                       (:option :value "" "Any")
-                                       (loop for scale in (get-enum-vals :scale task-attrs)
-                                             do (if (equal scale (tbnl:get-parameter "scale"))
-                                                  (cl-who:htm (:option :value scale
-                                                                       :selected "selected"
-                                                                       (princ scale content-string)))
-                                                  (cl-who:htm (:option :value scale
-                                                                       (princ scale content-string))))))
-                              ;; Status
-                              (:div :id "status-name" :class "criteria-name" "Status")
-                              (:select :id "status-value"
-                                       :name "status"
-                                       :class "criteria-value"
-                                       :multiple "multiple"
-                                       :size 3
-                                       (:option :value "" "Any")
-                                       (loop for status in (get-enum-vals :status task-attrs)
-                                             do (if (equal status (tbnl:get-parameter "status"))
-                                                  (cl-who:htm (:option :value status
-                                                                       :selected "selected"
-                                                                       (princ status content-string)))
-                                                  (cl-who:htm (:option :value status
-                                                                       (princ status content-string))))))
-                              ;; Submit button
-                              (:div :id "submit-row"
-                                    (:input :type "submit" :value "Search" :id "searchbutton")))
-                       ;; Search results
-                       (:div :id "searchresults"
-                             (:h2 "Search results")
-                             (:table :class "results-list"
-                                     (:tr
-                                       (:th "Status")
-                                       (:th "Urgency")
-                                       (:th "Importance")
-                                       (:th "Scale")
-                                       (:th "Title")
-                                       (:th "Deadline"))
-                                     (loop for result in tbnl-formatted-results
-                                           do (cl-who:htm
-                                                (:tr
-                                                  (:td :class "results-list" (princ (getf result :status) content-string))
-                                                  (:td :class "results-list" (princ (getf result :urgency) content-string))
-                                                  (:td :class "results-list" (princ (getf result :importance) content-string))
-                                                  (:td :class "results-list" (princ (getf result :scale) content-string))
-                                                  (:td :class "results-list"
-                                                       (:a :href (format nil "display/Tasks/~A" (getf result :uid))
-                                                           (princ (getf result :title) content-string)))
-                                                  (:td :class "results-list"
-                                                       (princ (or (getf result :deadline) "") content-string)))))))))))))
-        ;; Fallback: not by this method
-        (t (method-not-allowed))))
+(defun tasks ()
+  "Display the tasks page"
+  (cond
+    ((equal (tbnl:request-method*) :GET)
+     (let* ((task-attrs (get-attrs-with-keywords (rg-server tbnl:*acceptor*) "Tasks"))
+            (statuses-requested (filter-params "status" (tbnl:get-parameters*)))
+            (tags-available (sort (get-uids (rg-server *webcat-gui-acceptor*) "/Tags?RGinbound=/Tasks/*/TAGS") #'string<))
+            (tags-requested (filter-params "tags" (tbnl:get-parameters*)))
+            (scale-requested (filter-params "scale" (tbnl:get-parameters*)))
+            (urgency-requested (filter-params "urgency" (tbnl:get-parameters*)))
+            (importance-requested (filter-params "importance" (tbnl:get-parameters*)))
+            (tbnl-formatted-results
+              (search-for-tasks (webcat-gui::rg-server webcat-gui::*webcat-gui-acceptor*)
+                                :tags tags-requested
+                                :statuses statuses-requested
+                                :scale scale-requested
+                                :urgency urgency-requested
+                                :importance importance-requested
+                                :uid-regex (when (tbnl:get-parameter "uid_regex")
+                                             (tbnl:get-parameter "uid_regex")))))
+       ;; Debug logging for what we've obtained so far
+       (log-message :debug (format nil "Attributes: ~A" task-attrs))
+       (log-message :debug (format nil "Statuses available: ~A" (get-enum-vals :status task-attrs)))
+       (log-message :debug (format nil "Tags: ~A" tags-available))
+       (log-message :debug (format nil "tbnl-formatted search results: ~A" tbnl-formatted-results))
+       (setf (tbnl:content-type*) "text/html")
+       (setf (tbnl:return-code*) tbnl:+http-ok+)
+       (with-output-to-string (outstr)
+         (default-clwho-layout
+           outstr
+           :title "Webcat tasks search"
+           :stylesheets '("tasks_search")
+           :javascripts '("search")
+           :resourcetype "Tasks"
+           :uid "Search"
+           :content
+           (cl-who:with-html-output-to-string
+             (content-string nil
+                             :prologue nil
+                             :indent t)
+             (:div :id "searchbox"
+                   (:form :action "/Tasks"
+                          :method "get"
+                          :class "formgrid-tasks"
+                          :id "searchform"
+                          ;; Tags
+                          (:div :id "tags-title" "Available tags")
+                          (:div :id "tags-list"
+                                (:select :name "tags" :multiple "multiple" :size 16
+                                         (loop for tag in tags-available
+                                               do (if (member tag tags-requested :test #'equal)
+                                                    (cl-who:htm (:option :value tag
+                                                                         :selected "selected"
+                                                                         (princ tag content-string)))
+                                                    (cl-who:htm (:option :value tag
+                                                                         (princ tag content-string)))))))
+                          ;; Other criteria
+                          (:div :id "refine-title" "Refine your search")
+                          (:div :id "uid-regex-name" :class "criteria-name" "UID regex")
+                          (:div :id "uid-regex-value"
+                                :class "criteria-value"
+                                (:input :type "text"
+                                        :name "uid_regex"
+                                        :value (or (tbnl:get-parameter "uid_regex") "")))
+                          ;; Importance
+                          (:div :id "importance-name" :class "criteria-name" "Importance")
+                          (:select :id "importance-value"
+                                   :name "importance"
+                                   :class "criteria-value"
+                                   :multiple "multiple"
+                                   :size 3
+                                   (:option :value "" "Any")
+                                   (loop for imp in (get-enum-vals :importance task-attrs)
+                                         do (if (equal imp (tbnl:get-parameter "importance"))
+                                              (cl-who:htm (:option :value imp
+                                                                   :selected "selected"
+                                                                   (princ imp content-string)))
+                                              (cl-who:htm (:option :value imp
+                                                                   (princ imp content-string))))))
+                          ;; Urgency
+                          (:div :id "urgency-name" :class "criteria-name" "Urgency")
+                          (:select :id "urgency-value"
+                                   :name "urgency"
+                                   :class "criteria-value"
+                                   :multiple "multiple"
+                                   :size 3
+                                   (:option :value "" "Any")
+                                   (loop for urge in (get-enum-vals :urgency task-attrs)
+                                         do (if (equal urge (tbnl:get-parameter "urgency"))
+                                              (cl-who:htm (:option :value urge
+                                                                   :selected "selected"
+                                                                   (princ urge content-string)))
+                                              (cl-who:htm (:option :value urge
+                                                                   (princ urge content-string))))))
+                          ;; Scale
+                          (:div :id "scale-name" :class "criteria-name" "Scale")
+                          (:select :id "scale-value"
+                                   :name "scale"
+                                   :class "criteria-value"
+                                   :multiple "multiple"
+                                   :size 3
+                                   (:option :value "" "Any")
+                                   (loop for scale in (get-enum-vals :scale task-attrs)
+                                         do (if (equal scale (tbnl:get-parameter "scale"))
+                                              (cl-who:htm (:option :value scale
+                                                                   :selected "selected"
+                                                                   (princ scale content-string)))
+                                              (cl-who:htm (:option :value scale
+                                                                   (princ scale content-string))))))
+                          ;; Status
+                          (:div :id "status-name" :class "criteria-name" "Status")
+                          (:select :id "status-value"
+                                   :name "status"
+                                   :class "criteria-value"
+                                   :multiple "multiple"
+                                   :size 3
+                                   (:option :value "" "Any")
+                                   (loop for status in (get-enum-vals :status task-attrs)
+                                         do (if (equal status (tbnl:get-parameter "status"))
+                                              (cl-who:htm (:option :value status
+                                                                   :selected "selected"
+                                                                   (princ status content-string)))
+                                              (cl-who:htm (:option :value status
+                                                                   (princ status content-string))))))
+                          ;; Submit button
+                          (:div :id "submit-row"
+                                (:input :type "submit" :value "Search" :id "searchbutton")))
+                   ;; Search results
+                   (:div :id "searchresults"
+                         (:h2 "Search results")
+                         (:table :class "results-list"
+                                 (:tr
+                                   (:th "Status")
+                                   (:th "Urgency")
+                                   (:th "Importance")
+                                   (:th "Scale")
+                                   (:th "Title")
+                                   (:th "Deadline"))
+                                 (loop for result in tbnl-formatted-results
+                                       do (cl-who:htm
+                                            (:tr
+                                              (:td :class "results-list" (princ (getf result :status) content-string))
+                                              (:td :class "results-list" (princ (getf result :urgency) content-string))
+                                              (:td :class "results-list" (princ (getf result :importance) content-string))
+                                              (:td :class "results-list" (princ (getf result :scale) content-string))
+                                              (:td :class "results-list"
+                                                   (:a :href (format nil "display/Tasks/~A" (getf result :uid))
+                                                       (princ (getf result :title) content-string)))
+                                              (:td :class "results-list"
+                                                   (princ (or (getf result :deadline) "") content-string)))))))))))))
+    ;; Fallback: not by this method
+    (t (method-not-allowed))))
 
-    (defun create-item ()
-      "Display the create-item page"
-      (cond
-        ((equal (tbnl:request-method*) :GET)
-         (log-message :debug (format nil "Handling create GET request ~A" (tbnl:request-uri*)))
-         (setf (tbnl:content-type*) "text/html")
-         (setf (tbnl:return-code*) tbnl:+http-ok+)
-         (with-output-to-string (outstr)
-           (default-clwho-layout
-             outstr
-             :title "Create item"
-             :stylesheets '("create" "display")
-             :javascripts '("search")
-             :resourcetype (or (tbnl:get-parameter "resourcetype") "Create")
-             :uid (or (tbnl:get-parameter "uid") "")
-             :content (cl-who:with-html-output-to-string
-                        (content-string nil
-                                        :prologue nil
-                                        :indent t)
-                        (:form :action "/create"
-                               :method "post"
-                               :class "formgrid-create"
-                               :id "createform"
-                               ;; UID
-                               (:div :id "header-uid" :class "header" "UID/title:")
-                               (:input :type "text"
-                                       :name "uid"
-                                       :id "input-uid"
-                                       :value (or (tbnl:get-parameter "uid") ""))
-                               ;; Resource-types
-                               (:div :class "header" :id "header-resourcetypes" "Resource type")
-                               (:select :name "resourcetype"
-                                        :id "resourcetype"
-                                        :size 15
-                                        (loop for rtype in (get-resourcetypes (rg-server tbnl:*acceptor*))
-                                              do (if (equal rtype (tbnl:get-parameter "resourcetype"))
-                                                   (cl-who:htm (:option :value rtype
-                                                                        :selected "selected"
-                                                                        (princ rtype content-string)))
-                                                   (cl-who:htm (:option :value rtype
-                                                                        (princ rtype content-string))))))
-                               ;; Javascript-updated attribute management
-                               (:div :class "header" :id "header-attributes" "Attributes")
-                               (:div :class "attrnames" :id "attrnames")
-                               (:div :class "attrvals" :id "attrvals")
-                               ;; Submit button
-                               (:input :type "submit" :value "Create" :id "createbutton"))))))
-        ((equal (tbnl:request-method*) :POST)
-         (let ((uid (tbnl:post-parameter "uid"))
-               (resourcetype (tbnl:post-parameter "resourcetype")))
-           (log-message :debug (format nil "Handling create POST request ~A" (tbnl:request-uri*)))
-           ;; Check for the UID and resourcetype; if we don't have those, give up now
-           ;; Missing both of them
-           (cond ((and (or (not uid)
-                           (equal uid ""))
-                       (or (not uid)
-                           (equal uid "")))
-                  (setf (tbnl:content-type*) "text/plain")
-                  (setf (tbnl:return-code*) tbnl:+http-bad-request+)
-                  "Both the UID and the resourcetype must be specified")
-                 ;; Missing only the UID
-                 ((or (not uid)
-                      (equal uid ""))
-                  (setf (tbnl:content-type*) "text/plain")
-                  (setf (tbnl:return-code*) tbnl:+http-bad-request+)
-                  "The UID parameter must be supplied")
-                 ;; Missing only the resourcetype
-                 ((or (not resourcetype)
-                      (equal resourcetype ""))
-                  (setf (tbnl:content-type*) "text/plain")
-                  (setf (tbnl:return-code*) tbnl:+http-bad-request+)
-                  "The resourcetype must be specified in the URL")
-                 ;; We have both; carry on
-                 (t
-                   ;; Extract non-empty attributes relevant to this resourcetype
-                   (let* ((valid-attrnames
-                            (mapcar #'schema-rtype-attrs-name
-                                    (get-attrs (rg-server tbnl:*acceptor*) resourcetype)))
-                          (validated-attrs
-                            (remove-if #'null
-                                       (mapcar #'(lambda (param)
-                                                   (log-message
-                                                     :debug
-                                                     (format nil "Validating parameter ~A" (car param)))
-                                                   (when (and (not (or (null (cdr param))
-                                                                       (equal "" (cdr param))))
-                                                              (member (car param) valid-attrnames :test #'equal))
-                                                     param))
-                                               (tbnl:post-parameters*)))))
-                     (log-message :debug (format nil "Validated attributes: ~A" validated-attrs))
-                     ;; Send the update
-                     (multiple-value-bind (body status-code)
-                       (rg-post-json (rg-server tbnl:*acceptor*)
-                                     (concatenate 'string "/" resourcetype)
-                                     :payload (append `(("uid" . ,(sanitise-uid uid))) validated-attrs))
-                       ;; Did it work?
-                       (if (and (> status-code 199)
-                                (< status-code 300))
-                         ;; Happy path
-                         (tbnl:redirect (concatenate 'string "/display/" resourcetype "/" (sanitise-uid uid)))
-                         ;; Less-happy path
-                         (with-output-to-string (outstr)
-                           (setf (tbnl:content-type*) "text/html")
-                           (setf (tbnl:return-code*) tbnl:+http-bad-request+)
-                           (default-clwho-layout
-                             outstr
-                             :title (format nil "Failed to create ~A '~A'" resourcetype uid)
-                             :resourcetype resourcetype
-                             :uid uid
-                             :stylesheets '("display")
-                             :javascripts '("display")
-                             :content (with-output-to-string (content-string)
-                                        (display-default
-                                          content-string
-                                          `(("Server message" . ,body))))))))))))))
-      ;; Fallback: not by this method
-      (t (method-not-allowed))))
+(defun create-item ()
+  "Display the create-item page"
+  (cond
+    ((equal (tbnl:request-method*) :GET)
+     (log-message :debug (format nil "Handling create GET request ~A" (tbnl:request-uri*)))
+     (setf (tbnl:content-type*) "text/html")
+     (setf (tbnl:return-code*) tbnl:+http-ok+)
+     (with-output-to-string (outstr)
+       (default-clwho-layout
+         outstr
+         :title "Create item"
+         :stylesheets '("create" "display")
+         :javascripts '("search")
+         :resourcetype (or (tbnl:get-parameter "resourcetype") "Create")
+         :uid (or (tbnl:get-parameter "uid") "")
+         :content (cl-who:with-html-output-to-string
+                    (content-string nil
+                                    :prologue nil
+                                    :indent t)
+                    (:form :action "/create"
+                           :method "post"
+                           :class "formgrid-create"
+                           :id "createform"
+                           ;; UID
+                           (:div :id "header-uid" :class "header" "UID/title:")
+                           (:input :type "text"
+                                   :name "uid"
+                                   :id "input-uid"
+                                   :value (or (tbnl:get-parameter "uid") ""))
+                           ;; Resource-types
+                           (:div :class "header" :id "header-resourcetypes" "Resource type")
+                           (:select :name "resourcetype"
+                                    :id "resourcetype"
+                                    :size 15
+                                    (loop for rtype in (get-resourcetypes (rg-server tbnl:*acceptor*))
+                                          do (if (equal rtype (tbnl:get-parameter "resourcetype"))
+                                               (cl-who:htm (:option :value rtype
+                                                                    :selected "selected"
+                                                                    (princ rtype content-string)))
+                                               (cl-who:htm (:option :value rtype
+                                                                    (princ rtype content-string))))))
+                           ;; Javascript-updated attribute management
+                           (:div :class "header" :id "header-attributes" "Attributes")
+                           (:div :class "attrnames" :id "attrnames")
+                           (:div :class "attrvals" :id "attrvals")
+                           ;; Submit button
+                           (:input :type "submit" :value "Create" :id "createbutton"))))))
+    ((equal (tbnl:request-method*) :POST)
+     (let ((uid (tbnl:post-parameter "uid"))
+           (resourcetype (tbnl:post-parameter "resourcetype")))
+       (log-message :debug (format nil "Handling create POST request ~A" (tbnl:request-uri*)))
+       ;; Check for the UID and resourcetype; if we don't have those, give up now
+       ;; Missing both of them
+       (cond ((and (or (not uid)
+                       (equal uid ""))
+                   (or (not uid)
+                       (equal uid "")))
+              (setf (tbnl:content-type*) "text/plain")
+              (setf (tbnl:return-code*) tbnl:+http-bad-request+)
+              "Both the UID and the resourcetype must be specified")
+             ;; Missing only the UID
+             ((or (not uid)
+                  (equal uid ""))
+              (setf (tbnl:content-type*) "text/plain")
+              (setf (tbnl:return-code*) tbnl:+http-bad-request+)
+              "The UID parameter must be supplied")
+             ;; Missing only the resourcetype
+             ((or (not resourcetype)
+                  (equal resourcetype ""))
+              (setf (tbnl:content-type*) "text/plain")
+              (setf (tbnl:return-code*) tbnl:+http-bad-request+)
+              "The resourcetype must be specified in the URL")
+             ;; We have both; carry on
+             (t
+               ;; Extract non-empty attributes relevant to this resourcetype
+               (let* ((valid-attrnames
+                        (mapcar #'schema-rtype-attrs-name
+                                (get-attrs (rg-server tbnl:*acceptor*) resourcetype)))
+                      (validated-attrs
+                        (remove-if #'null
+                                   (mapcar #'(lambda (param)
+                                               (log-message
+                                                 :debug
+                                                 (format nil "Validating parameter ~A" (car param)))
+                                               (when (and (not (or (null (cdr param))
+                                                                   (equal "" (cdr param))))
+                                                          (member (car param) valid-attrnames :test #'equal))
+                                                 param))
+                                           (tbnl:post-parameters*)))))
+                 (log-message :debug (format nil "Validated attributes: ~A" validated-attrs))
+                 ;; Send the update
+                 (multiple-value-bind (body status-code)
+                   (rg-post-json (rg-server tbnl:*acceptor*)
+                                 (concatenate 'string "/" resourcetype)
+                                 :payload (append `(("uid" . ,(sanitise-uid uid))) validated-attrs))
+                   ;; Did it work?
+                   (if (and (> status-code 199)
+                            (< status-code 300))
+                     ;; Happy path
+                     (tbnl:redirect (concatenate 'string "/display/" resourcetype "/" (sanitise-uid uid)))
+                     ;; Less-happy path
+                     (with-output-to-string (outstr)
+                       (setf (tbnl:content-type*) "text/html")
+                       (setf (tbnl:return-code*) tbnl:+http-bad-request+)
+                       (default-clwho-layout
+                         outstr
+                         :title (format nil "Failed to create ~A '~A'" resourcetype uid)
+                         :resourcetype resourcetype
+                         :uid uid
+                         :stylesheets '("display")
+                         :javascripts '("display")
+                         :content (with-output-to-string (content-string)
+                                    (display-default
+                                      content-string
+                                      `(("Server message" . ,body)))))))))))))
+    ;; Fallback: not by this method
+    (t (method-not-allowed))))
