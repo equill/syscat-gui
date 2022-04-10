@@ -3,14 +3,20 @@
   grid-area: content;
   /* How its own contents are laid out */
   display: grid;
+  grid-template-columns: auto auto 1fr;
+  column-gap: 12px;
   grid-template-areas:
-    "source-resource"
-    "available-rels"
-    "submit-rels";
+    "outbound-title   return-title     blank"
+    "available-rels   available-return blank"
+    "submit-rels      submit-rels      blank";
 }
 
-div#source-resource { grid-area: source-resource; }
+div#outbound-title { grid-area: outbound-title; }
+
+div#return-title { grid-area: return-title; }
 
 div#available-rels { grid-area: available-rels; }
+
+div#available-return { grid-area: available-return; }
 
 div#rels-submit { grid-area: submit-rels; }
