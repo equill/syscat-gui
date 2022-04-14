@@ -18,6 +18,8 @@ body {
   width: 100%;
 }
 
+h1#title { grid-area: title; }
+
 .header {
     font-weight: bold;
 }

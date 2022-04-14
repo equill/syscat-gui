@@ -76,7 +76,7 @@
       (:body
         (:div
           :class "default-grid"
-          (:h1 :id "title" (format outstr "[~A] ~A" resourcetype (uid-to-title uid)))
+          (:h1 :id "title" (format outstr "[~A] ~A" resourcetype (or title (uid-to-title uid))))
           (navbar outstr
                   :resourcetype resourcetype
                   :uid uid)
