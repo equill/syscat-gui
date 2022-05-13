@@ -59,13 +59,91 @@
   (files-base nil :type string :read-only t)
   (schema-base nil :type string :read-only t))
 
-(defstruct schema-rtype-attrs
-  "Attributes of resource-types. Copy-pasted straight from restagraph/src/structures.lisp."
-  (name nil :type string :read-only t)
-  (description "" :type string :read-only t)
-  (values nil :type list :read-only t)
-  ;; The type of value. To be used for validation, and for rendering of the value.
-  (valuetype "text" :type string :read-only t))
+
+(defclass schema-rtype-attrs ()
+  ((name :initarg :name
+         :reader name
+         :type string
+         :initform (error "name is mandatory"))
+   (description :initarg :description
+                :reader description
+                :type (or null string)
+                :initform nil)
+   (readonly :initarg :readonly
+           :reader readonly
+           :type boolean
+           :initform nil))
+  (:documentation "Attributes of resource-types. Abstract type: *do not* instantiate directly; instead, use one of its subclasses."))
+
+(defclass schema-rtype-attr-varchar (schema-rtype-attrs)
+  ((maxlength :initarg :maxlength
+              :reader maxlength
+              :type (or null integer)
+              :initform nil)
+   (attrvalues :initarg :attrvalues
+               :reader attrvalues
+               :type (or null list)
+               :initform nil))
+  (:documentation "Variable-length string, for one-line values with optionally limited length. For bulk text, use schema-rtype-attr-text."))
+
+(defclass schema-rtype-attr-text (schema-rtype-attrs)
+  ()
+  (:documentation "Block text, up to 65535 characters. For one-liners, see schema-rtype-attr-varchar."))
+
+(defclass schema-rtype-attr-integer (schema-rtype-attrs)
+  ((minimum :initarg :minimum
+            :reader minimum
+            :type (or null integer)
+            :initform nil)
+   (maximum :initarg :maximum
+            :reader maximum
+            :type (or null integer)
+            :initform nil))
+  (:documentation "Integer, with optional minimum and maximum values."))
+
+(defclass schema-rtype-attr-boolean (schema-rtype-attrs)
+  ()
+  (:documentation "Boolean. Does what you'd expect."))
+
+
+(defun make-schema-rtype-attrs (attribute)
+  "Instantiate a subclass of schema-rtype-attrs according to the data provided.
+   `attribute` is expected to be an alist, as fetched from the Restagraph schema endpoint."
+  (cond
+    ;; Text-block
+    ((equal "text" (cdr (assoc :type attribute)))
+     (make-instance 'schema-rtype-attr-text
+                    :name (cdr (assoc :name attribute))
+                    :description (or (cdr (assoc :description attribute)) "")
+                    :readonly (cdr (assoc :readonly attribute))))
+    ;; Integer
+    ((equal "integer" (cdr (assoc :type attribute)))
+     (make-instance 'schema-rtype-attr-integer
+                    :name (cdr (assoc :name attribute))
+                    :description (or (cdr (assoc :description attribute)) "")
+                    :readonly (cdr (assoc :readonly attribute))
+                    :minimum (cdr (assoc :minimum attribute))
+                    :maximum (cdr (assoc :maximum attribute))))
+    ;; Boolean
+    ((equal "boolean" (cdr (assoc :type attribute)))
+     (make-instance 'schema-rtype-attr-boolean
+                    :name (cdr (assoc :name attribute))
+                    :description (or (cdr (assoc :description attribute)) "")
+                    :readonly (cdr (assoc :readonly attribute))))
+    ;; Explicitly defined as a varchar
+    ((equal "varchar" (cdr (assoc :type attribute)))
+     (make-instance 'schema-rtype-attr-varchar
+                    :name (cdr (assoc :name attribute))
+                    :description (or (cdr (assoc :description attribute)) "")
+                    :readonly (cdr (assoc :readonly attribute))
+                    :maxlength (cdr (assoc :maxlength attribute))
+                    :attrvalues (cdr (assoc :values attribute))))
+    ;; Default to varchar, but without maxlength or attrvalues.
+    (t
+     (make-instance 'schema-rtype-attr-varchar
+                    :name (cdr (assoc :name attribute))
+                    :description (or (cdr (assoc :description attribute)) "")
+                    :readonly (cdr (assoc :readonly attribute))))))
 
 
 (defclass outbound-rels ()

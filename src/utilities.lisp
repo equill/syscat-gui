@@ -232,26 +232,14 @@
            (type string resourcetype))
   (log-message :debug (format nil "Fetching attributes for resourcetype '~A'" resourcetype))
   (let* ((rawdata (get-schema server resourcetype))
+         ;; Pre-fetch and sort it here so we can log it before processing it.
+         ;; Otherwise, I'd have put it inline and sorted the results afterward.
          (attributes (sort (cdr (assoc :attributes rawdata))
                            #'string<
                            :key #'(lambda (attr) (cdr (assoc :name attr))))))
     (log-message :debug (format nil "Retrieved attributes: ~A" attributes))
-    (mapcar #'(lambda (attribute)
-                (make-schema-rtype-attrs
-                  :name (cdr (assoc :name attribute))
-                  :description (or (cdr (assoc :description attribute)) "")
-                  :values (cdr (assoc :values attribute))))
+    (mapcar #'(lambda (attribute) (make-schema-rtype-attrs attribute))
             attributes)))
-
-(defun get-attrs-with-keywords (server resourcetype)
-  "Return a sorted alist of the attribute definitions for a resourcetype,
-  for passing to html-template.
-  Key = attribute name, interned into the keyword package.
-  Value = schema-rtype-attrs struct."
-  (mapcar #'(lambda (attribute)
-              (cons (intern (string-upcase (schema-rtype-attrs-name attribute)) 'keyword)
-                    attribute))
-          (get-attrs server resourcetype)))
 
 (defun get-resourcetypes (server)
   "Retrieve a sorted list of resourcetypes.
@@ -459,11 +447,16 @@ and any forward-slashes that sneaked through are also now underscores.
 
 
 (defun get-enum-vals (attr attrlist)
-  "Extract the enum values for an attribute,
+  "Extract the enum values for an attribute identified,
   from the alist of schema-rtype-attr structs returned by get-attrs-with-keywords.
   It's possible it returns a list of strings."
+  (declare (type string attr)
+           (type list attrlist))
   (log-message :debug (format nil "Extracting values for '~A' from attribute-list ~A" attr attrlist))
-  (schema-rtype-attrs-values (cdr (assoc attr attrlist))))
+  (attrvalues
+    (car (remove-if-not #'(lambda (attrdef)
+                            (equal attr (name attrdef)))
+                        attrlist))))
 
 (defun sanitise-uid (uid)
   "Replace UID-unfriendly characters in UIDs with something safe.

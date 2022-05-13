@@ -156,7 +156,7 @@
          (content (rg-request-json (rg-server tbnl:*acceptor*)
                                    (format nil "/~A/~A" resourcetype uid)))
          ;; Get a hash-table of attribute definitions
-         (attrdefs (get-attrs-with-keywords (rg-server tbnl:*acceptor*) resourcetype)))
+         (attrdefs (get-attrs (rg-server tbnl:*acceptor*) resourcetype)))
     (log-message :debug (format nil "Content: ~A" content))
     (log-message :debug (format nil "Resource-type attributes: ~A" attrdefs))
     (cond
@@ -283,19 +283,18 @@
                                 :class "content"
                                 (:h2 :id "title-attributes" "Item attributes")
                                 (:table :id "table-attributes"
-                                        (loop for attribute in attrdefs
+                                        (loop for attr in attrdefs
                                               do
-                                              (let* ((attrname (car attribute))
-                                                     (attrval (cdr (assoc attrname content))))
+                                              (let ((existing-value
+                                                    (cdr (assoc (intern (string-upcase (name attr)) 'keyword)
+                                                                content))))
                                                 (cl-who:htm
                                                   (:tr
                                                     (:td :class "attrnames"
-                                                         (princ (schema-rtype-attrs-name (cdr attribute)) content-string))
+                                                         (princ (name attr) content-string))
                                                     (:td :class "attrvals"
-                                                         (if attrval
-                                                           (3bmd:parse-string-and-print-to-stream
-                                                            attrval
-                                                            content-string)
+                                                         (if existing-value
+                                                           (display-element content-string attr existing-value)
                                                            "")))))))))))
               :tags (listify-outbound-links
                       outbound-links
@@ -689,7 +688,7 @@
                      (let ((message (format
                                       nil
                                       "Failed to create return relationship ~A from ~A to '~A'. ~A: ~A"
-                                      return-relationship 
+                                      return-relationship
                                       return-sourcepath
                                       return-targetpath
                                       return-status-code
@@ -805,6 +804,121 @@
                                                 (:div :class "gallery-image-text"
                                                       (princ (cdr (assoc :TITLE img)) content-string))))))))))))
 
+
+(defgeneric display-element (outstr attrdef val)
+  (:documentation "Render different attribute-types for display.
+  attrdef is really only used for dispatching."))
+
+(defmethod display-element ((outstr stream)
+                            (attrdef schema-rtype-attr-varchar)
+                            (val string))
+  ;; attrdef is only there for dispatching
+  (declare (ignore attrdef))
+  (3bmd:parse-string-and-print-to-stream val outstr))
+
+(defmethod display-element ((outstr stream)
+                            (attrdef schema-rtype-attr-text)
+                            (val string))
+  ;; attrdef is only there for dispatching
+  (declare (ignore attrdef))
+  (3bmd:parse-string-and-print-to-stream val outstr))
+
+(defmethod display-element ((outstr stream)
+                            (attrdef schema-rtype-attr-boolean)
+                            val)
+  ;; attrdef is only there for dispatching
+  (declare (ignore attrdef))
+  (princ (if val "true" "false")
+         outstr))
+
+(defmethod display-element ((outstr stream)
+                            (attrdef schema-rtype-attr-integer)
+                            (val integer))
+  ;; attrdef is only there for dispatching
+  (declare (ignore attrdef))
+  (princ val outstr))
+
+
+(defgeneric generate-edit-element (outstr attrdef &optional existing-value)
+  (:documentation "Generate an edit-field, text-area or checkbox definition, according to the class of attrdef.
+                   If existing-value is specified, pre-populate the field with it."))
+
+(defmethod generate-edit-element ((outstr stream)
+                                  (attrdef schema-rtype-attr-varchar)
+                                  &optional (existing-value ""))
+  (cl-who:with-html-output
+    (outstr)
+    (if (attrvalues attrdef)
+        ;; If it has values to select from, create a drop-down
+        (cl-who:htm
+          (:select :class "attrvals"
+           :name (name attrdef)
+           (loop for val in (attrvalues attrdef)
+                 do (if (equal existing-value val)
+                        (cl-who:htm
+                          (:option :name (getf val :val)
+                           :selected "true"
+                           (princ (getf val :val)
+                                  outstr)))
+                        (cl-who:htm
+                          (:option :name (getf val :val)
+                           (princ (getf val :val)
+                                  outstr)))))))
+        ;; If it does *not* have values, create an input field
+        (cl-who:htm
+          (:input :type "text"
+           :class "attrvals"
+           :name (name attrdef)
+           :value existing-value)))))
+
+(defmethod generate-edit-element ((outstr stream)
+                                  (attrdef schema-rtype-attr-text)
+                                  &optional (existing-value ""))
+  (cl-who:with-html-output
+    (outstr)
+    (cl-who:htm (:textarea :class "attrvals"
+                 :name (name attrdef)
+                 (princ existing-value outstr)))))
+
+(defmethod generate-edit-element ((outstr stream)
+                                  (attrdef schema-rtype-attr-boolean)
+                                  &optional existing-value)
+  (cl-who:with-html-output
+    (outstr)
+    (cl-who:htm (:input :type "checkbox"
+                 :class "attrvals"
+                 :name (name attrdef)
+                 :checked existing-value))))
+
+(defmethod generate-edit-element ((outstr stream)
+                                  (attrdef schema-rtype-attr-integer)
+                                  &optional existing-value)
+  ;; Assemble this in steps, to keep the code understandable.
+  ;; Put together the stuff that'll always be here:
+  (let ((data `(:input :type "number"
+                :class "attrvals"
+                :name ,(name attrdef))))
+    ;; If a minimum and/or maximum is specified in the resourcetype, add them
+    (when (minimum attrdef)
+      (setf data (append data `(:min ,(minimum attrdef)))))
+    (when (maximum attrdef)
+      (setf data (append data `(:max ,(maximum attrdef)))))
+    ;; If we got an existing value, add that last
+    (when existing-value
+      (setf data (append data (list existing-value))))
+    (log-message :debug (format nil "Rendering number field with data: ~A" data))
+    ;; Now render the result
+    (cl-who:with-html-output
+      (outstr)
+      (:input :type "number"
+                :class "attrvals"
+                :name (name attrdef)
+                :pattern "[0-9]")
+      ;(cl-who:htm data)
+      ;data
+      )))
+
+
 (defun edit-resource ()
   "Handle the edit-page for an item"
   (log-message :debug (format nil "Attempting to edit an item with URI ~A" (tbnl:request-uri*)))
@@ -867,46 +981,7 @@
                    (log-message :debug (format nil "Rendering ~A ~A" resourcetype uid))
                    ;; Render the attributes for editing
                    (let ((attributes-to-display
-                           (mapcar
-                             #'(lambda (attribute)
-                                 ;; Memoise this to simplify the following code
-                                 (let ((attrname (schema-rtype-attrs-name attribute)))
-                                   ;; Handle differently according to attribute type
-                                   (cond
-                                     ;; If the `values` attribute is non-null:
-                                     ((not (null (schema-rtype-attrs-values attribute)))
-                                      (let ((existing-value
-                                              (or (cdr
-                                                    (assoc
-                                                      (intern (string-upcase attrname) 'keyword)
-                                                      content))
-                                                  "")))
-                                        (log-message
-                                          :debug
-                                          (format nil "Extracting value for attribute '~A'" attrname))
-                                        (log-message :debug (format nil "Existing value of ~A: ~A"
-                                                                    attrname existing-value))
-                                        (list :attrname attrname
-                                              :attrvals
-                                              (when (schema-rtype-attrs-values attribute)
-                                                (mapcar
-                                                  #'(lambda (val)
-                                                      (list :val val
-                                                            :selected (when (equal existing-value val) t)))
-                                                  (schema-rtype-attrs-values attribute)))
-                                              :textarea nil)))
-                                     ;; Default style
-                                     (t
-                                       (list :attrname attrname
-                                             :attrval (or (cdr (assoc
-                                                                 (intern (string-upcase attrname) 'keyword)
-                                                                 content))
-                                                          "")
-                                             :attrvals nil
-                                             :textarea (member attrname '("description" "text")
-                                                               :test #'equal))))))
-                             ;; Retrieve the attribute-definitions for this resourcetype
-                             (get-attrs (rg-server tbnl:*acceptor*) resourcetype))))
+                           (get-attrs (rg-server tbnl:*acceptor*) resourcetype)))
                      (log-message :debug (format nil "Attributes: ~A" attributes-to-display))
                      (setf (tbnl:content-type*) "text/html")
                      (setf (tbnl:return-code*) tbnl:+http-ok+)
@@ -927,46 +1002,18 @@
                                   :method "post"
                                   (:h2 :id "title-attributes" "Edit attributes")
                                   (:table :class "attributes"
-                                          (loop for attr in attributes-to-display
-                                                do (let ((attrname (getf attr :attrname))
-                                                         (attrval (getf attr :attrval))
-                                                         (attrvals (getf attr :attrvals))
-                                                         (textarea (getf attr :textarea)))
-                                                     (cl-who:htm
-                                                       (:tr
-                                                         ;; Attribute name
-                                                         (:td :class "attrnames"
-                                                              (princ attrname content-string))
-                                                         (:td
-                                                           ;; There's either a textarea or a list of acceptable values.
-                                                           ;; Or a single value.
-                                                           (cond
-                                                             (textarea
-                                                               (cl-who:htm
-                                                                 (:textarea :class "attrvals"
-                                                                            :name attrname
-                                                                            (princ attrval content-string))))
-                                                             (attrvals
-                                                               (cl-who:htm
-                                                                 (:select :class "attrvals"
-                                                                          :name attrname
-                                                                          (loop for val in attrvals
-                                                                                do (if (getf val :selected)
-                                                                                     (cl-who:htm
-                                                                                       (:option :name (getf val :val)
-                                                                                                :selected "true"
-                                                                                                (princ (getf val :val)
-                                                                                                       content-string)))
-                                                                                     (cl-who:htm
-                                                                                       (:option :name (getf val :val)
-                                                                                                (princ (getf val :val)
-                                                                                                       content-string))))))))
-                                                             ;; Default to single value
-                                                             (t
-                                                               (cl-who:htm
-                                                                 (:input :class "attrvals"
-                                                                         :name attrname
-                                                                         :value attrval))))))))))
+                                   (loop for attr in attributes-to-display
+                                         do (let ((existing-value
+                                                    (cdr (assoc (intern (string-upcase (name attr)) 'keyword)
+                                                                content))))
+                                              (log-message :debug (format nil "Rendering attribute ~A" (name attr)))
+                                              (cl-who:htm
+                                                (:tr
+                                                  (:td (:p (princ (name attr) content-string)))
+                                                  (:td
+                                                    (if existing-value
+                                                        (generate-edit-element content-string attr existing-value)
+                                                        (generate-edit-element content-string attr))))))))
                                   (:div :id "submit-row"
                                         (:input :id "wikipage-submit"
                                                 :type "submit"
@@ -983,7 +1030,7 @@
             (uid (third uri-parts))
             ;; Extract attributes relevant to this resourcetype
             (valid-attrnames
-              (mapcar #'schema-rtype-attrs-name
+              (mapcar #'name
                       (get-attrs (rg-server tbnl:*acceptor*) resourcetype)))
             (validated-attrs
               (mapcar #'(lambda (param)
@@ -992,7 +1039,6 @@
                           (when (member (car param)
                                         valid-attrnames
                                         :test #'equal)
-                            ;(cons (car param) (write-json-string (cdr param)))
                             param))
                       (tbnl:post-parameters*))))
        (log-message :debug (format nil "Processing edit request for ~A ~A" resourcetype uid))
@@ -1050,7 +1096,7 @@
                                                   (let ((val (tbnl:get-parameter attr)))
                                                     (when val (format nil "~A=~A"
                                                                       attr val))))
-                                              (mapcar #'schema-rtype-attrs-name
+                                              (mapcar #'name
                                                       (get-attrs (rg-server tbnl:*acceptor*)
                                                                  (tbnl:get-parameter "resourcetype"))))))
                          (tags-requested-formatted
@@ -1235,7 +1281,7 @@
   "Display the tasks page"
   (cond
     ((equal (tbnl:request-method*) :GET)
-     (let* ((task-attrs (get-attrs-with-keywords (rg-server tbnl:*acceptor*) "Tasks"))
+     (let* ((task-attrs (get-attrs (rg-server tbnl:*acceptor*) "Tasks"))
             (statuses-requested (filter-params "status" (tbnl:get-parameters*)))
             (tags-available (sort (get-uids (rg-server *webcat-gui-acceptor*) "/Tags?RGinbound=/Tasks/*/TAGS") #'string<))
             (tags-requested (filter-params "tags" (tbnl:get-parameters*)))
@@ -1253,7 +1299,7 @@
                                              (tbnl:get-parameter "uid_regex")))))
        ;; Debug logging for what we've obtained so far
        (log-message :debug (format nil "Attributes: ~A" task-attrs))
-       (log-message :debug (format nil "Statuses available: ~A" (get-enum-vals :status task-attrs)))
+       (log-message :debug (format nil "Statuses available: ~A" (get-enum-vals "status" task-attrs)))
        (log-message :debug (format nil "Tags: ~A" tags-available))
        (log-message :debug (format nil "tbnl-formatted search results: ~A" tbnl-formatted-results))
        (setf (tbnl:content-type*) "text/html")
@@ -1303,7 +1349,7 @@
                                    :multiple "multiple"
                                    :size 3
                                    (:option :value "" "Any")
-                                   (loop for imp in (get-enum-vals :importance task-attrs)
+                                   (loop for imp in (get-enum-vals "importance" task-attrs)
                                          do (if (equal imp (tbnl:get-parameter "importance"))
                                               (cl-who:htm (:option :value imp
                                                                    :selected "selected"
@@ -1318,7 +1364,7 @@
                                    :multiple "multiple"
                                    :size 3
                                    (:option :value "" "Any")
-                                   (loop for urge in (get-enum-vals :urgency task-attrs)
+                                   (loop for urge in (get-enum-vals "urgency" task-attrs)
                                          do (if (equal urge (tbnl:get-parameter "urgency"))
                                               (cl-who:htm (:option :value urge
                                                                    :selected "selected"
@@ -1333,7 +1379,7 @@
                                    :multiple "multiple"
                                    :size 3
                                    (:option :value "" "Any")
-                                   (loop for scale in (get-enum-vals :scale task-attrs)
+                                   (loop for scale in (get-enum-vals "scale" task-attrs)
                                          do (if (equal scale (tbnl:get-parameter "scale"))
                                               (cl-who:htm (:option :value scale
                                                                    :selected "selected"
@@ -1348,7 +1394,7 @@
                                    :multiple "multiple"
                                    :size 3
                                    (:option :value "" "Any")
-                                   (loop for status in (get-enum-vals :status task-attrs)
+                                   (loop for status in (get-enum-vals "status" task-attrs)
                                          do (if (equal status (tbnl:get-parameter "status"))
                                               (cl-who:htm (:option :value status
                                                                    :selected "selected"
@@ -1460,7 +1506,7 @@
              (t
                ;; Extract non-empty attributes relevant to this resourcetype
                (let* ((valid-attrnames
-                        (mapcar #'schema-rtype-attrs-name
+                        (mapcar #'name
                                 (get-attrs (rg-server tbnl:*acceptor*) resourcetype)))
                       (validated-attrs
                         (remove-if #'null
