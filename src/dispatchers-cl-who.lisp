@@ -856,14 +856,12 @@
            (loop for val in (attrvalues attrdef)
                  do (if (equal existing-value val)
                         (cl-who:htm
-                          (:option :name (getf val :val)
+                          (:option :name val
                            :selected "true"
-                           (princ (getf val :val)
-                                  outstr)))
+                           (princ val outstr)))
                         (cl-who:htm
-                          (:option :name (getf val :val)
-                           (princ (getf val :val)
-                                  outstr)))))))
+                          (:option :name val
+                           (princ val outstr)))))))
         ;; If it does *not* have values, create an input field
         (cl-who:htm
           (:input :type "text"
