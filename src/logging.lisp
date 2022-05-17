@@ -1,4 +1,4 @@
-;   Copyright 2019 James Fleming <james@electronic-quill.net>
+;   Copyright 2019-2022 James Fleming <james@electronic-quill.net>
 ;
 ;   Licensed under the GNU General Public License
 ;   - for details, see LICENSE.txt in the top-level directory
@@ -7,7 +7,7 @@
 ;;;; Logging infrastructure
 ;;; We only need something extremely simple
 
-(in-package #:webcat-gui)
+(in-package #:syscat-gui)
 
 (defvar *loglevels*
   '(:crit 4
@@ -38,7 +38,7 @@
             severity
             message)))
 
-(defmethod tbnl:acceptor-log-message ((acceptor webcat-gui-acceptor)
+(defmethod tbnl:acceptor-log-message ((acceptor syscat-gui-acceptor)
                                       log-level
                                       format-string
                                       &rest format-arguments)

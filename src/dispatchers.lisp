@@ -3,7 +3,7 @@
 ;   Licensed under the GNU General Public License
 ;   - for details, see LICENSE.txt in the top-level directory
 
-(in-package #:webcat-gui)
+(in-package #:syscat-gui)
 
 (declaim (optimize (compilation-speed 0)
                    (speed 2)

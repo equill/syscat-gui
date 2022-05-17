@@ -1,7 +1,7 @@
 with import <nixpkgs> {};
 
 stdenv.mkDerivation rec {
-    name = "webcat-gui";
+    name = "syscat-gui";
 
     buildInputs = [
         pkgs.sbcl
@@ -15,5 +15,5 @@ stdenv.mkDerivation rec {
         pkgs.libressl
     ];
 
-    shellHook = "export PS1='\n\\[\\033[01;32m\\][nix webcat-gui] \\w\\$\\[\\033[00m\\] '";
+    shellHook = "export PS1='\n\\[\\033[01;32m\\][nix syscat-gui] \\w\\$\\[\\033[00m\\] '";
 }

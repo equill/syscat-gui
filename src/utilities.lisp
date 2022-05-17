@@ -1,9 +1,9 @@
-;   Copyright 2020 James Fleming <james@electronic-quill.net>
+;   Copyright 2020-2022 James Fleming <james@electronic-quill.net>
 ;
 ;   Licensed under the GNU General Public License
 ;   - for details, see LICENSE.txt in the top-level directory
 
-(in-package #:webcat-gui)
+(in-package #:syscat-gui)
 
 
 ;;; Utility functions

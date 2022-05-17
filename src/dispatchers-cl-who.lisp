@@ -3,7 +3,7 @@
 ;   Licensed under the GNU General Public License
 ;   - for details, see LICENSE.txt in the top-level directory
 
-(in-package #:webcat-gui)
+(in-package #:syscat-gui)
 
 (declaim (optimize (compilation-speed 0)
                    (speed 2)
@@ -1128,7 +1128,7 @@
        (with-output-to-string (outstr)
          (default-clwho-layout
            outstr
-           :title "Webcat search page"
+           :title "Syscat search page"
            :resourcetype "Search"
            :uid ""
            :stylesheets '("search" "display")
@@ -1281,13 +1281,13 @@
     ((equal (tbnl:request-method*) :GET)
      (let* ((task-attrs (get-attrs (rg-server tbnl:*acceptor*) "Tasks"))
             (statuses-requested (filter-params "status" (tbnl:get-parameters*)))
-            (tags-available (sort (get-uids (rg-server *webcat-gui-acceptor*) "/Tags?RGinbound=/Tasks/*/TAGS") #'string<))
+            (tags-available (sort (get-uids (rg-server *syscat-gui-acceptor*) "/Tags?RGinbound=/Tasks/*/TAGS") #'string<))
             (tags-requested (filter-params "tags" (tbnl:get-parameters*)))
             (scale-requested (filter-params "scale" (tbnl:get-parameters*)))
             (urgency-requested (filter-params "urgency" (tbnl:get-parameters*)))
             (importance-requested (filter-params "importance" (tbnl:get-parameters*)))
             (tbnl-formatted-results
-              (search-for-tasks (webcat-gui::rg-server webcat-gui::*webcat-gui-acceptor*)
+              (search-for-tasks (syscat-gui::rg-server syscat-gui::*syscat-gui-acceptor*)
                                 :tags tags-requested
                                 :statuses statuses-requested
                                 :scale scale-requested
@@ -1305,7 +1305,7 @@
        (with-output-to-string (outstr)
          (default-clwho-layout
            outstr
-           :title "Webcat tasks search"
+           :title "Syscat tasks search"
            :stylesheets '("tasks_search")
            :javascripts '("search")
            :resourcetype "Tasks"

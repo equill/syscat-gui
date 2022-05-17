@@ -1,13 +1,13 @@
-;   Copyright 2020 James Fleming <james@electronic-quill.net>
+;   Copyright 2020-2022 James Fleming <james@electronic-quill.net>
 ;
 ;   Licensed under the GNU General Public License
 ;   - for details, see LICENSE.txt in the top-level directory
 
-(in-package #:webcat-gui)
+(in-package #:syscat-gui)
 
 ;;; Customised Hunchentoot acceptor.
 ;;; Carries information about the datastore being used.
-(defclass webcat-gui-acceptor (tbnl:easy-acceptor)
+(defclass syscat-gui-acceptor (tbnl:easy-acceptor)
   ;; Subclass attributes
   ((rg-server :initarg :rg-server
               :reader rg-server
@@ -23,8 +23,8 @@
   (:documentation "vhost object, subclassed from tbnl:easy-acceptor"))
 
 (defun make-acceptor ()
-  "Return an instance of 'webcat-gui-acceptor, a subclass of tbnl:easy-acceptor."
-  (make-instance 'webcat-gui-acceptor
+  "Return an instance of 'syscat-gui-acceptor, a subclass of tbnl:easy-acceptor."
+  (make-instance 'syscat-gui-acceptor
                  :address (or (sb-ext:posix-getenv "LISTEN_ADDR")
                               (getf *config-vars* :listen-address))
                  :port (or (when (sb-ext:posix-getenv "LISTEN_PORT")

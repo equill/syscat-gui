@@ -6,7 +6,7 @@
 
 ;;;; The REST API server application
 
-(in-package #:webcat-gui)
+(in-package #:syscat-gui)
 
 (declaim (optimize (compilation-speed 0)
                    (speed 2)
@@ -26,21 +26,21 @@
   i.e. return only after Hunchentoot shuts down, instead of immediately after it starts up."
   (declare (type (boolean) docker)
            ;; Specialising on acceptor doesn't allow for a null value
-           ;(type (or nil webcat-gui-acceptor) acceptor)
+           ;(type (or nil syscat-gui-acceptor) acceptor)
            )
-  (log-message :info "Attempting to start up the webcat-gui application server")
+  (log-message :info "Attempting to start up the syscat-gui application server")
   ;; Control the decoding of JSON identifiers
   (setf json:*json-identifier-name-to-lisp* 'common-lisp:string-upcase)
   ;; Sanity-check: is an acceptor already running?
   ;;; We can't directly check whether this acceptor is running,
   ;;; so we're using the existence of its special variable as a proxy.
-  (if (boundp '*webcat-gui-acceptor*)
+  (if (boundp '*syscat-gui-acceptor*)
     ;; There's an acceptor already in play; bail out.
     (log-message :critical "Acceptor already exists; refusing to create a new one.")
     ;; No existing acceptor; we're good to go.
     (let ((myacceptor (or acceptor (make-acceptor))))
       ;; Make it available as a dynamic variable, for shutdown to work on
-      (defparameter *webcat-gui-acceptor* myacceptor)
+      (defparameter *syscat-gui-acceptor* myacceptor)
       ;; Set the dispatch table
       (log-message :info "Configuring the dispatch table")
       (setf tbnl:*dispatch-table*
@@ -85,24 +85,24 @@
 (defun dockerstart ()
     (startup :docker t))
 
-(defun save-image (&optional (path "/tmp/webcat-gui"))
-  (sb-ext:save-lisp-and-die path :executable t :toplevel 'webcat-gui::dockerstart))
+(defun save-image (&optional (path "/tmp/syscat-gui"))
+  (sb-ext:save-lisp-and-die path :executable t :toplevel 'syscat-gui::dockerstart))
 
 (defun shutdown ()
   ;; Check whether there's something to shut down
   (if (and
-        (boundp '*webcat-gui-acceptor*)
-        *webcat-gui-acceptor*)
+        (boundp '*syscat-gui-acceptor*)
+        *syscat-gui-acceptor*)
       ;; There is; go ahead
       (progn
       ;; Check whether it's still present but shutdown
-      (if (tbnl::acceptor-shutdown-p *webcat-gui-acceptor*)
+      (if (tbnl::acceptor-shutdown-p *syscat-gui-acceptor*)
           (log-message :info "Acceptor was present but already shut down.")
           (progn
-            (log-message :info "Shutting down the webcat-gui application server")
+            (log-message :info "Shutting down the syscat-gui application server")
             (handler-case
               ;; Perform a soft shutdown: finish serving any requests in flight
-              (tbnl:stop *webcat-gui-acceptor* :soft t)
+              (tbnl:stop *syscat-gui-acceptor* :soft t)
               ;; Catch the case where it's already shut down
               (tbnl::unbound-slot
                 ()
@@ -113,6 +113,6 @@
                   :info
                   "Attempted to shut down Hunchentoot, but received an error. Assuming it wasn't running.")))))
         ;; Nuke the acceptor
-        (makunbound '*webcat-gui-acceptor*))
+        (makunbound '*syscat-gui-acceptor*))
       ;; No acceptor. Note the fact and do nothing.
       (log-message :warn "No acceptor present; nothing to shut down.")))

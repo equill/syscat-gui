@@ -1,9 +1,9 @@
-;   Copyright 2020 James Fleming <james@electronic-quill.net>
+;   Copyright 2020-2022 James Fleming <james@electronic-quill.net>
 ;
 ;   Licensed under the GNU General Public License
 ;   - for details, see LICENSE.txt in the top-level directory
 
-(in-package #:webcat-gui)
+(in-package #:syscat-gui)
 
 
 ;; Error response functions
@@ -12,7 +12,7 @@
   "Fallthrough handler, for anything we haven't already defined."
   (setf (tbnl:content-type*) "text/plain")
   (setf (tbnl:return-code*) tbnl:+http-not-found+)
-  "webcat-gui: this is not a valid URI")
+  "syscat-gui: this is not a valid URI")
 
 (defun method-not-allowed ()
   "Default response for a client making a request we don't support"

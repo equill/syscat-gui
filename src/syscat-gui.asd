@@ -3,11 +3,11 @@
 ;   Licensed under the GNU General Public License
 ;   - for details, see LICENSE.txt in the top-level directory
 
-(asdf:defsystem #:webcat-gui
+(asdf:defsystem #:syscat-gui
   :serial t
   :license "GPLv3"
   :author "James Fleming <james@electronic-quill.net>"
-  :description "Generates a REST API from a shema defined in Neo4J"
+  :description "Rudimentary GUI for Syscat"
   :depends-on (#:3bmd
                #:3bmd-ext-code-blocks
                #:3bmd-ext-definition-lists
